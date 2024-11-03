@@ -6,6 +6,7 @@ package path_generator.discrete_function;
  * Она переодическая, день заканчивается, приоритет с нулевого часа стартует по новой.
  */
 public interface DiscreteFunction<T extends Number> {
+    public static final Integer NUMBER_OF_SECTIONS = 24;
     public T getIthPriority (int ithHour);
     
 }

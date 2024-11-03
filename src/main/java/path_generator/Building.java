@@ -3,6 +3,7 @@ package path_generator;
 import jakarta.validation.constraints.Min;
 import path_generator.discrete_function.DiscreteFunction;
 import path_generator.discrete_function.DiscreteFunctionBuildings;
+import path_generator.discrete_function.DiscreteFunctionPeople;
 
 /**
  * Класс описывающий любое здание
@@ -13,15 +14,15 @@ public class Building {
     private int capacity;
     @Min(value = 0, message = "Must be more or equals than 0")
     private int currentPeople;
-    private DiscreteFunction discreteFunction;
+    private DiscreteFunctionBuildings discreteFunction;
 
-    public Building(int capacity, int currentPeople, DiscreteFunction discreteFunction) {
+    public Building(int capacity, int currentPeople, DiscreteFunctionBuildings discreteFunction) {
         this.capacity = capacity;
         this.currentPeople = currentPeople;
         this.discreteFunction = discreteFunction;
     }
 
-    public Building(String name, int capacity, int currentPeople, DiscreteFunction discreteFunction) {
+    public Building(String name, int capacity, int currentPeople, DiscreteFunctionBuildings discreteFunction) {
         this(capacity, currentPeople, discreteFunction);
         this.name = name;
     }
@@ -34,11 +35,11 @@ public class Building {
         return name;
     }
 
-    public void changePriorityFunction(DiscreteFunction discreteFunction) {
+    public void changePriorityFunction(DiscreteFunctionBuildings discreteFunction) {
         this.discreteFunction = discreteFunction;
     }
 
-    public DiscreteFunction getPriorityFunction() {
+    public DiscreteFunctionBuildings getPriorityFunction() {
         return discreteFunction;
     }
 

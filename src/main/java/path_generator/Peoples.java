@@ -6,8 +6,8 @@ import path_generator.discrete_function.DiscreteFunctionPeople;
 public class Peoples {
     private int allPeople;
     private int inBuildingsPeople;
-    private DiscreteFunction priorityFunction;
-    public Peoples(int allPeople, int inBuildingsPeople, DiscreteFunction priorityFunction) {
+    private DiscreteFunctionPeople priorityFunction;
+    public Peoples(int allPeople, int inBuildingsPeople, DiscreteFunctionPeople priorityFunction) {
         this.allPeople = allPeople;
         this.inBuildingsPeople = inBuildingsPeople;
         this.priorityFunction = priorityFunction;
@@ -22,7 +22,7 @@ public class Peoples {
     public int getPeopleOnTheWay() {
         return allPeople - inBuildingsPeople;
     }
-    public DiscreteFunction getPriorityFunction() {
+    public DiscreteFunctionPeople getPriorityFunction() {
         return priorityFunction;
     }
 

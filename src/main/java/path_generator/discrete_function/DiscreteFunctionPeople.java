@@ -5,9 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DiscreteFunctionPeople implements DiscreteFunction {
+public class DiscreteFunctionPeople implements DiscreteFunction<Double> {
     private final List<Double> function;
-    public static final Integer NUMBER_OF_SECTIONS = 24;
     public static final Double FUNCTION_MINIMUM_VALUE = 0.0;
     public static final Double FUNCTION_MAXIMUM_VALUE = 1.0;
     /**
