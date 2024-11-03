@@ -1,18 +1,20 @@
 package path_generator.discrete_function;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DiscreteFunctionBuildings implements DiscreteFunction {
     private final List<Integer> function;
-    public static final Integer NUMBER_OF_SECTIONS = 24;
-    public static final Integer FUNCTION_MINIMUM_VALUE = 1;
-    public static final Integer FUNCTION_MAXIMUM_VALUE = 100;
+    public static final int NUMBER_OF_SECTIONS = 24;
+    public static final int FUNCTION_MINIMUM_VALUE = 1;
+    public static final int FUNCTION_MAXIMUM_VALUE = 100;
     /**
      * Задает любую функцию с 24 отрезками.
      * @param function
      */
-    public DiscreteFunctionBuildings(List<Integer> function) {
+    public DiscreteFunctionBuildings(final @NotNull List<Integer> function) {
         if (function.size() != NUMBER_OF_SECTIONS) {
             throw new IllegalArgumentException("List have size isn't 24.");
         }
@@ -32,7 +34,7 @@ public class DiscreteFunctionBuildings implements DiscreteFunction {
      * Задает функцию с константным значением.
      * @param constanta
      */
-    public DiscreteFunctionBuildings(final Integer constanta) {
+    public DiscreteFunctionBuildings(final int constanta) {
         if (constanta < FUNCTION_MINIMUM_VALUE) {
             throw new IllegalArgumentException("Function value is less than the minimum value.");
         }
@@ -46,7 +48,7 @@ public class DiscreteFunctionBuildings implements DiscreteFunction {
     }
 
     @Override
-    public Integer getIthPriority (Integer ithHour){
+    public Integer getIthPriority (final int ithHour){
         return function.get(ithHour);
     }
 }

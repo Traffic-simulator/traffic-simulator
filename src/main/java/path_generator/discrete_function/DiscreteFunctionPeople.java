@@ -1,5 +1,7 @@
 package path_generator.discrete_function;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +14,7 @@ public class DiscreteFunctionPeople implements DiscreteFunction {
      * Задает любую функцию с 24 отрезками.
      * @param function
      */
-    public DiscreteFunctionPeople(List<Double> function) {
+    public DiscreteFunctionPeople(final @NotNull List<Double> function) {
         if (function.size() != NUMBER_OF_SECTIONS) {
             throw new IllegalArgumentException("List have size isn't 24.");
         }
@@ -32,7 +34,7 @@ public class DiscreteFunctionPeople implements DiscreteFunction {
      * Задает функцию с константным значением.
      * @param constanta
      */
-    public DiscreteFunctionPeople(final Double constanta) {
+    public DiscreteFunctionPeople(final double constanta) {
         if (constanta < FUNCTION_MINIMUM_VALUE) {
             throw new IllegalArgumentException("Function value is less than the minimum value.");
         }
@@ -47,7 +49,7 @@ public class DiscreteFunctionPeople implements DiscreteFunction {
 
 
     @Override
-    public Double getIthPriority(Integer ithHour) {
+    public Double getIthPriority(final int ithHour) {
         return this.function.get(ithHour);
     }
 }

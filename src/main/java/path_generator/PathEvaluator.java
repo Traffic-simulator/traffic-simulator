@@ -8,9 +8,8 @@ public class PathEvaluator {
     private List<Building> nonFullBuildings;
     private Peoples peoples;
     private double expectedValue;
-    // Шанс что человек захочет поехать куда-нибудь на текущем кадре и ему надо построить путь.
-    private static final double HUMAN_WANTS_TO_GO = 0.1;
     public PathEvaluator(List<Building> buildings, Peoples peoples) {
+        this.peoples = peoples;
         allBuildings = buildings;
         //инициализация вспомогательных массивов
         for (Building build : buildings) {
@@ -25,7 +24,8 @@ public class PathEvaluator {
         }
     }
 
-//    private int howManyPathsToGenerate() {
-//
-//    }
+    private Integer howManyPathsToGenerate() {
+
+        return null;
+    }
 }
