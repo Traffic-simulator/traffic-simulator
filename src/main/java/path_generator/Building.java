@@ -1,6 +1,8 @@
 package path_generator;
 
 import jakarta.validation.constraints.Min;
+import path_generator.discrete_function.DiscreteFunction;
+import path_generator.discrete_function.DiscreteFunctionBuildings;
 
 /**
  * Класс описывающий любое здание

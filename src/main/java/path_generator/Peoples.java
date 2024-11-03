@@ -1,5 +1,8 @@
 package path_generator;
 
+import path_generator.discrete_function.DiscreteFunction;
+import path_generator.discrete_function.DiscreteFunctionPeople;
+
 public class Peoples {
     private int allPeople;
     private int inBuildingsPeople;
