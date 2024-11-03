@@ -14,6 +14,7 @@ public class Building {
     private int capacity;
     @Min(value = 0, message = "Must be more or equals than 0")
     private int currentPeople;
+    //жизненно необходимо добавить поле inPath. Это люди для которых место запривачено, но мы их не можем отправить в путь.
     private DiscreteFunctionBuildings discreteFunction;
 
     public Building(int capacity, int currentPeople, DiscreteFunctionBuildings discreteFunction) {

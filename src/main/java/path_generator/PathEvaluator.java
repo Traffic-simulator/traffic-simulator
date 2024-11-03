@@ -78,15 +78,16 @@ public class PathEvaluator {
 
     @NotNull
     private Thread getThread(Building to, Building from) {
+        int  finalNumber = numberOfAllPaths;
         return new Thread(() -> {
             assert to != null;
-            System.out.println("[" + numberOfAllPaths + "] car start from:" + from.getName() + " to " + to.getName());
+            System.out.println("[" + finalNumber + "] car start from:" + from.getName() + " to " + to.getName());
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
                 System.out.println("Что-то пошло не так");
             }
-            System.out.println("[" + numberOfAllPaths + "] car finish from:" + from.getName() + " to " + to.getName());
+            System.out.println("[" + finalNumber + "] car finish from:" + from.getName() + " to " + to.getName());
         });
     }
 

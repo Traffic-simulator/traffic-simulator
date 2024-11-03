@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         ArrayList<Building> buildings = new ArrayList<>();
         int allPeople = 0;
@@ -18,7 +18,7 @@ public class Main {
             inBuildings += 4;
             buildings.add(build);
         }
-        Peoples peoples = new Peoples(allPeople, inBuildings, new DiscreteFunctionPeople(0.01));
+        Peoples peoples = new Peoples(allPeople, inBuildings, new DiscreteFunctionPeople(0.001));
         PathEvaluator pathEvaluator = new PathEvaluator(buildings, peoples);
 
         while(true) {
@@ -26,6 +26,7 @@ public class Main {
             for (int i = 0; i < generatePass; i++) {
                 pathEvaluator.generatePaths(0);
             }
+            Thread.sleep(50);
         }
     }
 }
