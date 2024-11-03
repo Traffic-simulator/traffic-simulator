@@ -1,4 +1,4 @@
-package PathGenerator;
+package path_generator;
 
 import jakarta.validation.constraints.Min;
 
@@ -11,16 +11,16 @@ public class Building {
     private int capacity;
     @Min(value = 0, message = "Must be more or equals than 0")
     private int currentPeople;
-    private PriorityFunction priorityFunction;
+    private DiscreteFunction discreteFunction;
 
-    public Building(int capacity, int currentPeople, PriorityFunction priorityFunction) {
+    public Building(int capacity, int currentPeople, DiscreteFunction discreteFunction) {
         this.capacity = capacity;
         this.currentPeople = currentPeople;
-        this.priorityFunction = priorityFunction;
+        this.discreteFunction = discreteFunction;
     }
 
-    public Building(String name, int capacity, int currentPeople, PriorityFunction priorityFunction) {
-        this(capacity, currentPeople, priorityFunction);
+    public Building(String name, int capacity, int currentPeople, DiscreteFunction discreteFunction) {
+        this(capacity, currentPeople, discreteFunction);
         this.name = name;
     }
 
@@ -32,12 +32,12 @@ public class Building {
         return name;
     }
 
-    public void changePriorityFunction(PriorityFunction priorityFunction) {
-        this.priorityFunction = priorityFunction;
+    public void changePriorityFunction(DiscreteFunction discreteFunction) {
+        this.discreteFunction = discreteFunction;
     }
 
-    public PriorityFunction getPriorityFunction() {
-        return priorityFunction;
+    public DiscreteFunction getPriorityFunction() {
+        return discreteFunction;
     }
 
     public void changeCurrentPeople(int currentPeople) {
