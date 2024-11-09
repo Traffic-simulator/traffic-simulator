@@ -4,9 +4,16 @@ import opendrive.TJunction
 import opendrive.TJunctionConnection
 
 class Junction(val tjunction: TJunction) {
-    val connections: List<TJunctionConnection>
+    val connections: HashMap<String, ArrayList<Connection>> = HashMap()
 
     init {
-        connections = tjunction.connection
+        for (con in tjunction.connection) {
+            if (con.incomingRoad in connections.keys) {
+                connections[con.incomingRoad]?.add(Connection(con))
+            } else {
+                connections[con.incomingRoad] = ArrayList()
+                connections[con.incomingRoad]?.add(Connection(con))
+            }
+        }
     }
 }
