@@ -1,13 +1,9 @@
-package org.example
-
-
 import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.JAXBException
 import opendrive.OpenDRIVE
 
 import java.io.FileReader
 import java.io.IOException
-
 
 class OpenDriveReader {
     @Throws(JAXBException::class, IOException::class)

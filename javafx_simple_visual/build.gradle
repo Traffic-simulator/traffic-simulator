@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+group 'trafficsim.javafx_simple_visual'
+version '1.0-SNAPSHOT'
+
+javafx {
+    version = "14"
+    modules = [ 'javafx.controls', 'javafx.fxml']
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation(project(":simulator"))
+}
+
+test {
+    useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(21)
+}
