@@ -2,7 +2,7 @@
 .gradle/
 gradle-app.setting
 /gradle/gradle-daemon-jvm.properties
-/build/
+**/build/
 /android/build/
 /core/build/
 /lwjgl2/build/
