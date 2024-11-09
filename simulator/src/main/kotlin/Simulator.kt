@@ -6,7 +6,7 @@ import java.util.*
 
 class Simulator(openDrive: OpenDRIVE) {
 
-    val network: Network = Network(openDrive.road)
+    val network: Network = Network(openDrive.road, openDrive.junction)
     val rnd= Random()
     var spawnTimer = 2.0
 

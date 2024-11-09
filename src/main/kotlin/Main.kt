@@ -3,6 +3,7 @@ package trafficsim
 import OpenDriveReader
 import Simulator
 import java.util.*
+
 fun main() {
 
     val rnd = Random()
@@ -10,7 +11,7 @@ fun main() {
     println("Hello World!")
 
     val odr = OpenDriveReader()
-    val openDRIVE = odr.read("single_road.xodr")
+    val openDRIVE = odr.read("UC_Simple-X-Junction.xodr")
 
     println(openDRIVE.road.size)
 
