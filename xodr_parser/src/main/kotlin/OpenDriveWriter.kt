@@ -1,6 +1,3 @@
-package org.example
-
-
 import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.JAXBException
 import jakarta.xml.bind.Marshaller

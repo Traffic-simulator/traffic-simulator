@@ -3,6 +3,7 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.0.10'
     id 'org.graalvm.buildtools.native' version '0.10.3'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
 group = 'trafficsim'
@@ -29,12 +30,28 @@ switch (OperatingSystem.current()) {
         break
 }
 
-repositories {
-    mavenCentral()
+javafx {
+    version = "14"
+    modules = [ 'javafx.controls', 'javafx.fxml']
 }
 
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    kotlin {
+        jvmToolchain {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
+    }
+}
 dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
+
+    implementation(project(":xodr_parser"))
+    implementation(project(":javafx_simple_visual"))
+    implementation(project(":simulator"))
 
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
     implementation "org.lwjgl:lwjgl"
@@ -57,7 +74,7 @@ graalvmNative {
     toolchainDetection.set(true)
     binaries {
         named("main") {
-            imageName.set("traffic-simulator")
+            imageName.set("trafficsim")
             mainClass.set("trafficsim.MainKt")
             buildArgs.add("--initialize-at-build-time")
         }
@@ -70,6 +87,7 @@ graalvmNative {
 test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
 }
