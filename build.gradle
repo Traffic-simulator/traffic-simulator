@@ -15,7 +15,6 @@ buildscript {
 }
 
 allprojects {
-  apply plugin: 'eclipse'
   apply plugin: 'idea'
 
   // This allows you to "Build and run using IntelliJ IDEA", an option in IDEA's Settings.
@@ -57,7 +56,7 @@ configure(subprojects) {
   }
   compileKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
   compileTestKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-  
+
 }
 
 subprojects {
@@ -73,5 +72,3 @@ subprojects {
     maven { url 'https://jitpack.io' }
   }
 }
-
-eclipse.project.name = 'traffic-simulator' + '-parent'
