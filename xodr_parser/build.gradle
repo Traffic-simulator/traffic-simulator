@@ -3,7 +3,7 @@ plugins {
     id 'com.intershop.gradle.jaxb' version '7.0.0'
 }
 
-group = 'trafficsim.xodr-parser'
+group = 'trafficsim.xodr_parser'
 version = '1.0-SNAPSHOT'
 
 repositories {
@@ -29,4 +29,7 @@ jaxb {
 
 test {
     useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(17)
 }
