@@ -14,6 +14,11 @@ buildscript {
   }
 }
 
+plugins {
+  id 'org.jetbrains.kotlin.jvm' version '2.0.10'
+  id 'org.openjfx.javafxplugin' version '0.0.8'
+}
+
 allprojects {
   apply plugin: 'idea'
 
@@ -57,6 +62,19 @@ configure(subprojects) {
   compileKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
   compileTestKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
 
+}
+
+javafx {
+  version = "14"
+  modules = [ 'javafx.controls', 'javafx.fxml']
+}
+
+dependencies {
+  testImplementation 'org.jetbrains.kotlin:kotlin-test'
+
+  implementation(project(":xodr_parser"))
+  implementation(project(":javafx_simple_visual"))
+  implementation(project(":simulator"))
 }
 
 subprojects {
