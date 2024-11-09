@@ -1,0 +1,23 @@
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+dependencies {
+  api "com.badlogicgames.gdx:gdx:$gdxVersion"
+  api "com.github.mgsx-dev.gdx-gltf:gltf:$gdxGltfVersion"
+  api "com.github.tommyettinger:libgdx-utils:$utilsVersion"
+  api "io.github.libktx:ktx-collections:$ktxVersion"
+  api "io.github.libktx:ktx-graphics:$ktxVersion"
+  api "io.github.libktx:ktx-math:$ktxVersion"
+  api "io.github.libktx:ktx-preferences:$ktxVersion"
+  api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+
+  implementation "io.github.spair:imgui-java-app:1.87.4"
+
+  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+
+  if(enableGraalNative == 'true') {
+    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+    // https://mvnrepository.com/artifact/io.github.spair/imgui-java-natives-linux
+    runtimeOnly("io.github.spair:imgui-java-natives-linux:1.87.4")
+  }
+}
