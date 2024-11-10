@@ -1,6 +1,7 @@
 package network
 
 import opendrive.TRoadLanes
+import opendrive.TRoadLanesLaneSectionLcrLaneLink
 import opendrive.TRoadLanesLaneSectionLrLane
 import opendrive.TRoadLanesLaneSectionRightLane
 import vehicle.Vehicle
@@ -8,6 +9,12 @@ import vehicle.Vehicle
 class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: Int) {
 
     val vehicles: ArrayList<Vehicle> = ArrayList()
+
+    val laneLink: TRoadLanesLaneSectionLcrLaneLink = tlane.link
+    // null if junction, else list of Lane objs
+    var predecessor: List<Lane>? = null
+    var successor: List<Lane>? = null
+
 
     fun addVehicle(vehicle: Vehicle) {
         vehicles.add(vehicle)
@@ -75,4 +82,6 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         vehicles.forEach({it -> if (it.position > result.position) result = it })
         return result
     }
+
+    //TODO get next lane
 }
