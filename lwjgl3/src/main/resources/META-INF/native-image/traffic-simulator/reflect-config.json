@@ -1,0 +1,141 @@
+[
+{
+  "name":"[F"
+},
+{
+  "name":"[Lcom.badlogic.gdx.backends.lwjgl3.audio.OpenALMusic;"
+},
+{
+  "name":"[Lcom.badlogic.gdx.graphics.VertexAttribute;"
+},
+{
+  "name":"[Ljava.lang.Object;"
+},
+{
+  "name":"com.badlogic.gdx.utils.ObjectMap",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"java.nio.Buffer",
+  "allDeclaredFields":true
+},
+{
+  "name":"java.nio.ByteBuffer",
+  "allDeclaredFields":true
+},
+{
+  "name":"java.nio.DirectByteBuffer",
+  "allDeclaredFields":true,
+  "unsafeAllocated":true
+},
+{
+  "name":"java.nio.DirectCharBufferU",
+  "allDeclaredFields":true
+},
+{
+  "name":"java.nio.DirectDoubleBufferU",
+  "allDeclaredFields":true
+},
+{
+  "name":"java.nio.DirectFloatBufferU",
+  "allDeclaredFields":true
+},
+{
+  "name":"java.nio.DirectIntBufferU",
+  "allDeclaredFields":true,
+  "unsafeAllocated":true
+},
+{
+  "name":"java.nio.DirectLongBufferU",
+  "allDeclaredFields":true
+},
+{
+  "name":"java.nio.DirectShortBufferU",
+  "allDeclaredFields":true
+},
+{
+  "name":"java.nio.MappedByteBuffer",
+  "allDeclaredFields":true
+},
+{
+  "name":"net.mgsx.gltf.data.GLTF",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.GLTFAsset",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.GLTFEntity",
+  "allDeclaredFields":true
+},
+{
+  "name":"net.mgsx.gltf.data.GLTFObject",
+  "allDeclaredFields":true
+},
+{
+  "name":"net.mgsx.gltf.data.data.GLTFAccessor",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.data.GLTFBuffer",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.data.GLTFBufferView",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.geometry.GLTFMesh",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.geometry.GLTFPrimitive",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.scene.GLTFNode",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"net.mgsx.gltf.data.scene.GLTFScene",
+  "allDeclaredFields":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.lwjgl.glfw.GLFW",
+  "allDeclaredFields":true
+},
+{
+  "name":"org.lwjgl.system.CallbackI",
+  "methods":[{"name":"callback","parameterTypes":["long","long"] }]
+},
+{
+  "name":"org.lwjgl.system.CustomBuffer",
+  "fields":[{"name":"capacity"}, {"name":"container"}, {"name":"limit"}, {"name":"mark"}, {"name":"position"}]
+},
+{
+  "name":"org.lwjgl.system.Pointer$Default",
+  "fields":[{"name":"address"}]
+},
+{
+  "name":"org.lwjgl.system.jemalloc.JEmallocAllocator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.misc.Unsafe",
+  "allDeclaredFields":true
+},
+{
+  "name":"sun.security.provider.SHA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+}
+]
