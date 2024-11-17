@@ -105,7 +105,7 @@
         <type s="0.0000000000000000e+0" type="town">
             <speed max="25" unit="mph"/>
         </type>
-        <planView>x
+        <planView>
             <geometry s="0.0000000000000000e+0" x="3.2562765821020736e+2" y="1.1322960428247972e-2" hdg="3.1410614169049995e+0" length="3.5051535093848557e+1">
                 <line/>
             </geometry>
