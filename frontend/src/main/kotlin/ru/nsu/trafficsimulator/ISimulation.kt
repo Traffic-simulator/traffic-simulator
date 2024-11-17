@@ -1,20 +1,19 @@
 package ru.nsu.trafficsimulator
 
-import network.Lane
-import network.Road
 import opendrive.OpenDRIVE
 import opendrive.TRoad
-import opendrive.TRoadLanesLaneSectionLrLane
 
 interface ISimulation {
     /**
-     * All possible cars variations that behave differently on the road
+     * All possible cars types that behave differently on the road
+     * Each car type might have multiple variations as per supplied information at init time
+     * 0th variation is default and guaranteed to exist
      */
     enum class VehicleType {
         PassengerCar,
-        Truck,
-        Bus,
-        Motorcycle,
+        Bus;
+
+        var variation: Int = 0
     }
 
     /**
