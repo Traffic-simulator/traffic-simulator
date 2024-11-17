@@ -6,7 +6,7 @@ import opendrive.OpenDRIVE
 import opendrive.TRoad
 import opendrive.TRoadLanesLaneSectionLrLane
 
-interface Backend {
+interface ISimulation {
     /**
      * All possible cars variations that behave differently on the road
      */
@@ -22,7 +22,7 @@ interface Backend {
      * Distance specifies distance from the start of the road
      * Distance should be positive, and less than length of the road
      */
-    data class Vehicle(val id: Int, val road: TRoad, val laneId: Int, val type: VehicleType, val distance: Double)
+    data class VehicleDTO(val id: Int, val road: TRoad, val laneId: Int, val type: VehicleType, val distance: Double)
 
     /**
      * Initialize simulation state with.
@@ -38,5 +38,5 @@ interface Backend {
      * Calculate next vehicle positions after a set amount of time
      * @param deltaTime time interval to simulate
      */
-    fun getNextFrame(deltaTime: Double): Array<Vehicle>
+    fun getNextFrame(deltaTime: Double): Array<VehicleDTO>
 }
