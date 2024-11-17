@@ -16,14 +16,6 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
 
     init {
 
-//        println("JUNCTIONS")
-//        for (junc in junctions) {
-//            println(junc)
-//            for (con in junc.connections) {
-//                println(con.key + " to " + con.value.map { it.connectingRoad })
-//            }
-//        }
-
         println("incidentRoads")
         for (road in roads) {
             incidentJunctions[road] = junctions.filter { road.id in it.connections.keys }
@@ -49,7 +41,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
 
             if (road.predecessor?.elementType == ERoadLinkElementType.ROAD) {
                 // get all lanes that have predecessors
-                road.lanes.takeWhile { it.laneLink.predecessor != null }.forEach {
+                road.lanes.filter { it.laneLink?.predecessor != null }.forEach {
                     // TODO get roads by id from hashmap
                     // for every lane find predecessor Lane object
                     lane -> lane.predecessor = roads.firstOrNull {
@@ -57,9 +49,9 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                         predecessorRd -> predecessorRd.id == road.predecessor?.elementId
                     }?.lanes?.filter {
                         // filter lanes that are in laneLink by id
-                        candidate -> lane.laneLink.predecessor.map {
+                        candidate -> lane.laneLink?.predecessor?.map {
                             prevLane -> prevLane.id
-                        }.contains(candidate.laneId.toBigInteger())
+                        }?.contains(candidate.laneId.toBigInteger()) ?: false
                     }
                 }
             }
@@ -67,7 +59,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
             println("Successor type id " + road.successor?.elementType + road.successor?.elementId)
             if (road.successor?.elementType == ERoadLinkElementType.ROAD) {
                 // same for successors
-                road.lanes.takeWhile { it.laneLink.successor != null }.forEach {
+                road.lanes.filter { it.laneLink?.successor != null }.forEach {
                     // TODO get roads by id from hashmap
                     // for every lane find successor Lane object
                     lane -> lane.successor = roads.firstOrNull {
@@ -75,9 +67,9 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                         successorRoads -> successorRoads.id == road.successor?.elementId
                     }?.lanes?.filter {
                         // filter lanes that are in laneLink by id
-                        candidate -> lane.laneLink.successor.map {
+                        candidate -> lane.laneLink?.successor?.map {
                             nextLane -> nextLane.id
-                        }.contains(candidate.laneId.toBigInteger())
+                        }?.contains(candidate.laneId.toBigInteger()) ?: false
                     }
                 }
             }

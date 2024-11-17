@@ -11,7 +11,7 @@ fun main() {
     println("Hello World!")
 
     val odr = OpenDriveReader()
-    val openDRIVE = odr.read("UC_Simple-X-Junction.xodr")
+    val openDRIVE = odr.read("single_segment_road.xodr")
 
     println(openDRIVE.road.size)
 
