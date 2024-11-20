@@ -17,8 +17,8 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     private val vehicles: ArrayList<Vehicle> = ArrayList()
     val laneLink: TRoadLanesLaneSectionLcrLaneLink? = tlane.link
 
-    // TODO: null if junction
-    // List for junctions and for strange asam.net:xodr:1.4.0:road.lane.link.multiple_connections.
+    // TODO: flag if the next lane is from junction
+    // List for lanes from roads AND from junctions and for strange asam.net:xodr:1.4.0:road.lane.link.multiple_connections.
     var predecessor: List<Lane>? = null
     var successor: List<Lane>? = null
 
