@@ -1,7 +1,8 @@
 package vehicle
 
+import SimulationConfig
 import network.Lane
-import vehicle.model.IntelligentDriverModel
+import vehicle.model.IDM
 
 class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
 
@@ -14,24 +15,40 @@ class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0
     var acc = 0.0
     var laneChangeTimer = 0.0
 
+    var despawned = false
 
     init {
-        assert(lane != null)
         lane.addVehicle(this)
     }
 
-    var position = 0.0 // position of front bumper in road length. Vehicle is going to the next road if the back bumper is not on the road
+    // position of front bumper in road length. Vehicle is going to the next road if the front bumper is not on the road
+    var position = 0.0
 
+    // TODO: How to handle road narrowing without junction
     fun update(deltaTime: Double) {
         val nextVeh = lane.getNextVehicle(this)
-        if (nextVeh == null) {
-            acc = IntelligentDriverModel.getAcceleration(this, speed, 10000.0)
-        } else {
-            acc = IntelligentDriverModel.getAcceleration(this, nextVeh, nextVeh.position - position)
-        }
+        acc = IDM.getAcceleration(this, nextVeh.first, nextVeh.second)
+
         speed += acc
         position += speed * deltaTime
         laneChangeTimer -= deltaTime
+
+        while (position > lane.road.troad.length) {
+            val newPosition = position - lane.road.troad.length
+
+
+            // TODO: We can't go just to 0 lane with junctions.
+            val nextLane = if (lane.laneId > 0) lane.successor else lane.predecessor
+            if (nextLane != null && nextLane.size > 0) {
+                setNewLane(nextLane.get(0))
+                position = newPosition
+            } else {
+                // Despawn vehicle
+                lane.removeVehicle(this)
+                despawned = true
+                break
+            }
+        }
     }
 
     fun isInLaneChange(): Boolean {
@@ -45,12 +62,13 @@ class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0
     fun setNewLane(_lane: Lane) {
         if (_lane == this.lane) return
 
-        laneChangeTimer = 5.0
-        this.lane.vehicles.remove(this)
+        laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
+        this.lane.removeVehicle(this)
         this.lane = _lane
-        this.lane.vehicles.add(this)
+        this.lane.addVehicle(this)
     }
 
+    // TODO: Do we need factory?
     companion object {
         fun NewVehicle(lane: Lane, maxSpeed: Double, maxAcc: Double): Vehicle {
             return Vehicle(lane, maxSpeed, maxAcc)

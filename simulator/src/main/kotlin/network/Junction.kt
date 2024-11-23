@@ -4,6 +4,8 @@ import opendrive.TJunction
 import opendrive.TJunctionConnection
 
 class Junction(val tjunction: TJunction) {
+
+    // HashMap by incoming roadId store connection
     val connections: HashMap<String, ArrayList<Connection>> = HashMap()
 
     init {

@@ -3,6 +3,7 @@ import opendrive.OpenDRIVE
 import vehicle.Vehicle
 import vehicle.model.MOBIL
 import java.util.*
+import kotlin.math.abs
 
 class Simulator(openDrive: OpenDRIVE) {
 
@@ -10,32 +11,34 @@ class Simulator(openDrive: OpenDRIVE) {
     val rnd= Random()
     var spawnTimer = 2.0
 
+    // TODO: Correct lane id checking
+    // TODO: staged updates
     fun update(dt: Double) {
+
+        // Stage x: non mandatory lane changes
         vehicles.forEach { it ->
             if (it.isInLaneChange()) {
                 return@forEach
             }
-            val idx = it.lane.road.lanes.indexOf(it.lane)
-            if (idx - 1 >= 0) {
-                val toLane = it.lane.road.lanes.get(idx - 1)
+
+            val lanesToChange = it.lane.road.lanes.filter { newLane -> abs(newLane.laneId - it.lane.laneId) == 1}
+
+            for (toLane in lanesToChange) {
                 val balance = MOBIL.calcAccelerationBalance(it, toLane)
                 if (balance > 0.0) {
                     it.setNewLane(toLane)
                     return@forEach
                 }
             }
-            if (idx + 1 < it.lane.road.lanes.size) {
-                val toLane = it.lane.road.lanes.get(idx + 1)
-                val balance = MOBIL.calcAccelerationBalance(it, toLane)
-                if (balance > 0.0) {
-                    it.setNewLane(toLane)
-                }
-            }
         }
 
+        // Stage y:
         vehicles.forEach { it ->
             it.update(dt)
         }
+
+        // despawn vehicles
+        vehicles.removeAll { it.despawned == true}
 
         spawnTimer += dt
         if (spawnTimer >= 0.5) {
@@ -48,9 +51,18 @@ class Simulator(openDrive: OpenDRIVE) {
 
     fun addVehicle() {
 
-        val nw = Vehicle.NewVehicle(network.roads.get(0).lanes.get(rnd.nextInt(3)),
-            rnd.nextInt(5, 9) * 4.0,
-            rnd.nextDouble(1.5, 2.0))
+        val side = rnd.nextInt(2)
+        val nw: Vehicle
+        if (side == 0) {
+            nw = Vehicle.NewVehicle(network.roads.get(0).lanes.get(rnd.nextInt(2)),
+                rnd.nextInt(5, 9) * 4.0,
+                rnd.nextDouble(1.5, 2.0))
+
+        } else {
+            nw = Vehicle.NewVehicle(network.roads.get(2).lanes.get(rnd.nextInt(2, 4)),
+                rnd.nextInt(5, 9) * 4.0,
+                rnd.nextDouble(1.5, 2.0))
+        }
 
         vehicles.add(nw)
     }
