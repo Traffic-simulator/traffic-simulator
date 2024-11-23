@@ -16,11 +16,12 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     // TODO: need clever structure for binary_search and easy .front() .back()
     private val vehicles: ArrayList<Vehicle> = ArrayList()
     val laneLink: TRoadLanesLaneSectionLcrLaneLink? = tlane.link
+    val roadId = road.id
 
     // TODO: flag if the next lane is from junction
     // List for lanes from roads AND from junctions and for strange asam.net:xodr:1.4.0:road.lane.link.multiple_connections.
-    var predecessor: List<Lane>? = null
-    var successor: List<Lane>? = null
+    var predecessor: ArrayList<Lane>? = null
+    var successor: ArrayList<Lane>? = null
 
     // TODO: Handle move to the next line
     fun addVehicle(vehicle: Vehicle) {
