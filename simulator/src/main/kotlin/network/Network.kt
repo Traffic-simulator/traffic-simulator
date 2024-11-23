@@ -33,12 +33,9 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
             )
         }
 
-        // Assign Lane objects as predecessors and successors to Lanes
-        // If junction they'll stay null
+        // Connections of Lanes. Assign Lane objects as predecessors and successors for Lanes.
         for (road in roads) {
-            println("\nRoad" + road.id + ":")
-            println("Predecessor type id " + road.predecessor?.elementType + road.predecessor?.elementId)
-
+            // For Road <-> Road connections
             if (road.predecessor?.elementType == ERoadLinkElementType.ROAD) {
                 // get all lanes that have predecessors
                 road.lanes.filter { it.laneLink?.predecessor != null }.forEach {
@@ -54,9 +51,40 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                         }?.contains(candidate.laneId.toBigInteger()) ?: false
                     }
                 }
+
+            // For Road <- Junction -> Road connections
+            } else if (road.predecessor?.elementType == ERoadLinkElementType.JUNCTION) {
+                val junc = junctions.firstOrNull { it.id == road.predecessor!!.elementId }!!  // that junction
+                // get connections by incomingId, even for predecessor junction
+                val connections = junc.connections[road.id]!!
+
+                // if for our road Junction is a successor
+                // then in laneLink[incomingRoad == ourRoad].from is -N
+
+                for (lane in road.lanes) {
+                    for (con in connections) {
+                        // TODO can be many connected roads
+                        // get incoming road, for predecessors AND successors incomingRoad is the key
+                        val incomingRoad = roads.firstOrNull{ it.id == con.incomingRoad }!!
+
+                        lane.predecessor = incomingRoad.lanes.filter {
+                            con.laneLink.filter {
+                                // find those laneLinks, that are connected FROM this lane
+                                // even for predecessors
+                                link -> link.from == lane.laneId.toBigInteger()
+                            }.map {
+                                // get TO lane indices from these laneLinks
+                                link2 -> link2.to
+                            }.contains(
+                                // and make predicate to filter those incomingRoad.lanes
+                                it.laneId.toBigInteger()
+                            )
+                        }
+                    }
+                }
             }
 
-            println("Successor type id " + road.successor?.elementType + road.successor?.elementId)
+            // Road <-> Road
             if (road.successor?.elementType == ERoadLinkElementType.ROAD) {
                 // same for successors
                 road.lanes.filter { it.laneLink?.successor != null }.forEach {
@@ -72,8 +100,61 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                         }?.contains(candidate.laneId.toBigInteger()) ?: false
                     }
                 }
-            }
+            // Road <- Junction -> Road
+            } else if (road.successor?.elementType == ERoadLinkElementType.ROAD) {
+                val junc = junctions.firstOrNull { it.id == road.successor!!.elementId }!!  // that junction
+                // get connections by incomingId, even for predecessor junction
+                val connections = junc.connections[road.id]!!
 
+                // if for our road Junction is a successor
+                // then in laneLink[incomingRoad == ourRoad].from is -N
+
+                for (lane in road.lanes) {
+                    for (con in connections) {
+                        // TODO can be many connected roads
+                        // get incoming road, for predecessors AND successors incomingRoad is the key
+                        val incomingRoad = roads.firstOrNull { it.id == con.incomingRoad }!!
+
+                        lane.successor = incomingRoad.lanes.filter {
+                            con.laneLink.filter {
+                                // find those laneLinks, that are connected FROM this lane
+                                link -> link.from == lane.laneId.toBigInteger()
+                            }.map {
+                                // get TO lane indices from these laneLinks
+                                link2 -> link2.to
+                            }.contains(
+                                // and make predicate to filter those incomingRoad.lanes
+                                it.laneId.toBigInteger()
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        for (road in roads) {
+            println("\nRoad" + road.id + ":")
+            println("Road at junction?: " + (road.junction == "1"))
+            println("Predecessor type id " + road.predecessor?.elementType + road.predecessor?.elementId)
+            if (road.predecessor?.elementType == ERoadLinkElementType.JUNCTION) {
+                for (con in junctions.firstOrNull{ it.id == road.predecessor?.elementId }!!.connections.values) {
+                    println(con.map {
+                            it -> "ROAD " + it.incomingRoad + " TO " + it.connectingRoad + ": "+
+                                it.laneLink.map { "FROM " + it.from + " TO " + it.to }
+                        }
+                    )
+                }
+            }
+            println("Successor type id " + road.successor?.elementType + road.successor?.elementId)
+            if (road.successor?.elementType == ERoadLinkElementType.JUNCTION) {
+                for (con in junctions.firstOrNull{ it.id == road.successor?.elementId }!!.connections.values) {
+                    println(con.map {
+                            it -> "ROAD " + it.incomingRoad + " TO " + it.connectingRoad + ": "+
+                                it.laneLink.map { "FROM " + it.from + " TO " + it.to }
+                        }
+                    )
+                }
+            }
             println(
                 road.lanes.map {
                     "\n predecessorLane" + it.predecessor?.map { it2 -> it2.laneId } + "->" + "currentLane" + it.laneId

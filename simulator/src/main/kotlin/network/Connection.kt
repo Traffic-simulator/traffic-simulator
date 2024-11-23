@@ -7,4 +7,5 @@ class Connection(tConnection: TJunctionConnection) {
     val incomingRoad = tConnection.incomingRoad
     val linkedRoad = tConnection.linkedRoad // Probably deprecated or not used
     val id = tConnection.id
+    val laneLink = tConnection.laneLink
 }
