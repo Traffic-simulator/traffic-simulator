@@ -4,12 +4,20 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Environment
+import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
+import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -17,6 +25,9 @@ import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
+import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.Vec3
+
 
 class Main : ApplicationAdapter() {
     private var image: Texture? = null
@@ -29,6 +40,45 @@ class Main : ApplicationAdapter() {
     private var sceneManager: SceneManager? = null
     private var sceneAsset: SceneAsset? = null
     private var tmpInputProcessor: InputProcessor? = null
+    private var layout: Layout = Layout()
+
+
+    companion object {
+        fun createLayoutMesh(layout: Layout): Model {
+            val roadHeight = 0.5
+            val laneWidth = 2.0
+            val intersectionPadding = 10.0f
+
+            val modelBuilder = ModelBuilder()
+            var meshPartBuilder: MeshPartBuilder
+            modelBuilder.begin()
+            for (road in layout.getRoads()) {
+                val node = modelBuilder.node()
+                val pos = (road.startIntersection.position + road.endIntersection.position) / 2.0
+                val dir = road.startIntersection.position - road.endIntersection.position
+                val halfLen = dir.length() / 2.0 - intersectionPadding
+                if (halfLen < 0)
+                    continue
+                val halfDir = dir.normalized() * halfLen
+                val right = halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * 2.0 * laneWidth
+                node.translation.set(pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat())
+                meshPartBuilder = modelBuilder.part("road${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+                BoxShapeBuilder.build(
+                    meshPartBuilder,
+                    Vector3((-halfDir.x - right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z - right.z).toFloat()),
+                    Vector3((-halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + right.z).toFloat()),
+                    Vector3((halfDir.x - right.x).toFloat(), roadHeight.toFloat(), (halfDir.z - right.z).toFloat()),
+                    Vector3((halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (halfDir.z + right.z).toFloat()),
+                    Vector3((-halfDir.x - right.x).toFloat(), 0.0f, (-halfDir.z - right.z).toFloat()),
+                    Vector3((-halfDir.x + right.x).toFloat(), 0.0f, (-halfDir.z + right.z).toFloat()),
+                    Vector3((halfDir.x - right.x).toFloat(), 0.0f, (halfDir.z - right.z).toFloat()),
+                    Vector3((halfDir.x + right.x).toFloat(), 0.0f, (halfDir.z + right.z).toFloat()),
+                )
+            }
+
+            return modelBuilder.end()
+        }
+    }
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -40,8 +90,8 @@ class Main : ApplicationAdapter() {
         camera = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         camera?.position?.set(10f, 10f, 10f)
         camera?.lookAt(0.0f, 0.0f, 0.0f)
-        camera?.near = 1f
-        camera?.far = 300f
+        camera?.near = 0.5f
+        camera?.far = 1000f
         camera?.update()
 
         environment = Environment()
@@ -50,12 +100,25 @@ class Main : ApplicationAdapter() {
 
         sceneManager = SceneManager()
         sceneAsset = GLBLoader().load(Gdx.files.internal("car.glb"))
-        sceneManager?.addScene(Scene(sceneAsset?.scene))
+        // sceneManager?.addScene(Scene(sceneAsset?.scene))
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
-        val camController = CameraInputController(camera);
-        Gdx.input.inputProcessor = camController;
+        val camController = CameraInputController(camera)
+        camController.translateUnits = 100.0f
+        Gdx.input.inputProcessor = camController
+
+        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, 0.0))
+        layout.addRoad(Vec3(100.0, 0.0, -100.0), Vec3(100.0, 0.0, 0.0))
+        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 100.0))
+        layout.addRoad(Vec3(100.0, 0.0, 100.0), Vec3(0.0, 0.0, 100.0))
+        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, 100.0))
+        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, -100.0))
+        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
+        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, -100.0))
+        val layoutModel = createLayoutMesh(layout)
+        val layoutScene = Scene(layoutModel)
+        sceneManager?.addScene(layoutScene)
     }
 
     override fun render() {

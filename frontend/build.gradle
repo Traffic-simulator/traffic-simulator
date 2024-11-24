@@ -13,6 +13,7 @@ dependencies {
   implementation "io.github.spair:imgui-java-app:1.87.4"
 
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+  implementation project(":xodr_parser")
 
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"

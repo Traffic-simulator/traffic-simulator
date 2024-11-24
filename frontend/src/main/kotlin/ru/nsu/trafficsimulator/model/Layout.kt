@@ -7,13 +7,16 @@ class Layout {
     private var roadIdCount = 0
     private var intersectionIdCount = 0
 
-    fun addRoad(startPosition: Point, endPosition: Point): Road {
+    fun getRoads(): Set<Road> = roads.toSet()
+    fun getIntersections(): Set<Intersection> = intersections.toSet()
+
+    fun addRoad(startPosition: Vec3, endPosition: Vec3): Road {
         val startIntersection = addIntersection(startPosition)
         val endIntersection = addIntersection(endPosition)
         return addRoad(startIntersection, endIntersection)
     }
 
-    fun addRoad(startIntersection: Intersection, endPosition: Point): Road {
+    fun addRoad(startIntersection: Intersection, endPosition: Vec3): Road {
         val endIntersection = addIntersection(endPosition)
         return addRoad(startIntersection, endIntersection)
     }
@@ -29,7 +32,7 @@ class Layout {
         return newRoad
     }
 
-    fun addIntersection(position: Point): Intersection {
+    fun addIntersection(position: Vec3): Intersection {
         val newIntersectionId = intersectionIdCount
         val newIntersection = Intersection(newIntersectionId, position)
         intersections.add(newIntersection)

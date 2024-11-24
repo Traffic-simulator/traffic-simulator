@@ -2,7 +2,7 @@ package ru.nsu.trafficsimulator.model
 
 data class Intersection(
     val id: Int,
-    var position: Point,
+    var position: Vec3,
     var buildingId: Int? = null
 ) {
     private val incomingRoads: MutableSet<Road> = HashSet()
