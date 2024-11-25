@@ -1,10 +1,13 @@
 package network
 
+import network.junction.Connection
+import network.junction.Junction
 import opendrive.EContactPoint
 import opendrive.ERoadLinkElementType
 import opendrive.TJunction
 import opendrive.TRoad
 
+// TODO: Interface for this class, because it's too big for reading
 class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
 
     // DONE store predecessors and successors id for roads
@@ -14,6 +17,10 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
 
     // Junctions that have Road in key as an incomingRoad
     val incidentJunctions: HashMap<Road, List<Junction>> = HashMap()
+
+    fun getJunctionById(id: String): Junction {
+        return junctions.filter { it.id == id }.get(0)
+    }
 
     init {
 
@@ -33,7 +40,6 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                         )
             )
         }
-
         // Connections of Lanes. Assign Lane objects as predecessors and successors for Lanes.
         for (road in roads) {
             // For Road <-> Road connections
@@ -98,6 +104,15 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
         }
 
         verbose()
+    }
+
+    fun getRoadById(id: String): Road {
+        return roads.filter { it.id == id }.take(1)[0]
+    }
+
+    fun getLaneById(roadId: String, laneId: String): Lane {
+        val road = getRoadById(roadId)
+        return road.lanes.filter { it.laneId.toString() == laneId }.take(1)[0]
     }
 
     fun getLanesFromConnection(currentLane: Lane, con: Connection): List<Lane> {

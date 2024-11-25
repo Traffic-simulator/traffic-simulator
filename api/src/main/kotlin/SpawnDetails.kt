@@ -1,3 +1,4 @@
+import vehicle.Direction
 import java.util.ArrayList
 
 /**
@@ -6,5 +7,5 @@ import java.util.ArrayList
  * First element of pair - RoadId.
  * Second element of pair - LaneId.
  */
-class SpawnDetails(val spawnPair: ArrayList<Triple<String, String, ISimulation.Direction>>) {
+class SpawnDetails(val spawnPair: ArrayList<Triple<String, String, Direction>>) {
 }
