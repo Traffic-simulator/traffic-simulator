@@ -17,7 +17,7 @@ fun main() {
 
     println(openDRIVE.road.size)
 
-    val simulator: Simulator = Simulator(openDRIVE, SpawnDetails(ArrayList<Pair<String, String>>()), 228);
+    val simulator: Simulator = Simulator(openDRIVE, SpawnDetails(ArrayList<Triple<String, String, ISimulation.Direction>>()), 228);
 
     MovingRectangle.jfxStart(simulator)
 
