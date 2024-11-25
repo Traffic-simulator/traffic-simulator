@@ -4,7 +4,7 @@ import SimulationConfig
 import network.Lane
 import vehicle.model.IDM
 
-class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
+class Vehicle(val vehicleId: Int, var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
 
     val width = 1.7
     val length = 4.5
@@ -68,15 +68,16 @@ class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0
         this.lane.addVehicle(this)
     }
 
-    // TODO: Do we need factory?
     companion object {
+        var counter: Int =  0
+
         fun NewVehicle(lane: Lane, maxSpeed: Double, maxAcc: Double): Vehicle {
-            return Vehicle(lane, maxSpeed, maxAcc)
+            return Vehicle(counter++, lane, maxSpeed, maxAcc)
         }
 
         // Some non standard default parameters
         fun NewVehicle(lane: Lane): Vehicle {
-            return Vehicle(lane)
+            return Vehicle(counter++, lane)
         }
     }
 

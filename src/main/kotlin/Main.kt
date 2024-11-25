@@ -2,6 +2,7 @@ package trafficsim
 
 import OpenDriveReader
 import Simulator
+import SpawnDetails
 import java.util.*
 
 fun main() {
@@ -16,7 +17,7 @@ fun main() {
 
     println(openDRIVE.road.size)
 
-    val simulator: Simulator = Simulator(openDRIVE);
+    val simulator: Simulator = Simulator(openDRIVE, SpawnDetails(ArrayList<Pair<String, String>>()), 228);
 
     MovingRectangle.jfxStart(simulator)
 

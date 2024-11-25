@@ -15,6 +15,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation(project(":xodr_parser"))
+    implementation(project(":api"))
 
     // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'

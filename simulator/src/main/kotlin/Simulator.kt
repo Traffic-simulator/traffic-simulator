@@ -5,15 +5,15 @@ import vehicle.model.MOBIL
 import java.util.*
 import kotlin.math.abs
 
-class Simulator(openDrive: OpenDRIVE) {
+class Simulator(openDrive: OpenDRIVE, spawnDetails: SpawnDetails, seed: Long) {
 
     val network: Network = Network(openDrive.road, openDrive.junction)
-    val rnd= Random()
+    val rnd = Random(seed)
     var spawnTimer = 2.0
 
     // TODO: Correct lane id checking
     // TODO: staged updates
-    fun update(dt: Double) {
+    fun update(dt: Double): ArrayList<Vehicle> {
 
         // Stage x: non mandatory lane changes
         vehicles.forEach { it ->
@@ -45,6 +45,8 @@ class Simulator(openDrive: OpenDRIVE) {
             addVehicle()
             spawnTimer = 0.0
         }
+
+        return vehicles
     }
 
     val vehicles: ArrayList<Vehicle> = ArrayList()

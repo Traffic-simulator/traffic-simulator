@@ -1,7 +1,3 @@
-package ru.nsu.trafficsimulator
-
-import opendrive.OpenDRIVE
-import opendrive.TRoad
 
 interface ISimulation {
     /**
@@ -17,11 +13,23 @@ interface ISimulation {
     }
 
     /**
+     * Direction of vehicle in relation of road reference line direction.
+     * I.e. if direction is FORWARD then distance is computing from start of the reference line.
+     * If direction is BACKWARD then distance is computing from end of the reference line.
+     *
+     * Maybe will be excluded later...
+     */
+    enum class Direction {
+        FORWARD,
+        BACKWARD;
+    }
+
+    /**
      * Class for communicating information about vehicles and their positions of the road
      * Distance specifies distance from the start of the road
      * Distance should be positive, and less than length of the road
      */
-    data class VehicleDTO(val id: Int, val road: TRoad, val laneId: Int, val type: VehicleType, val distance: Double)
+    data class VehicleDTO(val id: Int, val road: opendrive.TRoad, val laneId: Int, val type: VehicleType, val distance: Double, val direction: Direction)
 
     /**
      * Initialize simulation state with.
@@ -31,11 +39,11 @@ interface ISimulation {
      * TODO: specify userData layout
      * @param layout Layout to initialize simulation
      */
-    fun init(layout: OpenDRIVE): Error?
+    fun init(layout: opendrive.OpenDRIVE, spawnDetails: SpawnDetails, seed: Long): Error?
 
     /**
      * Calculate next vehicle positions after a set amount of time
      * @param deltaTime time interval to simulate
      */
-    fun getNextFrame(deltaTime: Double): Array<VehicleDTO>
+    fun getNextFrame(deltaTime: Double): List<VehicleDTO>
 }

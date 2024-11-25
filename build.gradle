@@ -87,6 +87,7 @@ dependencies {
   implementation(project(":xodr_parser"))
   implementation(project(":javafx_simple_visual"))
   implementation(project(":simulator"))
+  implementation(project(":api"))
 }
 
 subprojects {
