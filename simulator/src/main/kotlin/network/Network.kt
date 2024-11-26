@@ -84,7 +84,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                     } as ArrayList<Lane>?
                 }
             // Road <- Junction -> Road
-            } else if (road.successor?.elementType == ERoadLinkElementType.ROAD) {
+            } else if (road.successor?.elementType == ERoadLinkElementType.JUNCTION) {
                 val junc = junctions.firstOrNull { it.id == road.successor!!.elementId }!!  // that junction
                 // get connections by incomingId, even for predecessor junction
                 val connections = junc.connections[road.id]!!
