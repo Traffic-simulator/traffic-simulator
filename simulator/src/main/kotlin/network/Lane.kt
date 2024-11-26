@@ -20,8 +20,8 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
     // TODO: flag if the next lane is from junction
     // List for lanes from roads AND from junctions and for strange asam.net:xodr:1.4.0:road.lane.link.multiple_connections.
-    var predecessor: ArrayList<Lane>? = null
-    var successor: ArrayList<Lane>? = null
+    var predecessor: ArrayList<Pair<Lane, Boolean>>? = null
+    var successor: ArrayList<Pair<Lane, Boolean>>? = null
 
     // TODO: Handle move to the next line
     fun addVehicle(vehicle: Vehicle) {
@@ -62,7 +62,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         }
 
         // TODO: If successor.size > 1 do we need graph traversal? Or only the our next line. Because junction will block if need
-        return nextLane.get(0).getLastVehicle(road.troad.length - vehicle.position)
+        return nextLane.get(0).first.getLastVehicle(road.troad.length - vehicle.position)
     }
 
     private fun getLastVehicle(accDistance: Double): Pair<Vehicle?, Double> {
@@ -74,7 +74,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
             }
 
             // TODO: If successor.size > 1 do we need graph traversal? Or only the our next line. Because junction will block if need
-            return nextLane.get(0).getLastVehicle(accDistance + road.troad.length)
+            return nextLane.get(0).first.getLastVehicle(accDistance + road.troad.length)
         }
 
         var result = vehicles[0]
@@ -119,7 +119,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         }
 
         // TODO: If predecessor.size > 1 have to do graph traversal...
-        return nextLane.get(0).getFirstVehicle(vehicle.position - vehicle.length)
+        return nextLane.get(0).first.getFirstVehicle(vehicle.position - vehicle.length)
     }
 
 
@@ -132,7 +132,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
             }
 
             // TODO: If predecessor.size > 1 have to do graph traversal...
-            return nextLane.get(0).getFirstVehicle(accDistance + road.troad.length)
+            return nextLane.get(0).first.getFirstVehicle(accDistance + road.troad.length)
         }
 
         var result = vehicles[0]

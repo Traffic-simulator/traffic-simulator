@@ -40,7 +40,7 @@ class Vehicle(val vehicleId: Int, var lane: Lane, val maxSpeed: Double = 33.0, v
             // TODO: We can't go just to 0 lane with junctions.
             val nextLane = if (lane.laneId > 0) lane.successor else lane.predecessor
             if (nextLane != null && nextLane.size > 0) {
-                setNewLane(nextLane.get(0))
+                setNewLane(nextLane[0].first)
                 position = newPosition
             } else {
                 // Despawn vehicle
