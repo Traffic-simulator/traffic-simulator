@@ -1,11 +1,12 @@
 package ru.nsu.trafficsimulator.model
 
 class Layout {
-    private val roads = mutableSetOf<Road>()
-    private val intersections = mutableSetOf<Intersection>()
+    val roads = mutableSetOf<Road>()
+    val intersectionRoads = mutableSetOf<IntersectionRoad>()
+    val intersections = mutableSetOf<Intersection>()
 
-    private var roadIdCount = 0
-    private var intersectionIdCount = 0
+    private var roadIdCount: Long = 0
+    private var intersectionIdCount: Long = 0
 
     fun addRoad(startPosition: Point, endPosition: Point): Road {
         val startIntersection = addIntersection(startPosition)
@@ -29,14 +30,6 @@ class Layout {
         return newRoad
     }
 
-    fun addIntersection(position: Point): Intersection {
-        val newIntersectionId = intersectionIdCount
-        val newIntersection = Intersection(newIntersectionId, position)
-        intersections.add(newIntersection)
-        intersectionIdCount++
-        return (newIntersection)
-    }
-
     fun deleteRoad(road: Road) {
         val start = road.startIntersection
         start.removeRoad(road)
@@ -53,7 +46,16 @@ class Layout {
         road.endIntersection.removeRoad(road)
     }
 
-    fun deleteIntersection(intersection: Intersection) {
+    private fun addIntersection(position: Point): Intersection {
+        val newIntersectionId = intersectionIdCount
+        val newIntersection = Intersection(newIntersectionId, position)
+        intersections.add(newIntersection)
+        intersectionIdCount++
+        return (newIntersection)
+    }
+
+
+    private fun deleteIntersection(intersection: Intersection) {
         for (road in intersection.getIncomingRoads()) {
             deleteRoad(road)
         }

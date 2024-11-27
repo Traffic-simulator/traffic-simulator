@@ -1,10 +1,10 @@
 package ru.nsu.trafficsimulator.model
 
 data class Road(
-    val id: Int,
+    val id: Long,
     var startIntersection: Intersection,
     var endIntersection: Intersection,
-    var len: Double,
+    var length: Double,
     var leftLane : Int = 1,
     var rightLane : Int = 1,
 )

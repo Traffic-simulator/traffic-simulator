@@ -1,11 +1,13 @@
 package ru.nsu.trafficsimulator.model
 
 data class Intersection(
-    val id: Int,
+    val id: Long,
     var position: Point,
     var buildingId: Int? = null
 ) {
-    private val incomingRoads: MutableSet<Road> = HashSet()
+    protected val incomingRoads: MutableSet<Road> = HashSet()
+    protected val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
+
 
     fun addRoad(road: Road) {
         incomingRoads.add(road)
