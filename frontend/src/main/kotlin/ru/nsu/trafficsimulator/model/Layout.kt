@@ -32,7 +32,7 @@ class Layout {
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
-        val incomingRoads = intersection.getIncomingRoads()
+        val incomingRoads = intersection.incomingRoads
         for (incomingRoad in incomingRoads) {
             val outIR = IntersectionRoad(
                 roadIdCount++,
@@ -79,7 +79,7 @@ class Layout {
 
 
     private fun deleteIntersection(intersection: Intersection) {
-        for (road in intersection.getIncomingRoads()) {
+        for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
     }

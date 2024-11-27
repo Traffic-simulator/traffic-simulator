@@ -17,7 +17,5 @@ data class Intersection(
         incomingRoads.remove(road)
     }
 
-    fun getIncomingRoads(): Set<Road> = incomingRoads.toSet()
-
     fun getIncomingRoadsCount(): Int = incomingRoads.size
 }
