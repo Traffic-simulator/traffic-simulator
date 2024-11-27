@@ -27,9 +27,10 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Vec3
+import kotlin.math.abs
 
 
-class Main : ApplicationAdapter() {
+class Main() : ApplicationAdapter() {
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
     private var imGuiGl3: ImGuiImplGl3 = ImGuiImplGl3()
@@ -41,7 +42,7 @@ class Main : ApplicationAdapter() {
     private var sceneAsset: SceneAsset? = null
     private var tmpInputProcessor: InputProcessor? = null
     private var layout: Layout = Layout()
-
+    private var layoutModel: Model? = null
 
     companion object {
         fun createLayoutMesh(layout: Layout): Model {
@@ -60,8 +61,8 @@ class Main : ApplicationAdapter() {
                 if (halfLen < 0)
                     continue
                 val halfDir = dir.normalized() * halfLen
-                val right = halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * 2.0 * laneWidth
-                node.translation.set(pos.x.toFloat(), pos.y.toFloat(), pos.z.toFloat())
+                val right = halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * laneWidth
+                node.translation.set(pos.toGdxVec())
                 meshPartBuilder = modelBuilder.part("road${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
                 BoxShapeBuilder.build(
                     meshPartBuilder,
@@ -74,6 +75,161 @@ class Main : ApplicationAdapter() {
                     Vector3((halfDir.x - right.x).toFloat(), 0.0f, (halfDir.z - right.z).toFloat()),
                     Vector3((halfDir.x + right.x).toFloat(), 0.0f, (halfDir.z + right.z).toFloat()),
                 )
+            }
+
+            val getDistanceToSegment = { point: Vec3, from: Vec3, to: Vec3 ->
+                val dir = to - from
+                val t = Math.clamp((point - from).dot(dir) / dir.lengthSq(), 0.0, 1.0)
+                val projected = from + dir * t
+                (point - projected).length()
+            }
+
+            val intersectionBoxSize = 20.0
+            val samplePerSide = 40
+            val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
+            val upVec = Vec3(0.0, roadHeight, 0.0)
+            for (intersection in layout.getIntersections()) {
+                val node = modelBuilder.node()
+                node.translation.set(intersection.position.toGdxVec())
+                meshPartBuilder = modelBuilder.part("intersection${intersection.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+                val intersectionSdf = { local: Vec3 ->
+                    val point = intersection.position + local
+                    var minDist = intersectionBoxSize * intersectionBoxSize
+                    for (road in intersection.getIncomingRoads()) {
+                        val dist = getDistanceToSegment(point, road.startIntersection.position, road.endIntersection.position)
+                        if (abs(dist) < abs(minDist))
+                            minDist = dist
+                    }
+                    minDist - laneWidth
+                }
+                val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
+                    meshPartBuilder.rect(
+                        a.toGdxVec(),
+                        (a + upVec).toGdxVec(),
+                        (b + upVec).toGdxVec(),
+                        b.toGdxVec(),
+                        normal.toGdxVec()
+                    )
+                }
+                val leftBottomCorner = Vec3(-intersectionBoxSize / 2.0, 0.0, -intersectionBoxSize / 2.0)
+//                val patterns = arrayOf(
+//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and !bType and !cType and !dType}
+//                        to { a: Vec3, b: Vec3, c: Vec3, _: Vec3 ->
+//                            val normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+//                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
+//                        },
+//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType}
+//                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+//                            insertRect((a + c) / 2.0, (b + d) / 2.0, (c - a).normalized())
+//                        },
+//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
+//                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+//                            var normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+//                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
+//                            normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+//                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
+//                        },
+//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
+//                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+//                            val normal = -(b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+//                            insertRect((a + b) / 2.0, (a + c) / 2.0, normal)
+//                        },
+//                )
+                for (i in 0..<(samplePerSide - 1)) {
+                    for (j in 0..<(samplePerSide - 1)) {
+                        val a = leftBottomCorner + Vec3(i * cellSize, 0.0, j * cellSize)
+                        val b = leftBottomCorner + Vec3((i + 1) * cellSize, 0.0, j * cellSize)
+                        val c = leftBottomCorner + Vec3(i * cellSize, 0.0, (j + 1) * cellSize)
+                        val d = leftBottomCorner + Vec3((i + 1) * cellSize, 0.0, (j + 1) * cellSize)
+                        val aSample = intersectionSdf(a)
+                        val bSample = intersectionSdf(b)
+                        val cSample = intersectionSdf(c)
+                        val dSample = intersectionSdf(d)
+                        val aType = aSample > 0.0
+                        val bType = bSample > 0.0
+                        val cType = cSample > 0.0
+                        val dType = dSample > 0.0
+                        if ((aType == bType) && (bType == cType) && (cType == dType))
+                            continue
+//
+//                        for ((match, action) in patterns) {
+//                            if (match(aType, bType, cType, dType)) {
+//                                action(a, b, c, d)
+//                                break;
+//                            } else if (match(bType, cType, dType, aType)) {
+//                                action(b, c, d, a)
+//                                break;
+//                            } else if (match(cType, dType, aType, bType)) {
+//                                action(c, d, a, b)
+//                                break;
+//                            } else if (match(dType, aType, bType, cType)) {
+//                                action(d, a, b, c)
+//                                break;
+//                            }
+//                        }
+                        if (aType and !bType and !cType and !dType) {
+                            val normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
+                            continue
+                        } else if (bType and !aType and !cType and !dType) {
+                            val normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
+                            continue
+                        } else if (cType and !aType and !bType and !dType) {
+                            val normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
+                            continue
+                        } else if (dType and !aType and !cType and !bType) {
+                            val normal = (c - b).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((d + b) / 2.0, (d + c) / 2.0, normal)
+                            continue
+                        }
+
+                        if (aType and bType and !cType and !dType) {
+                            insertRect((a + c) / 2.0, (b + d) / 2.0, Vec3(0.0, 0.0, 1.0))
+                            continue
+                        } else if (bType and dType and !aType and !cType) {
+                            insertRect((a + b) / 2.0, (d + c) / 2.0, Vec3(-1.0, 0.0, 0.0))
+                            continue
+                        } else if (dType and cType and !aType and !bType) {
+                            insertRect((b + d) / 2.0, (a + c) / 2.0, Vec3(0.0, 0.0, -1.0))
+                            continue
+                        } else if (aType and cType and !bType and !dType) {
+                            insertRect((d + c) / 2.0, (a + b) / 2.0, Vec3(1.0, 0.0, 0.0))
+                            continue
+                        } else if (aType and dType and !bType and !cType) {
+                            var normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
+                            normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
+                            continue
+                        } else if (bType and cType and !aType and !dType) {
+                            var normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
+                            normal = (c - b).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((d + b) / 2.0, (d + c) / 2.0, normal)
+                            continue
+                        }
+
+                        if (!aType and bType and cType and dType) {
+                            val normal = -(b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((a + b) / 2.0, (a + c) / 2.0, normal)
+                            continue
+                        } else if (!bType and aType and cType and dType) {
+                            val normal = -(d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((b + d) / 2.0, (b + a) / 2.0, normal)
+                            continue
+                        } else if (!cType and aType and bType and dType) {
+                            val normal = -(a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((c + a) / 2.0, (c + d) / 2.0, normal)
+                            continue
+                        } else if (!dType and aType and cType and bType) {
+                            val normal = -(c - b).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((d + c) / 2.0, (d + b) / 2.0, normal)
+                            continue
+                        }
+                    }
+                }
             }
 
             return modelBuilder.end()
@@ -108,15 +264,16 @@ class Main : ApplicationAdapter() {
         camController.translateUnits = 100.0f
         Gdx.input.inputProcessor = camController
 
-        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, 0.0))
-        layout.addRoad(Vec3(100.0, 0.0, -100.0), Vec3(100.0, 0.0, 0.0))
-        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 100.0))
-        layout.addRoad(Vec3(100.0, 0.0, 100.0), Vec3(0.0, 0.0, 100.0))
-        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, 100.0))
-        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, -100.0))
-        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
-        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, -100.0))
-        val layoutModel = createLayoutMesh(layout)
+        val inter1 = layout.addIntersection(Vec3(0.0, 0.0, 0.0))
+        layout.addRoad(inter1, Vec3(100.0, 0.0, 0.0))
+//        layout.addRoad(Vec3(100.0, 0.0, -100.0), Vec3(100.0, 0.0, 0.0))
+        layout.addRoad(inter1, Vec3(0.0, 0.0, 100.0))
+//        layout.addRoad(Vec3(100.0, 0.0, 100.0), Vec3(0.0, 0.0, 100.0))
+        layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
+        layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
+//        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
+//        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, -100.0))
+        layoutModel = createLayoutMesh(layout)
         val layoutScene = Scene(layoutModel)
         sceneManager?.addScene(layoutScene)
     }
