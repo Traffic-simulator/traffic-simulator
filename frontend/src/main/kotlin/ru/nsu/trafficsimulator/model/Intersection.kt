@@ -5,8 +5,8 @@ data class Intersection(
     var position: Point,
     var buildingId: Int? = null
 ) {
-    protected val incomingRoads: MutableSet<Road> = HashSet()
-    protected val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
+    val incomingRoads: MutableSet<Road> = HashSet()
+    val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
 
 
     fun addRoad(road: Road) {

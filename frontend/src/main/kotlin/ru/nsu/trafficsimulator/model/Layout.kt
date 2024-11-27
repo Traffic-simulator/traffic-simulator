@@ -1,9 +1,9 @@
 package ru.nsu.trafficsimulator.model
 
 class Layout {
-    val roads = mutableSetOf<Road>()
-    val intersectionRoads = mutableSetOf<IntersectionRoad>()
-    val intersections = mutableSetOf<Intersection>()
+    val layoutRoads = mutableSetOf<Road>()
+    val layoutIntersectionRoads = mutableSetOf<IntersectionRoad>()
+    val layoutIntersections = mutableSetOf<Intersection>()
 
     private var roadIdCount: Long = 0
     private var intersectionIdCount: Long = 0
@@ -20,14 +20,38 @@ class Layout {
     }
 
     fun addRoad(startIntersection: Intersection, endIntersection: Intersection): Road {
-        val newRoadId = roadIdCount
+        val newRoadId = roadIdCount++
         val length = endIntersection.position.distance(startIntersection.position)
         val newRoad = Road(newRoadId, startIntersection, endIntersection, length)
-        startIntersection.addRoad(newRoad)
-        endIntersection.addRoad(newRoad)
-        roads.add(newRoad)
-        roadIdCount++
+
+        connectRoadToIntersection(newRoad, startIntersection)
+        connectRoadToIntersection(newRoad, endIntersection)
+
+        layoutRoads.add(newRoad)
         return newRoad
+    }
+
+    private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
+        val incomingRoads = intersection.getIncomingRoads()
+        for (incomingRoad in incomingRoads) {
+            val outIR = IntersectionRoad(
+                roadIdCount++,
+                intersection,
+                road,
+                incomingRoad,
+                1.0
+            )
+            intersection.intersectionRoads.add(outIR)
+            val inIR = IntersectionRoad(
+                roadIdCount++,
+                intersection,
+                incomingRoad,
+                road,
+                1.0
+            )
+            intersection.intersectionRoads.add(inIR)
+        }
+        intersection.addRoad(road)
     }
 
     fun deleteRoad(road: Road) {
@@ -47,10 +71,9 @@ class Layout {
     }
 
     private fun addIntersection(position: Point): Intersection {
-        val newIntersectionId = intersectionIdCount
+        val newIntersectionId = intersectionIdCount++
         val newIntersection = Intersection(newIntersectionId, position)
-        intersections.add(newIntersection)
-        intersectionIdCount++
+        layoutIntersections.add(newIntersection)
         return (newIntersection)
     }
 
