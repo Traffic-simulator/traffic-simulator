@@ -86,7 +86,7 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
         if (nextLaneList != null && nextLaneList.size > 0) {
 
             // TODO: We can't go just to 0 lane with junctions.
-            val nextLane = nextLaneList.get(0)
+            val nextLane = nextLaneList.get(0).first
 
             // If was blockingJunction have to unlock
             // TODO: If connection is junc to junc?... By idea have to detect it before and block before...
