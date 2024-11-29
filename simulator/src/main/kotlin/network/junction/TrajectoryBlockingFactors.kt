@@ -17,16 +17,18 @@ class TrajectoryBlockingFactors {
         DEFAULT(1),
     }
 
-    var blockingFactors = ArrayList<BlockingFactor>()
+    var blockingFactors: MutableList<BlockingFactor> = ArrayList<BlockingFactor>()
 
     // Be careful. Can be muptiple same adds.
     fun addBlockingFactor(reason: BlockingReason, vehicleId: Int) {
-        blockingFactors.add(BlockingFactor(reason, vehicleId))
+        if (blockingFactors.find{ it.reason == reason && it.vehicleId == vehicleId } == null) {
+            blockingFactors.add(BlockingFactor(reason, vehicleId))
+        }
     }
 
     fun removeBlockingFactor(reason: BlockingReason, vehicleId: Int) {
         // TODO: need smarter logic
-        blockingFactors = blockingFactors.filter{ it.reason != reason || it.vehicleId != vehicleId }.toList() as ArrayList<BlockingFactor>
+        blockingFactors = blockingFactors.filter{ it.reason != reason || it.vehicleId != vehicleId }.toMutableList()
     }
 
 //    fun update(deltaTime: double) {

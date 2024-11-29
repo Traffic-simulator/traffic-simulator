@@ -76,7 +76,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         }
 
         // TODO: If successor.size > 1 do we need graph traversal? Or only the our next line. Because junction will block if need
-        return nextLane.get(0).first.getLastVehicle(road.troad.length - vehicle.position)
+        return nextLane.get(0).first.getLastVehicleInternal(vehicle.direction.opposite(nextLane.get(0).second), road.troad.length - vehicle.position)
     }
 
     private fun getLastVehicleInternal(direction: Direction, accDistance: Double): Pair<Vehicle?, Double> {
@@ -88,7 +88,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
             }
 
             // TODO: If successor.size > 1 do we need graph traversal? Or only the our next line. Because junction will block if need
-            return nextLane.get(0).first.getLastVehicle(accDistance + road.troad.length)
+            return nextLane.get(0).first.getLastVehicleInternal(direction.opposite(nextLane.get(0).second), accDistance + road.troad.length)
         }
 
         var result = vehicles[0]
@@ -133,7 +133,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         }
 
         // TODO: If predecessor.size > 1 have to do graph traversal...
-        return nextLane.get(0).first.getFirstVehicle(vehicle.position - vehicle.length)
+        return nextLane.get(0).first.getFirstVehicleInternal(vehicle.direction.opposite(nextLane.get(0).second), vehicle.position - vehicle.length)
     }
 
 
@@ -146,7 +146,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
             }
 
             // TODO: If predecessor.size > 1 have to do graph traversal...
-            return nextLane.get(0).first.getFirstVehicle(accDistance + road.troad.length)
+            return nextLane.get(0).first.getFirstVehicleInternal(direction.opposite(nextLane.get(0).second), accDistance + road.troad.length)
         }
 
         var result = vehicles[0]
@@ -159,7 +159,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         return Pair(result, distance)
     }
 
-    fun getNextLane(direction: Direction): ArrayList<Lane>? {
+    fun getNextLane(direction: Direction): ArrayList<Pair<Lane, Boolean>>? {
         if (direction == Direction.FORWARD)
             return successor
         return predecessor

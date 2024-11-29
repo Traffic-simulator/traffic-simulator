@@ -117,7 +117,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
             }
         }
 
-        verbose()
+        // verbose()
     }
 
     fun getRoadById(id: String): Road {

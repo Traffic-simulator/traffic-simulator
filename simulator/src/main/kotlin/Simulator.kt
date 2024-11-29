@@ -29,7 +29,7 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long
         vehicles.removeAll { it.despawned == true}
 
         spawnTimer += dt
-        if (spawnTimer >= 0.5) {
+        if (spawnTimer >= 2.0) {
             addVehicle()
             spawnTimer = 0.0
         }
@@ -75,6 +75,8 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long
 
     fun addVehicle() {
         val availablePositions = spawnDetails.spawnPair.filter { isPositionFree(it) }
+        if (availablePositions.isEmpty()) return
+
         val idx = rnd.nextInt(availablePositions.size)
 
         val nw = Vehicle.NewVehicle(

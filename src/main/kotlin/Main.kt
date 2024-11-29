@@ -22,7 +22,7 @@ fun initJunctionSimulator(odr: OpenDriveReader): Simulator {
     println(openDRIVE.road.size)
 
     val spawnDetails = ArrayList<Triple<String, String, Direction>>()
-    spawnDetails.add(Triple("0", "1", Direction.BACKWARD))
+    // spawnDetails.add(Triple("0", "1", Direction.BACKWARD))
     spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
     spawnDetails.add(Triple("6", "1", Direction.BACKWARD))
     spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
@@ -45,4 +45,16 @@ fun initSegmentRoadSimulator(odr: OpenDriveReader): Simulator {
     return simulator
 }
 
+fun initTown01Simulator(odr: OpenDriveReader): Simulator {
+    val openDRIVE = odr.read("Town01.xodr")
+    println(openDRIVE.road.size)
 
+    val spawnDetails = ArrayList<Triple<String, String, Direction>>()
+    spawnDetails.add(Triple("6", "-1", Direction.FORWARD))
+    //spawnDetails.add(Triple("57", "2", Direction.BACKWARD))
+    // spawnDetails.add(Triple("21", "-1", Direction.FORWARD))
+    // spawnDetails.add(Triple("21", "-2", Direction.FORWARD))
+
+    val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), 228);
+    return simulator
+}

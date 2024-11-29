@@ -49,14 +49,14 @@ class Junction(val tjunction: TJunction) {
         }
 
         // Blocking trajectory
-        trajBlockList.forEach { trajBlockingFactors[connectingRoadId]!!.addBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
+        trajBlockList[connectingRoadId]!!.blockList.forEach { trajBlockingFactors[it.connectingRoad]!!.addBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
         return true
     }
 
     fun unlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int) {
         assert(trajBlockingFactors[connectingRoadId] != null)
 
-        trajBlockList.forEach { trajBlockingFactors[connectingRoadId]!!.removeBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
+        trajBlockList[connectingRoadId]!!.blockList.forEach { trajBlockingFactors[it.connectingRoad]!!.removeBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
     }
 
 }

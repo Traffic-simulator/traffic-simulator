@@ -10,4 +10,18 @@ package vehicle
 enum class Direction {
     FORWARD,
     BACKWARD;
+
+    fun opposite(dir: Direction): Direction {
+        if (dir == FORWARD) {
+            return BACKWARD
+        }
+        return FORWARD
+    }
+
+    fun opposite(flag: Boolean): Direction {
+        if (flag) {
+            return this.opposite(this)
+        }
+        return this
+    }
 }

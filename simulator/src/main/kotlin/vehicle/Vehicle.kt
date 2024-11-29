@@ -27,6 +27,8 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
 
     // TODO: How to handle road narrowing without junction
     fun update(deltaTime: Double) {
+        println("Veh id: ${vehicleId}, Road id: ${lane.roadId}, Line id: ${lane.laneId}, Position: ${position}, Speed: ${speed}, Direction: ${direction}")
+
         // TODO: have to rely on PATH
         val closestJunction = getClosestJunction()
         var junctionAcc = SimulationConfig.INF
@@ -35,16 +37,16 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
         //When close (TODO: how is depending on Block factor) to junction need block it.
         // TODO: smart distance logic... Multiple params... Depends on block type..
         val some_distance = 200.0
-        if (closestJunction != null && closestJunction.second < some_distance) {
-            val junction = network.getJunctionById(closestJunction.first)
+        if (closestJunction != null && closestJunction.distance < some_distance) {
+            val junction = network.getJunctionById(closestJunction.junctionId)
 
             // TODO: Еще нужно следить, что ранее не блокировали, а в прочем пофиг...
             // Быть внимательным, если траектория заблокирована машиной перед нами (то есть мы можем проехать)
             // Не смотря на это заблокироваться от нас она тоже должна.
-            if (junction.tryBlockTrajectoryVehicle(closestJunction.third, vehicleId)) {
+            if (junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
 
             } else {
-                junctionAcc = IDM.getAcceleration(this, this.speed, closestJunction.second)
+                junctionAcc = IDM.getAcceleration(this, this.speed, closestJunction.distance)
             }
         }
 
@@ -52,6 +54,10 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
         acc = Math.min(junctionAcc, IDM.getAcceleration(this, nextVeh.first, nextVeh.second))
 
         speed += acc
+        speed = Math.max(speed, 0.0)
+        if (speed < SimulationConfig.EPS * 10.0) {
+            speed = 0.0
+        }
         position += speed * deltaTime
         laneChangeTimer -= deltaTime
 
@@ -61,22 +67,26 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
         }
     }
 
+    data class ClosestJunction(val junctionId: String, val distance: Double, val connectingRoadId: String) {
+
+    }
+
     // Returns JunctionId, DistanceToJunction, ConnectorRoadId
     // TODO: What to do if currently on junction?
-    private fun getClosestJunction(): Triple<String, Double, String>? {
+    private fun getClosestJunction(): ClosestJunction? {
         // TODO: Have to rely on path - maybe even PathModule, but now just random or 0.
         // TODO: Don't we need to copy?
 
-        var tmp_lane: Lane? = lane.getNextLane(direction)?.first
+        var tmp_lane: Lane? = lane.getNextLane(direction)?.first?.first
         var accDist = lane.road.troad.length - position
         while (tmp_lane != null && tmp_lane.road.junction == "-1") {
             accDist += tmp_lane.road.troad.length
-            tmp_lane = tmp_lane.getNextLane(direction)?.first
+            tmp_lane = tmp_lane.getNextLane(direction)?.first?.first
         }
         if (tmp_lane == null) {
             return null
         }
-        return Triple(tmp_lane.road.junction, accDist, tmp_lane.roadId)
+        return ClosestJunction(tmp_lane.road.junction, accDist, tmp_lane.roadId)
     }
 
     private fun moveToNextLane(): Boolean {
@@ -86,16 +96,20 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
         if (nextLaneList != null && nextLaneList.size > 0) {
 
             // TODO: We can't go just to 0 lane with junctions.
-            val nextLane = nextLaneList.get(0).first
+            val nextLane = nextLaneList.get(0)
+
 
             // If was blockingJunction have to unlock
             // TODO: If connection is junc to junc?... By idea have to detect it before and block before...
-            if (lane.road.junction != "-1" && nextLane.road.junction != lane.road.junction) {
+            if (lane.road.junction != "-1" && nextLane.first.road.junction != lane.road.junction) {
                 // TODO: is it correct roadId?
                 network.getJunctionById(lane.road.junction).unlockTrajectoryVehicle(lane.roadId, vehicleId)
             }
 
-            setNewLane(nextLane)
+            if (nextLane.second) {
+                direction = direction.opposite(direction)
+            }
+            setNewLane(nextLane.first)
             position = newPosition
         } else {
             // Despawn vehicle
