@@ -5,6 +5,7 @@ data class Road(
     var startIntersection: Intersection,
     var endIntersection: Intersection,
     var length: Double,
-    var leftLane : Int = 1,
-    var rightLane : Int = 1,
+    var leftLane: Int = 1,
+    var rightLane: Int = 1,
+    val geometry: Spline? = null
 )

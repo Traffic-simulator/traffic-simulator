@@ -15,7 +15,7 @@ data class Point(val x: Double, val y: Double, val z: Double) {
 
 data class Point2(var x: Double, var y: Double) {
     fun rotate(angleRad: Double): Point2 {
-        return Point2(x * cos(angleRad) - y * sin(angleRad),  x * sin(angleRad) + y * cos(angleRad))
+        return Point2(x * cos(angleRad) - y * sin(angleRad), x * sin(angleRad) + y * cos(angleRad))
     }
 
     operator fun plus(other: Point2): Point2 {
