@@ -111,12 +111,35 @@ class Main() : ApplicationAdapter() {
                         normal.toGdxVec()
                     )
                 }
+                val getRefinedGuess = { a: Vec3, b: Vec3 ->
+                    val iterationCount = 5
+                    var guess = (a + b) / 2.0
+                    var left = a
+                    var right = b
+                    var guessType = intersectionSdf(guess) > 0
+                    val leftType = intersectionSdf(left) > 0
+                    val rightType = intersectionSdf(right) > 0
+                    assert(leftType != rightType)
+                    for (i in 0..<iterationCount) {
+                        if (guessType == rightType) {
+                            right = guess
+                            guess = (left + guess) / 2.0
+                        } else {
+                            left = guess
+                            guess = (right + guess) / 2.0
+                        }
+                        guessType = intersectionSdf(guess) > 0
+                    }
+                    guess
+                }
                 val leftBottomCorner = Vec3(-intersectionBoxSize / 2.0, 0.0, -intersectionBoxSize / 2.0)
                 val patterns = arrayOf(
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and !bType and !cType and !dType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                            val normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
+                            val abPoint = getRefinedGuess(a, b)
+                            val acPoint = getRefinedGuess(a, c)
+                            val normal = (abPoint - acPoint).cross(Vec3(0.0, -1.0, 0.0)).normalized()
+                            insertRect(acPoint, abPoint, normal)
                             meshPartBuilder.triangle(
                                     MeshPartBuilder.VertexInfo().set(
                                         (d + upVec).toGdxVec(),
@@ -131,7 +154,7 @@ class Main() : ApplicationAdapter() {
                                         null
                                     ),
                                     MeshPartBuilder.VertexInfo().set(
-                                        ((a + b) / 2.0 + upVec).toGdxVec(),
+                                        (abPoint + upVec).toGdxVec(),
                                         Vector3(0.0f, 1.0f, 0.0f),
                                         null,
                                         null
@@ -145,13 +168,13 @@ class Main() : ApplicationAdapter() {
                                     null
                                 ),
                                 MeshPartBuilder.VertexInfo().set(
-                                    ((a + b) / 2.0 + upVec).toGdxVec(),
+                                    (abPoint + upVec).toGdxVec(),
                                     Vector3(0.0f, 1.0f, 0.0f),
                                     null,
                                     null
                                 ),
                                 MeshPartBuilder.VertexInfo().set(
-                                    ((a + c) / 2.0 + upVec).toGdxVec(),
+                                    (acPoint + upVec).toGdxVec(),
                                     Vector3(0.0f, 1.0f, 0.0f),
                                     null,
                                     null
@@ -165,7 +188,7 @@ class Main() : ApplicationAdapter() {
                                     null
                                 ),
                                 MeshPartBuilder.VertexInfo().set(
-                                    ((a + c) / 2.0 + upVec).toGdxVec(),
+                                    (acPoint + upVec).toGdxVec(),
                                     Vector3(0.0f, 1.0f, 0.0f),
                                     null,
                                     null
@@ -180,35 +203,44 @@ class Main() : ApplicationAdapter() {
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                            insertRect((a + c) / 2.0, (b + d) / 2.0, (c - a).normalized())
+                            val bdPoint = getRefinedGuess(b, d)
+                            val acPoint = getRefinedGuess(a, c)
+                            val normal = -(bdPoint - acPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect(acPoint, bdPoint, normal)
                             meshPartBuilder.rect(
-                                ((a + c) / 2.0 + upVec).toGdxVec(),
+                                (acPoint + upVec).toGdxVec(),
                                 (c + upVec).toGdxVec(),
                                 (d + upVec).toGdxVec(),
-                                ((b + d) / 2.0 + upVec).toGdxVec(),
+                                (bdPoint + upVec).toGdxVec(),
                                 Vec3(0.0, 1.0, 0.0).toGdxVec()
                             )
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                            var normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
-                            normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
+                            val abPoint = getRefinedGuess(a, b)
+                            val acPoint = getRefinedGuess(a, c)
+                            val bdPoint = getRefinedGuess(b, d)
+                            val cdPoint = getRefinedGuess(c, d)
+                            var normal = (abPoint - cdPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect(abPoint, bdPoint, normal)
+                            normal = (cdPoint - abPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect(cdPoint, acPoint, normal)
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                            val normal = -(b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((a + b) / 2.0, (a + c) / 2.0, normal)
+                            val abPoint = getRefinedGuess(a, b)
+                            val acPoint = getRefinedGuess(a, c)
+                            val normal = (abPoint - acPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect(abPoint, acPoint, normal)
                             meshPartBuilder.triangle(
                                 MeshPartBuilder.VertexInfo().set(
-                                    ((a + c) / 2.0 + upVec).toGdxVec(),
+                                    (acPoint + upVec).toGdxVec(),
                                     Vector3(0.0f, 1.0f, 0.0f),
                                     null,
                                     null
                                 ),
                                 MeshPartBuilder.VertexInfo().set(
-                                    ((a + b) / 2.0 + upVec).toGdxVec(),
+                                    (abPoint + upVec).toGdxVec(),
                                     Vector3(0.0f, 1.0f, 0.0f),
                                     null,
                                     null
@@ -250,16 +282,16 @@ class Main() : ApplicationAdapter() {
                         for ((match, action) in patterns) {
                             if (match(aType, bType, cType, dType)) {
                                 action(a, b, c, d)
-                                break;
+                                break
                             } else if (match(cType, aType, dType, bType)) {
                                 action(c, a, d, b)
-                                break;
+                                break
                             } else if (match(bType, dType, aType, cType)) {
                                 action(b, d, a, c)
-                                break;
+                                break
                             } else if (match(dType, cType, bType, aType)) {
                                 action(d, c, b, a)
-                                break;
+                                break
                             }
                         }
                     }
@@ -286,7 +318,7 @@ class Main() : ApplicationAdapter() {
 
         environment = Environment()
         environment!!.set(ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f))
-        environment!!.add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, 0.8f, -0.2f))
+        environment!!.add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -0f, -1.0f, -0.2f))
 
         sceneManager = SceneManager()
         sceneAsset = GLBLoader().load(Gdx.files.internal("car.glb"))
