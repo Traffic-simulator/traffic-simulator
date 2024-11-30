@@ -12,7 +12,7 @@ class TrajectoryBlockList(me: TJunctionConnection, others: List<TJunctionConnect
     val blockList: List<TJunctionConnection>
 
     init {
-        blockList = others.filter { it != me }.toList()
+        blockList = others.filter { it.incomingRoad != me.incomingRoad }.toList()
     }
 
 }
