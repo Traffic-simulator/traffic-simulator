@@ -112,29 +112,126 @@ class Main() : ApplicationAdapter() {
                     )
                 }
                 val leftBottomCorner = Vec3(-intersectionBoxSize / 2.0, 0.0, -intersectionBoxSize / 2.0)
-//                val patterns = arrayOf(
-//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and !bType and !cType and !dType}
-//                        to { a: Vec3, b: Vec3, c: Vec3, _: Vec3 ->
-//                            val normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-//                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
-//                        },
-//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType}
-//                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-//                            insertRect((a + c) / 2.0, (b + d) / 2.0, (c - a).normalized())
-//                        },
-//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
-//                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-//                            var normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-//                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
-//                            normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-//                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
-//                        },
-//                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
-//                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-//                            val normal = -(b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-//                            insertRect((a + b) / 2.0, (a + c) / 2.0, normal)
-//                        },
-//                )
+                val patterns = arrayOf(
+                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and !bType and !cType and !dType}
+                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+                            val normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
+                            meshPartBuilder.triangle(
+                                    MeshPartBuilder.VertexInfo().set(
+                                        (d + upVec).toGdxVec(),
+                                        Vector3(0.0f, 1.0f, 0.0f),
+                                        null,
+                                        null
+                                    ),
+                                    MeshPartBuilder.VertexInfo().set(
+                                        (b + upVec).toGdxVec(),
+                                        Vector3(0.0f, 1.0f, 0.0f),
+                                        null,
+                                        null
+                                    ),
+                                    MeshPartBuilder.VertexInfo().set(
+                                        ((a + b) / 2.0 + upVec).toGdxVec(),
+                                        Vector3(0.0f, 1.0f, 0.0f),
+                                        null,
+                                        null
+                                    ),
+                                )
+                            meshPartBuilder.triangle(
+                                MeshPartBuilder.VertexInfo().set(
+                                    (d + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                                MeshPartBuilder.VertexInfo().set(
+                                    ((a + b) / 2.0 + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                                MeshPartBuilder.VertexInfo().set(
+                                    ((a + c) / 2.0 + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                            )
+                            meshPartBuilder.triangle(
+                                MeshPartBuilder.VertexInfo().set(
+                                    (d + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                                MeshPartBuilder.VertexInfo().set(
+                                    ((a + c) / 2.0 + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                                MeshPartBuilder.VertexInfo().set(
+                                    (c + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                            )
+                        },
+                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType}
+                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+                            insertRect((a + c) / 2.0, (b + d) / 2.0, (c - a).normalized())
+                            meshPartBuilder.rect(
+                                ((a + c) / 2.0 + upVec).toGdxVec(),
+                                (c + upVec).toGdxVec(),
+                                (d + upVec).toGdxVec(),
+                                ((b + d) / 2.0 + upVec).toGdxVec(),
+                                Vec3(0.0, 1.0, 0.0).toGdxVec()
+                            )
+                        },
+                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
+                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+                            var normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
+                            normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
+                        },
+                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
+                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+                            val normal = -(b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            insertRect((a + b) / 2.0, (a + c) / 2.0, normal)
+                            meshPartBuilder.triangle(
+                                MeshPartBuilder.VertexInfo().set(
+                                    ((a + c) / 2.0 + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                                MeshPartBuilder.VertexInfo().set(
+                                    ((a + b) / 2.0 + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                                MeshPartBuilder.VertexInfo().set(
+                                    (a + upVec).toGdxVec(),
+                                    Vector3(0.0f, 1.0f, 0.0f),
+                                    null,
+                                    null
+                                ),
+                            )
+                        },
+                    {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and !bType and !cType and !dType}
+                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+                            meshPartBuilder.rect(
+                                (a + upVec).toGdxVec(),
+                                (c + upVec).toGdxVec(),
+                                (d + upVec).toGdxVec(),
+                                (b + upVec).toGdxVec(),
+                                Vec3(0.0, 1.0, 0.0).toGdxVec()
+                            )
+                        },
+                )
                 for (i in 0..<(samplePerSide - 1)) {
                     for (j in 0..<(samplePerSide - 1)) {
                         val a = leftBottomCorner + Vec3(i * cellSize, 0.0, j * cellSize)
@@ -149,84 +246,21 @@ class Main() : ApplicationAdapter() {
                         val bType = bSample > 0.0
                         val cType = cSample > 0.0
                         val dType = dSample > 0.0
-                        if ((aType == bType) && (bType == cType) && (cType == dType))
-                            continue
-//
-//                        for ((match, action) in patterns) {
-//                            if (match(aType, bType, cType, dType)) {
-//                                action(a, b, c, d)
-//                                break;
-//                            } else if (match(bType, cType, dType, aType)) {
-//                                action(b, c, d, a)
-//                                break;
-//                            } else if (match(cType, dType, aType, bType)) {
-//                                action(c, d, a, b)
-//                                break;
-//                            } else if (match(dType, aType, bType, cType)) {
-//                                action(d, a, b, c)
-//                                break;
-//                            }
-//                        }
-                        if (aType and !bType and !cType and !dType) {
-                            val normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
-                            continue
-                        } else if (bType and !aType and !cType and !dType) {
-                            val normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
-                            continue
-                        } else if (cType and !aType and !bType and !dType) {
-                            val normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
-                            continue
-                        } else if (dType and !aType and !cType and !bType) {
-                            val normal = (c - b).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((d + b) / 2.0, (d + c) / 2.0, normal)
-                            continue
-                        }
 
-                        if (aType and bType and !cType and !dType) {
-                            insertRect((a + c) / 2.0, (b + d) / 2.0, Vec3(0.0, 0.0, 1.0))
-                            continue
-                        } else if (bType and dType and !aType and !cType) {
-                            insertRect((a + b) / 2.0, (d + c) / 2.0, Vec3(-1.0, 0.0, 0.0))
-                            continue
-                        } else if (dType and cType and !aType and !bType) {
-                            insertRect((b + d) / 2.0, (a + c) / 2.0, Vec3(0.0, 0.0, -1.0))
-                            continue
-                        } else if (aType and cType and !bType and !dType) {
-                            insertRect((d + c) / 2.0, (a + b) / 2.0, Vec3(1.0, 0.0, 0.0))
-                            continue
-                        } else if (aType and dType and !bType and !cType) {
-                            var normal = (d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((b + a) / 2.0, (b + d) / 2.0, normal)
-                            normal = (a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((c + d) / 2.0, (c + a) / 2.0, normal)
-                            continue
-                        } else if (bType and cType and !aType and !dType) {
-                            var normal = (b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((a + c) / 2.0, (a + b) / 2.0, normal)
-                            normal = (c - b).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((d + b) / 2.0, (d + c) / 2.0, normal)
-                            continue
-                        }
-
-                        if (!aType and bType and cType and dType) {
-                            val normal = -(b - c).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((a + b) / 2.0, (a + c) / 2.0, normal)
-                            continue
-                        } else if (!bType and aType and cType and dType) {
-                            val normal = -(d - a).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((b + d) / 2.0, (b + a) / 2.0, normal)
-                            continue
-                        } else if (!cType and aType and bType and dType) {
-                            val normal = -(a - d).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((c + a) / 2.0, (c + d) / 2.0, normal)
-                            continue
-                        } else if (!dType and aType and cType and bType) {
-                            val normal = -(c - b).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-                            insertRect((d + c) / 2.0, (d + b) / 2.0, normal)
-                            continue
+                        for ((match, action) in patterns) {
+                            if (match(aType, bType, cType, dType)) {
+                                action(a, b, c, d)
+                                break;
+                            } else if (match(cType, aType, dType, bType)) {
+                                action(c, a, d, b)
+                                break;
+                            } else if (match(bType, dType, aType, cType)) {
+                                action(b, d, a, c)
+                                break;
+                            } else if (match(dType, cType, bType, aType)) {
+                                action(d, c, b, a)
+                                break;
+                            }
                         }
                     }
                 }
