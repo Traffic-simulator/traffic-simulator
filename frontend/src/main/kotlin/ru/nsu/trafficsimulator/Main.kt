@@ -89,6 +89,7 @@ class Main() : ApplicationAdapter() {
             val samplePerSide = 40
             val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
             val upVec = Vec3(0.0, roadHeight, 0.0)
+            val upDir = Vec3(0.0, 1.0, 0.0)
             for (intersection in layout.getIntersections()) {
                 val node = modelBuilder.node()
                 node.translation.set(intersection.position.toGdxVec())
@@ -110,6 +111,28 @@ class Main() : ApplicationAdapter() {
                         (b + upVec).toGdxVec(),
                         b.toGdxVec(),
                         normal.toGdxVec()
+                    )
+                }
+                val insertTriangle = { a: Vec3, b: Vec3, c: Vec3, normal: Vec3 ->
+                    meshPartBuilder.triangle(
+                        MeshPartBuilder.VertexInfo().set(
+                            a.toGdxVec(),
+                            normal.toGdxVec(),
+                            null,
+                            null
+                        ),
+                        MeshPartBuilder.VertexInfo().set(
+                            b.toGdxVec(),
+                            normal.toGdxVec(),
+                            null,
+                            null
+                        ),
+                        MeshPartBuilder.VertexInfo().set(
+                            c.toGdxVec(),
+                            normal.toGdxVec(),
+                            null,
+                            null
+                        ),
                     )
                 }
                 val getRefinedGuess = { a: Vec3, b: Vec3 ->
@@ -141,66 +164,9 @@ class Main() : ApplicationAdapter() {
                             val acPoint = getRefinedGuess(a, c)
                             val normal = (abPoint - acPoint).cross(Vec3(0.0, -1.0, 0.0)).normalized()
                             insertRect(acPoint, abPoint, normal)
-                            meshPartBuilder.triangle(
-                                    MeshPartBuilder.VertexInfo().set(
-                                        (d + upVec).toGdxVec(),
-                                        Vector3(0.0f, 1.0f, 0.0f),
-                                        null,
-                                        null
-                                    ),
-                                    MeshPartBuilder.VertexInfo().set(
-                                        (b + upVec).toGdxVec(),
-                                        Vector3(0.0f, 1.0f, 0.0f),
-                                        null,
-                                        null
-                                    ),
-                                    MeshPartBuilder.VertexInfo().set(
-                                        (abPoint + upVec).toGdxVec(),
-                                        Vector3(0.0f, 1.0f, 0.0f),
-                                        null,
-                                        null
-                                    ),
-                                )
-                            meshPartBuilder.triangle(
-                                MeshPartBuilder.VertexInfo().set(
-                                    (d + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                                MeshPartBuilder.VertexInfo().set(
-                                    (abPoint + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                                MeshPartBuilder.VertexInfo().set(
-                                    (acPoint + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                            )
-                            meshPartBuilder.triangle(
-                                MeshPartBuilder.VertexInfo().set(
-                                    (d + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                                MeshPartBuilder.VertexInfo().set(
-                                    (acPoint + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                                MeshPartBuilder.VertexInfo().set(
-                                    (c + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                            )
+                            insertTriangle(d + upVec, b + upVec, abPoint + upVec, upDir)
+                            insertTriangle(d + upVec, abPoint + upVec, acPoint + upVec, upDir)
+                            insertTriangle(d + upVec, acPoint + upVec, c + upVec, upDir)
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
@@ -233,26 +199,7 @@ class Main() : ApplicationAdapter() {
                             val acPoint = getRefinedGuess(a, c)
                             val normal = (abPoint - acPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
                             insertRect(abPoint, acPoint, normal)
-                            meshPartBuilder.triangle(
-                                MeshPartBuilder.VertexInfo().set(
-                                    (acPoint + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                                MeshPartBuilder.VertexInfo().set(
-                                    (abPoint + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                                MeshPartBuilder.VertexInfo().set(
-                                    (a + upVec).toGdxVec(),
-                                    Vector3(0.0f, 1.0f, 0.0f),
-                                    null,
-                                    null
-                                ),
-                            )
+                            insertTriangle(acPoint + upVec, abPoint + upVec, a + upVec, upDir)
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and !bType and !cType and !dType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
