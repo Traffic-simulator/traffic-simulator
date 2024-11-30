@@ -20,6 +20,9 @@ class Layout {
         val endIntersection = addIntersection(endPosition)
         return addRoad(startIntersection, endIntersection)
     }
+    fun addRoad(startPosition: Vec3, endIntersection: Intersection): Road {
+        return addRoad(endIntersection, startPosition)
+    }
 
     fun addRoad(startIntersection: Intersection, endIntersection: Intersection): Road {
         val newRoadId = roadIdCount

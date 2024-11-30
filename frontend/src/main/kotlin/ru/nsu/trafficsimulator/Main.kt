@@ -28,6 +28,7 @@ import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Vec3
 import kotlin.math.abs
+import kotlin.time.measureTime
 
 
 class Main() : ApplicationAdapter() {
@@ -45,7 +46,7 @@ class Main() : ApplicationAdapter() {
     private var layoutModel: Model? = null
 
     companion object {
-        fun createLayoutMesh(layout: Layout): Model {
+        fun createLayoutModel(layout: Layout): Model {
             val roadHeight = 0.5
             val laneWidth = 2.0
             val intersectionPadding = 10.0f
@@ -331,15 +332,21 @@ class Main() : ApplicationAdapter() {
         Gdx.input.inputProcessor = camController
 
         val inter1 = layout.addIntersection(Vec3(0.0, 0.0, 0.0))
-        layout.addRoad(inter1, Vec3(100.0, 0.0, 0.0))
-//        layout.addRoad(Vec3(100.0, 0.0, -100.0), Vec3(100.0, 0.0, 0.0))
-        layout.addRoad(inter1, Vec3(0.0, 0.0, 100.0))
-//        layout.addRoad(Vec3(100.0, 0.0, 100.0), Vec3(0.0, 0.0, 100.0))
+        val inter2 = layout.addIntersection(Vec3(100.0, 0.0, 0.0))
+        val inter3 = layout.addIntersection(Vec3(100.0, 0.0, -100.0))
+        val inter4 = layout.addIntersection(Vec3(0.0, 0.0, 100.0))
+        layout.addRoad(inter1, inter2)
+        layout.addRoad(inter3, inter2)
+        layout.addRoad(inter1, inter4)
+        layout.addRoad(Vec3(100.0, 0.0, 100.0), inter4)
         layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
         layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
 //        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
-//        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(100.0, 0.0, -100.0))
-        layoutModel = createLayoutMesh(layout)
+        layout.addRoad(inter1, inter3)
+        val time = measureTime {
+            layoutModel = createLayoutModel(layout)
+        }
+        println("Road layout model generation took $time")
         val layoutScene = Scene(layoutModel)
         sceneManager?.addScene(layoutScene)
     }
