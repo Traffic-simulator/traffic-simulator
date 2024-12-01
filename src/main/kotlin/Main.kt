@@ -6,11 +6,15 @@ import SpawnDetails
 import vehicle.Direction
 import java.util.*
 
+
+val SEED: Long = 163
+
+
 fun main() {
     println("Hello World!")
 
     val odr = OpenDriveReader()
-    val simulator = initJunctionSimulator(odr)
+    val simulator = initTown01Simulator(odr)
 
     MovingRectangle.jfxStart(simulator)
 }
@@ -27,7 +31,7 @@ fun initJunctionSimulator(odr: OpenDriveReader): Simulator {
     spawnDetails.add(Triple("6", "1", Direction.BACKWARD))
     spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
 
-    val simulator: Simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), 228);
+    val simulator: Simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), SEED);
     return simulator
 }
 
@@ -41,7 +45,7 @@ fun initSegmentRoadSimulator(odr: OpenDriveReader): Simulator {
     spawnDetails.add(Triple("21", "-1", Direction.FORWARD))
     spawnDetails.add(Triple("21", "-2", Direction.FORWARD))
 
-    val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), 228);
+    val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), SEED);
     return simulator
 }
 
@@ -55,6 +59,6 @@ fun initTown01Simulator(odr: OpenDriveReader): Simulator {
     // spawnDetails.add(Triple("21", "-1", Direction.FORWARD))
     // spawnDetails.add(Triple("21", "-2", Direction.FORWARD))
 
-    val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), 228);
+    val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), SEED);
     return simulator
 }
