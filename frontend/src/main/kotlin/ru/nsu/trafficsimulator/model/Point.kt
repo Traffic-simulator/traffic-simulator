@@ -14,6 +14,12 @@ data class Point(val x: Double, val y: Double, val z: Double) {
 }
 
 data class Point2(var x: Double, var y: Double) {
+    fun distance(other: Point2): Double {
+        val dx = x - other.x
+        val dy = y - other.y
+        return sqrt(dx * dx + dy * dy)
+    }
+
     fun rotate(angleRad: Double): Point2 {
         return Point2(x * cos(angleRad) - y * sin(angleRad), x * sin(angleRad) + y * cos(angleRad))
     }
