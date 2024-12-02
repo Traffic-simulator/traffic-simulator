@@ -1,4 +1,4 @@
-package path_generator
+package route_generator
 
 class Path (
     startBuilding: Building,

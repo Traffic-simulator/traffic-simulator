@@ -1,4 +1,4 @@
-package network
+package network.junction
 
 import opendrive.TJunctionConnection
 

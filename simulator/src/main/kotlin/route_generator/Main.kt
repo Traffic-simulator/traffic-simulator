@@ -1,7 +1,7 @@
-package path_generator
+package route_generator
 
-import path_generator.discrete_function.DiscreteFunctionBuildings
-import path_generator.discrete_function.DiscreteFunctionPeople
+import route_generator.discrete_function.DiscreteFunctionBuildings
+import route_generator.discrete_function.DiscreteFunctionPeople
 
 object Main {
     @Throws(InterruptedException::class)
