@@ -66,7 +66,7 @@ public class MovingRectangle extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        final double dt = 0.01;
+        final double dt = 0.05;
 
         new AnimationTimer() {
             @Override public void handle(long currentNanoTime) {
@@ -74,58 +74,26 @@ public class MovingRectangle extends Application {
 
                 rectangles.forEach(it -> pane.getChildren().remove(it));
                 simulator.getVehicles().forEach(it -> {
-                    if (it.getLane().getLaneId() > 0) {
-                        var xPos = it.getPosition();
-                        var color = Color.RED;
-                        if (!it.getLane().getRoad().getId().equals("21")) {
-                            color = Color.BLUE;
-                            xPos += 190.7084;
-
-                            if (!it.getLane().getRoad().getId().equals("39")) {
-                                if (it.getPosition() > it.getLength()) {
-                                    color = Color.GREEN;
-                                }
-
-                                xPos += 16.5514;
-                            }
-                        }
-                        rectangles.add(drawRectangle(
-                            100 + xPos * 6,
-                            100 + it.getLaneNumber() * 30,
-                            it.getLength() * 12,
-                            it.getWidth() * 12,
-                            color
-                        ));
+                    var xPos = it.getPosition();
+                    var roadId = Integer.valueOf(it.getLane().getRoad().getId());
+                    Color color = Color.AQUA;
+                    if (roadId % 2 == 0) {
+                        color = Color.color((240.0f - roadId * 15) / 255, 0, (240.0f - roadId * 15) / 255);
                     } else {
-                        var xPos = it.getPosition();
-                        var color = Color.GREEN;
-                        switch(it.getLane().getRoad().getId()) {
-                            case "21":
-                                xPos += 16.5514;
-                                xPos += 75.7216;
-                                color = Color.RED;
-                                break;
-                            case "39":
-                                xPos += 75.7216;
-                                color = Color.BLUE;
-                                break;
-                            default:
-                                break;
-                        }
-                        xPos = 190.7084 + 16.6614 + 75.7216 - xPos;
-                        rectangles.add(drawRectangle(
-                            100 + xPos * 6 - it.getLength() * 12,
-                            100 + it.getLaneNumber() * 30,
-                            it.getLength() * 12,
-                            it.getWidth() * 12,
-                            color
-                        ));
+                        color = Color.color((240.0f - roadId * 15) / 255, (240.0f - roadId * 15) / 255, 0);
                     }
+                    rectangles.add(drawRectangle(
+                        100 + xPos * 8,
+                        100 + it.getLaneNumber() * 30,
+                        it.getLength() * 8,
+                        it.getWidth() * 8,
+                        color
+                    ));
                 });
 
 
                 try {
-                    Thread.sleep((int)(dt * 1000));
+                      Thread.sleep((int)(dt * 1000));
                 } catch (InterruptedException e) {
                     // Do nothing
                 }

@@ -1,4 +1,5 @@
 import opendrive.OpenDRIVE
+import vehicle.Direction
 import vehicle.Vehicle
 
 class BackendAPI : ISimulation{
@@ -26,6 +27,6 @@ class BackendAPI : ISimulation{
             vehicle.lane.laneId,
             ISimulation.VehicleType.PassengerCar,
             vehicle.position,
-            ISimulation.Direction.FORWARD)
+            Direction.FORWARD)
     }
 }
