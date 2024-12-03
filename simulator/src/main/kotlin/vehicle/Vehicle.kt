@@ -2,9 +2,12 @@ package vehicle
 
 import SimulationConfig
 import network.Lane
+import network.Network
+import path_builder.IPathBuilder
+import path_builder.RandomPathBuilder
 import vehicle.model.IDM
 
-class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
+class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var direction: Direction, val pathBuilder: IPathBuilder, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
 
     val width = 1.7
     val length = 4.5
@@ -26,29 +29,94 @@ class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0
 
     // TODO: How to handle road narrowing without junction
     fun update(deltaTime: Double) {
+        // println("Veh id: ${vehicleId}, Road id: ${lane.roadId}, Line id: ${lane.laneId}, Position: ${position}, Speed: ${speed}, Direction: ${direction}")
+
+        // TODO: have to rely on PATH
+        val closestJunction = getClosestJunction()
+        var junctionAcc = SimulationConfig.INF
+
+
+        //When close (TODO: how is depending on Block factor) to junction need block it.
+        // TODO: smart distance logic... Multiple params... Depends on block type..
+        val some_distance = 200.0
+        if (closestJunction != null && closestJunction.distance < some_distance) {
+            val junction = network.getJunctionById(closestJunction.junctionId)
+
+            // TODO: Еще нужно следить, что ранее не блокировали, а в прочем пофиг...
+            // Быть внимательным, если траектория заблокирована машиной перед нами (то есть мы можем проехать)
+            // Не смотря на это заблокироваться от нас она тоже должна.
+            if (junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
+
+            } else {
+                junctionAcc = IDM.getAcceleration(this, this.speed, closestJunction.distance)
+            }
+        }
+
+        // TODO: Not lane, have to use PathBuilder
         val nextVeh = lane.getNextVehicle(this)
-        acc = IDM.getAcceleration(this, nextVeh.first, nextVeh.second)
+        acc = Math.min(junctionAcc, IDM.getAcceleration(this, nextVeh.first, nextVeh.second))
 
         speed += acc
+        speed = Math.max(speed, 0.0)
+        if (speed < SimulationConfig.EPS * 10.0) {
+            speed = 0.0
+        }
         position += speed * deltaTime
         laneChangeTimer -= deltaTime
 
         while (position > lane.road.troad.length) {
-            val newPosition = position - lane.road.troad.length
-
-
-            // TODO: We can't go just to 0 lane with junctions.
-            val nextLane = if (lane.laneId > 0) lane.successor else lane.predecessor
-            if (nextLane != null && nextLane.size > 0) {
-                setNewLane(nextLane.get(0))
-                position = newPosition
-            } else {
-                // Despawn vehicle
-                lane.removeVehicle(this)
-                despawned = true
+            if (!moveToNextLane())
                 break
-            }
         }
+    }
+
+    data class ClosestJunction(val junctionId: String, val distance: Double, val connectingRoadId: String) {
+
+    }
+
+    // TODO: What to do if currently on junction?
+    private fun getClosestJunction(): ClosestJunction? {
+        var tmp_lane: Pair<Lane, Boolean>? = pathBuilder.getNextPathLane(this)
+        var tmp_dir: Direction = direction
+        var accDist = lane.road.troad.length - position
+
+        while (tmp_lane != null && tmp_lane.first.road.junction == "-1") {
+            tmp_dir = tmp_dir.opposite(tmp_lane.second)
+
+            accDist += tmp_lane.first.road.troad.length
+            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
+        }
+        if (tmp_lane == null) {
+            return null
+        }
+        return ClosestJunction(tmp_lane.first.road.junction, accDist, tmp_lane.first.roadId)
+    }
+
+    private fun moveToNextLane(): Boolean {
+        val newPosition = position - lane.road.troad.length
+
+        val nextLane = pathBuilder.getNextPathLane(this)
+        if (nextLane != null ) {
+
+            // If was blockingJunction have to unlock
+            // TODO: If connection is junc to junc?... By idea have to detect it before and block before...
+            if (lane.road.junction != "-1" && nextLane.first.road.junction != lane.road.junction) {
+                // TODO: is it correct roadId?
+                network.getJunctionById(lane.road.junction).unlockTrajectoryVehicle(lane.roadId, vehicleId)
+            }
+
+            if (nextLane.second) {
+                direction = direction.opposite(direction)
+            }
+            setNewLane(nextLane.first)
+            position = newPosition
+        } else {
+            // Despawn vehicle
+            lane.removeVehicle(this)
+            despawned = true
+            return false
+        }
+        return true
     }
 
     fun isInLaneChange(): Boolean {
@@ -59,24 +127,32 @@ class Vehicle(var lane: Lane, val maxSpeed: Double = 33.0, val maxAcc:Double = 0
         return lane.laneId;
     }
 
-    fun setNewLane(_lane: Lane) {
+    private fun setNewLane(_lane: Lane) {
         if (_lane == this.lane) return
 
-        laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
         this.lane.removeVehicle(this)
         this.lane = _lane
         this.lane.addVehicle(this)
     }
 
-    // TODO: Do we need factory?
+    fun performLaneChange(_lane: Lane) {
+        if (_lane == this.lane) return
+
+        laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
+        setNewLane(_lane)
+    }
+
     companion object {
-        fun NewVehicle(lane: Lane, maxSpeed: Double, maxAcc: Double): Vehicle {
-            return Vehicle(lane, maxSpeed, maxAcc)
+        var counter: Int =  0
+        val randomPathBuilder: IPathBuilder = RandomPathBuilder()
+
+        fun NewVehicle(network: Network, lane: Lane, direction: Direction, maxSpeed: Double, maxAcc: Double): Vehicle {
+            return Vehicle(counter++, network, lane, direction, randomPathBuilder, maxSpeed, maxAcc)
         }
 
         // Some non standard default parameters
-        fun NewVehicle(lane: Lane): Vehicle {
-            return Vehicle(lane)
+        fun NewVehicle(network: Network, lane: Lane,  direction: Direction): Vehicle {
+            return Vehicle(counter++, network, lane, direction, randomPathBuilder)
         }
     }
 

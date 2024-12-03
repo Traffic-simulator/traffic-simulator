@@ -1,17 +1,16 @@
 package network
 
 import SimulationConfig
-import opendrive.TRoadLanes
 import opendrive.TRoadLanesLaneSectionLcrLaneLink
 import opendrive.TRoadLanesLaneSectionLrLane
-import opendrive.TRoadLanesLaneSectionRightLane
+import vehicle.Direction
 import vehicle.Vehicle
 
 
 // Assuming that vehicle moves to the next_lane after front bumper (position) is > length(previous_lane)
 // TODO: Test functions with very short lane segments
 // TODO: Completely not working with junctions
-class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: Int) {
+class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: Int): ILane {
 
     // TODO: need clever structure for binary_search and easy .front() .back()
     private val vehicles: ArrayList<Vehicle> = ArrayList()
@@ -20,19 +19,34 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
     // TODO: flag if the next lane is from junction
     // List for lanes from roads AND from junctions and for strange asam.net:xodr:1.4.0:road.lane.link.multiple_connections.
-    var predecessor: ArrayList<Lane>? = null
-    var successor: ArrayList<Lane>? = null
+    var predecessor: ArrayList<Pair<Lane, Boolean>>? = null
+    var successor: ArrayList<Pair<Lane, Boolean>>? = null
 
-    // TODO: Handle move to the next line
-    fun addVehicle(vehicle: Vehicle) {
+    override fun addVehicle(vehicle: Vehicle) {
         vehicles.add(vehicle)
     }
 
-    fun removeVehicle(vehicle: Vehicle) {
+    override fun removeVehicle(vehicle: Vehicle) {
         vehicles.remove(vehicle)
     }
 
-    fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
+    override fun getMinPositionVehicle(): Vehicle? {
+        var result: Vehicle? = null
+
+        // TODO: use binary search
+        vehicles.forEach{
+            if (result == null) {
+                result = it
+            }
+            if (result != null && it.position < result!!.position) {
+                result = it
+            }
+        }
+
+        return result
+    }
+
+    override fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
         var result: Vehicle? = null
 
         // TODO: use binary search
@@ -56,25 +70,25 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
             return Pair(result, distance)
         }
 
-        val nextLane = if (laneId > 0) successor else predecessor
+        val nextLane = getNextLane(vehicle.direction)
         if (nextLane == null) {
             return Pair(null, SimulationConfig.INF)
         }
 
         // TODO: If successor.size > 1 do we need graph traversal? Or only the our next line. Because junction will block if need
-        return nextLane.get(0).getLastVehicle(road.troad.length - vehicle.position)
+        return nextLane.get(0).first.getLastVehicleInternal(vehicle.direction.opposite(nextLane.get(0).second), road.troad.length - vehicle.position)
     }
 
-    private fun getLastVehicle(accDistance: Double): Pair<Vehicle?, Double> {
+    private fun getLastVehicleInternal(direction: Direction, accDistance: Double): Pair<Vehicle?, Double> {
 
-        val nextLane = if (laneId > 0) successor else predecessor
+        val nextLane = getNextLane(direction)
         if (vehicles.size == 0) {
             if (nextLane == null || accDistance + road.troad.length > SimulationConfig.MAX_VALUABLE_DISTANCE) {
                 return Pair(null, SimulationConfig.INF)
             }
 
             // TODO: If successor.size > 1 do we need graph traversal? Or only the our next line. Because junction will block if need
-            return nextLane.get(0).getLastVehicle(accDistance + road.troad.length)
+            return nextLane.get(0).first.getLastVehicleInternal(direction.opposite(nextLane.get(0).second), accDistance + road.troad.length)
         }
 
         var result = vehicles[0]
@@ -88,7 +102,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
 
     // TODO: Check with reference line random directions
-    fun getPrevVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
+    override fun getPrevVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
         var result: Vehicle? = null
 
         // TODO: use binary search
@@ -113,26 +127,26 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         }
 
 
-        val nextLane = if (laneId < 0) successor else predecessor
+        val nextLane = getNextLane(vehicle.direction)
         if (nextLane == null) {
             return Pair(null, SimulationConfig.INF)
         }
 
         // TODO: If predecessor.size > 1 have to do graph traversal...
-        return nextLane.get(0).getFirstVehicle(vehicle.position - vehicle.length)
+        return nextLane.get(0).first.getFirstVehicleInternal(vehicle.direction.opposite(nextLane.get(0).second), vehicle.position - vehicle.length)
     }
 
 
     // TODO: Check with reference line random directions
-    private fun getFirstVehicle(accDistance: Double): Pair<Vehicle?, Double> {
-        val nextLane = if (laneId < 0) successor else predecessor
+    private fun getFirstVehicleInternal(direction: Direction, accDistance: Double): Pair<Vehicle?, Double> {
+        val nextLane = getNextLane(direction)
         if (vehicles.size == 0) {
             if (nextLane == null || accDistance + road.troad.length > SimulationConfig.MAX_VALUABLE_DISTANCE) {
                 return Pair(null, SimulationConfig.INF)
             }
 
             // TODO: If predecessor.size > 1 have to do graph traversal...
-            return nextLane.get(0).getFirstVehicle(accDistance + road.troad.length)
+            return nextLane.get(0).first.getFirstVehicleInternal(direction.opposite(nextLane.get(0).second), accDistance + road.troad.length)
         }
 
         var result = vehicles[0]
@@ -143,6 +157,12 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
             return Pair(null, SimulationConfig.INF)
         }
         return Pair(result, distance)
+    }
+
+    fun getNextLane(direction: Direction): ArrayList<Pair<Lane, Boolean>>? {
+        if (direction == Direction.FORWARD)
+            return successor
+        return predecessor
     }
 
 }
