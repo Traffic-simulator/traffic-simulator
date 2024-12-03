@@ -62,18 +62,19 @@ class Main : ApplicationAdapter() {
                 if (halfLen < 0)
                     continue
                 val halfDir = dir.normalized() * halfLen
-                val right = halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * laneWidth
+                val right = halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * laneWidth * road.rightLane.toDouble()
+                val left = -halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * laneWidth * road.leftLane.toDouble()
                 node.translation.set(pos.toGdxVec())
                 meshPartBuilder = modelBuilder.part("road${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
                 BoxShapeBuilder.build(
                     meshPartBuilder,
-                    Vector3((-halfDir.x - right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z - right.z).toFloat()),
+                    Vector3((-halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + left.z).toFloat()),
                     Vector3((-halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + right.z).toFloat()),
-                    Vector3((halfDir.x - right.x).toFloat(), roadHeight.toFloat(), (halfDir.z - right.z).toFloat()),
+                    Vector3((halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (halfDir.z + left.z).toFloat()),
                     Vector3((halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (halfDir.z + right.z).toFloat()),
-                    Vector3((-halfDir.x - right.x).toFloat(), 0.0f, (-halfDir.z - right.z).toFloat()),
+                    Vector3((-halfDir.x + left.x).toFloat(), 0.0f, (-halfDir.z + left.z).toFloat()),
                     Vector3((-halfDir.x + right.x).toFloat(), 0.0f, (-halfDir.z + right.z).toFloat()),
-                    Vector3((halfDir.x - right.x).toFloat(), 0.0f, (halfDir.z - right.z).toFloat()),
+                    Vector3((halfDir.x + left.x).toFloat(), 0.0f, (halfDir.z + left.z).toFloat()),
                     Vector3((halfDir.x + right.x).toFloat(), 0.0f, (halfDir.z + right.z).toFloat()),
                 )
             }
