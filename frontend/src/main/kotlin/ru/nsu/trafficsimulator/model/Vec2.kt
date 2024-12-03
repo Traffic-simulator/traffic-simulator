@@ -5,14 +5,14 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 data class Vec2(var x: Double, var y: Double) {
-    fun distance(other: Point2): Double {
+    fun distance(other: Vec2): Double {
         val dx = x - other.x
         val dy = y - other.y
         return sqrt(dx * dx + dy * dy)
     }
 
-    fun rotate(angleRad: Double): Point2 {
-        return Point2(x * cos(angleRad) - y * sin(angleRad), x * sin(angleRad) + y * cos(angleRad))
+    fun rotate(angleRad: Double): Vec2 {
+        return Vec2(x * cos(angleRad) - y * sin(angleRad), x * sin(angleRad) + y * cos(angleRad))
     }
 
     operator fun plus(other: Vec2): Vec2 = Vec2(x + other.x, y + other.y)

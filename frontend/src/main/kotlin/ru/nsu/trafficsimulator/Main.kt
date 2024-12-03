@@ -31,7 +31,7 @@ import kotlin.math.abs
 import kotlin.time.measureTime
 
 
-class Main() : ApplicationAdapter() {
+class Main : ApplicationAdapter() {
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
     private var imGuiGl3: ImGuiImplGl3 = ImGuiImplGl3()
@@ -54,7 +54,7 @@ class Main() : ApplicationAdapter() {
             val modelBuilder = ModelBuilder()
             var meshPartBuilder: MeshPartBuilder
             modelBuilder.begin()
-            for (road in layout.getRoads()) {
+            for (road in layout.roads) {
                 val node = modelBuilder.node()
                 val pos = (road.startIntersection.position + road.endIntersection.position) / 2.0
                 val dir = road.startIntersection.position - road.endIntersection.position
@@ -90,14 +90,14 @@ class Main() : ApplicationAdapter() {
             val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
             val upVec = Vec3(0.0, roadHeight, 0.0)
             val upDir = Vec3(0.0, 1.0, 0.0)
-            for (intersection in layout.getIntersections()) {
+            for (intersection in layout.intersections) {
                 val node = modelBuilder.node()
                 node.translation.set(intersection.position.toGdxVec())
                 meshPartBuilder = modelBuilder.part("intersection${intersection.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
                 val intersectionSdf = { local: Vec3 ->
                     val point = intersection.position + local
                     var minDist = intersectionBoxSize * intersectionBoxSize
-                    for (road in intersection.getIncomingRoads()) {
+                    for (road in intersection.incomingRoads) {
                         val dist = getDistanceToSegment(point, road.startIntersection.position, road.endIntersection.position)
                         if (abs(dist) < abs(minDist))
                             minDist = dist

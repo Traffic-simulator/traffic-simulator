@@ -26,7 +26,7 @@ class Spline {
         this.normalized = normalized
     }
 
-    constructor(start: Point2, startDirection: Point2, end: Point2, endDirection: Point2) {
+    constructor(start: Vec2, startDirection: Vec2, end: Vec2, endDirection: Vec2) {
         x = Poly3(
             start.x,
             startDirection.x - start.x,
@@ -45,15 +45,15 @@ class Spline {
         this.normalized = true
     }
 
-    fun getPoint(distance: Double): Point2 {
+    fun getPoint(distance: Double): Vec2 {
         if (distance < 0 || distance > length) {
             throw IllegalArgumentException("distance should be between 0 and length")
         }
 
         if (normalized) {
-            return Point2(x.value(distance / length), x.value(distance / length))
+            return Vec2(x.value(distance / length), x.value(distance / length))
         }
-        return Point2(x.value(distance), y.value(distance))
+        return Vec2(x.value(distance), y.value(distance))
     }
 
 
@@ -63,7 +63,7 @@ class Spline {
         var prev = Vec2(x.value(0.0), y.value(0.0))
         val step = 1.0 / iterations
         for (i in 0..iterations) {
-            val cur = Point2(x.value(step * i), y.value(step * i))
+            val cur = Vec2(x.value(step * i), y.value(step * i))
             length += prev.distance(cur)
             prev = cur
         }

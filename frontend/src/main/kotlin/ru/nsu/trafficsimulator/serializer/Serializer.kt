@@ -8,15 +8,15 @@ class Serializer {
     fun serialize(layout: Layout): OpenDRIVE {
         val openDrive = OpenDRIVE()
 
-        for (road in layout.layoutRoads) {
+        for (road in layout.roads) {
             openDrive.road.add(serializeRoad(road))
         }
 
-        for (intersectionRoad in layout.layoutIntersectionRoads) {
+        for (intersectionRoad in layout.intersectionRoads) {
             openDrive.road.add(serializeIntersectionRoad(intersectionRoad))
         }
 
-        for (intersection in layout.layoutIntersections) {
+        for (intersection in layout.intersections) {
             openDrive.junction.add(serializeIntersection(intersection))
         }
         return openDrive
@@ -147,7 +147,7 @@ fun main() {
     val ser = Serializer()
 
     val layout = Layout()
-    layout.addRoad(Point(1.0, 1.0, 1.0), Point(2.0, 2.0, 2.0))
+    layout.addRoad(Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 2.0))
 
     val od = ser.serialize(layout)
 
