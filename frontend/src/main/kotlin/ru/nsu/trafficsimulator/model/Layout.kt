@@ -1,11 +1,12 @@
 package ru.nsu.trafficsimulator.model
 
 class Layout {
-    private val roads = mutableSetOf<Road>()
-    private val intersections = mutableSetOf<Intersection>()
+    val layoutRoads = mutableSetOf<Road>()
+    val layoutIntersectionRoads = mutableSetOf<IntersectionRoad>()
+    val layoutIntersections = mutableSetOf<Intersection>()
 
-    private var roadIdCount = 0
-    private var intersectionIdCount = 0
+    private var roadIdCount: Long = 0
+    private var intersectionIdCount: Long = 0
 
     fun getRoads(): Set<Road> = roads.toSet()
     fun getIntersections(): Set<Intersection> = intersections.toSet()
@@ -25,22 +26,38 @@ class Layout {
     }
 
     fun addRoad(startIntersection: Intersection, endIntersection: Intersection): Road {
-        val newRoadId = roadIdCount
+        val newRoadId = roadIdCount++
         val length = endIntersection.position.distance(startIntersection.position)
         val newRoad = Road(newRoadId, startIntersection, endIntersection, length)
-        startIntersection.addRoad(newRoad)
-        endIntersection.addRoad(newRoad)
-        roads.add(newRoad)
-        roadIdCount++
+
+        connectRoadToIntersection(newRoad, startIntersection)
+        connectRoadToIntersection(newRoad, endIntersection)
+
+        layoutRoads.add(newRoad)
         return newRoad
     }
 
-    fun addIntersection(position: Vec3): Intersection {
-        val newIntersectionId = intersectionIdCount
-        val newIntersection = Intersection(newIntersectionId, position)
-        intersections.add(newIntersection)
-        intersectionIdCount++
-        return (newIntersection)
+    private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
+        val incomingRoads = intersection.incomingRoads
+        for (incomingRoad in incomingRoads) {
+            val outIR = IntersectionRoad(
+                roadIdCount++,
+                intersection,
+                road,
+                incomingRoad,
+                1.0
+            )
+            intersection.intersectionRoads.add(outIR)
+            val inIR = IntersectionRoad(
+                roadIdCount++,
+                intersection,
+                incomingRoad,
+                road,
+                1.0
+            )
+            intersection.intersectionRoads.add(inIR)
+        }
+        intersection.addRoad(road)
     }
 
     fun deleteRoad(road: Road) {
@@ -59,8 +76,16 @@ class Layout {
         road.endIntersection.removeRoad(road)
     }
 
-    fun deleteIntersection(intersection: Intersection) {
-        for (road in intersection.getIncomingRoads()) {
+    private fun addIntersection(position: Point): Intersection {
+        val newIntersectionId = intersectionIdCount++
+        val newIntersection = Intersection(newIntersectionId, position)
+        layoutIntersections.add(newIntersection)
+        return (newIntersection)
+    }
+
+
+    private fun deleteIntersection(intersection: Intersection) {
+        for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
     }

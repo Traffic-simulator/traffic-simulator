@@ -12,6 +12,7 @@ class Road(val troad: TRoad) {
     val numLanes: Int
     val lanes: ArrayList<Lane> = ArrayList()
     val id: String = troad.id
+    val junction: String = troad.junction
     var predecessor: TRoadLinkPredecessorSuccessor? = troad.link.predecessor
     var successor: TRoadLinkPredecessorSuccessor? = troad.link.successor
 
