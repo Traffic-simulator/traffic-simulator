@@ -57,7 +57,7 @@ class Main : ApplicationAdapter() {
             for (road in layout.roads) {
                 val node = modelBuilder.node()
                 val pos = (road.startIntersection.position + road.endIntersection.position) / 2.0
-                val dir = road.startIntersection.position - road.endIntersection.position
+                val dir = road.endIntersection.position - road.startIntersection.position
                 val halfLen = dir.length() / 2.0 - intersectionPadding
                 if (halfLen < 0)
                     continue
@@ -98,12 +98,20 @@ class Main : ApplicationAdapter() {
                 val intersectionSdf = { local: Vec3 ->
                     val point = intersection.position + local
                     var minDist = intersectionBoxSize * intersectionBoxSize
+                    var laneCount = 1
                     for (road in intersection.incomingRoads) {
                         val dist = getDistanceToSegment(point, road.startIntersection.position, road.endIntersection.position)
-                        if (abs(dist) < abs(minDist))
+                        if (abs(dist) < abs(minDist)) {
                             minDist = dist
+                            val right = (road.endIntersection.position - road.startIntersection.position).cross(Vec3(0.0, 1.0, 0.0))
+                            laneCount = if (point.dot(right) > 0) {
+                                road.rightLane
+                            } else {
+                                road.leftLane
+                            }
+                        }
                     }
-                    minDist - laneWidth
+                    minDist - laneWidth * laneCount
                 }
                 val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
                     meshPartBuilder.rect(
