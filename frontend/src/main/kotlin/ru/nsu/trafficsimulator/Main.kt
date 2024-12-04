@@ -21,13 +21,15 @@ import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
+import ktx.math.unaryMinus
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model.Vec3
+import ru.nsu.trafficsimulator.model.*
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.time.measureTime
 
 
@@ -46,38 +48,147 @@ class Main : ApplicationAdapter() {
     private var layoutModel: Model? = null
 
     companion object {
-        fun createLayoutModel(layout: Layout): Model {
-            val roadHeight = 0.5
-            val laneWidth = 2.0
-            val intersectionPadding = 10.0f
+        private val roadHeight = 0.5
+        private val laneWidth = 2.0
+        private val intersectionPadding = 10.0
+        private val splineRoadSegmentLen = 5.0f
+        private val upVec = Vec3(0.0, roadHeight, 0.0)
 
+        fun buildStraightRoad(modelBuilder: ModelBuilder, road: Road) {
+            val node = modelBuilder.node()
+            val pos = (road.startIntersection.position + road.endIntersection.position) / 2.0
+            val dir = road.endIntersection.position - road.startIntersection.position
+            val halfLen = dir.length() / 2.0 - intersectionPadding
+            if (halfLen < 0)
+                return
+            val halfDir = dir.normalized() * halfLen
+            val right = halfDir.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
+            val left = -halfDir.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
+            node.translation.set(pos.toGdxVec())
+            val meshPartBuilder = modelBuilder.part("road${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            BoxShapeBuilder.build(
+                meshPartBuilder,
+                Vector3((-halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + left.z).toFloat()),
+                Vector3((-halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + right.z).toFloat()),
+                Vector3((halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (halfDir.z + left.z).toFloat()),
+                Vector3((halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (halfDir.z + right.z).toFloat()),
+                Vector3((-halfDir.x + left.x).toFloat(), 0.0f, (-halfDir.z + left.z).toFloat()),
+                Vector3((-halfDir.x + right.x).toFloat(), 0.0f, (-halfDir.z + right.z).toFloat()),
+                Vector3((halfDir.x + left.x).toFloat(), 0.0f, (halfDir.z + left.z).toFloat()),
+                Vector3((halfDir.x + right.x).toFloat(), 0.0f, (halfDir.z + right.z).toFloat()),
+            )
+        }
+
+        fun createLayoutModel(layout: Layout): Model {
             val modelBuilder = ModelBuilder()
             var meshPartBuilder: MeshPartBuilder
             modelBuilder.begin()
             for (road in layout.roads) {
-                val node = modelBuilder.node()
-                val pos = (road.startIntersection.position + road.endIntersection.position) / 2.0
-                val dir = road.endIntersection.position - road.startIntersection.position
-                val halfLen = dir.length() / 2.0 - intersectionPadding
-                if (halfLen < 0)
+                if (road.geometry == null) {
+                    buildStraightRoad(modelBuilder, road)
                     continue
-                val halfDir = dir.normalized() * halfLen
-                val right = halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * laneWidth * road.rightLane.toDouble()
-                val left = -halfDir.cross(Vec3(0.0, 1.0, 0.0)).normalized() * laneWidth * road.leftLane.toDouble()
-                node.translation.set(pos.toGdxVec())
-                meshPartBuilder = modelBuilder.part("road${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-                BoxShapeBuilder.build(
-                    meshPartBuilder,
-                    Vector3((-halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + left.z).toFloat()),
-                    Vector3((-halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + right.z).toFloat()),
-                    Vector3((halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (halfDir.z + left.z).toFloat()),
-                    Vector3((halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (halfDir.z + right.z).toFloat()),
-                    Vector3((-halfDir.x + left.x).toFloat(), 0.0f, (-halfDir.z + left.z).toFloat()),
-                    Vector3((-halfDir.x + right.x).toFloat(), 0.0f, (-halfDir.z + right.z).toFloat()),
-                    Vector3((halfDir.x + left.x).toFloat(), 0.0f, (halfDir.z + left.z).toFloat()),
-                    Vector3((halfDir.x + right.x).toFloat(), 0.0f, (halfDir.z + right.z).toFloat()),
+                }
+                val node = modelBuilder.node()
+                node.translation.set(0.0f, 0.0f, 0.0f)
+                meshPartBuilder = modelBuilder.part("intersection${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+
+                val stepCount = floor((road.geometry!!.length - 2 * intersectionPadding )/ splineRoadSegmentLen).toInt()
+                var prevPos = road.geometry!!.getPoint(intersectionPadding).toVec3()
+                var prevDir = road.geometry!!.getDirection(intersectionPadding).toVec3().normalized()
+                var prevRight = prevDir.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
+                var prevLeft = -prevDir.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
+                meshPartBuilder.rect(
+                    (prevPos + prevLeft).toGdxVec(),
+                    (prevPos + prevRight).toGdxVec(),
+                    (prevPos + prevRight + upVec).toGdxVec(),
+                    (prevPos + prevLeft + upVec).toGdxVec(),
+                    -prevDir.toGdxVec()
+                )
+                println("${road.geometry}")
+
+                for (i in 1..stepCount) {
+                    val t = intersectionPadding + i * splineRoadSegmentLen.toDouble()
+                    val pos = road.geometry!!.getPoint(t).toVec3()
+                    val direction = road.geometry!!.getDirection(t).toVec3().normalized()
+                    val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
+                    val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
+//                    println(road.geometry!!.getDirection(i * splineRoadSegmentLen.toDouble()))
+//                    println("$prevDir, $prevPos")
+//                    println("$prevPos, $prevLeft, $prevRight")
+//                    println("${(prevPos + prevLeft).toGdxVec()}, ${(prevPos + prevLeft + upVec).toGdxVec()}, ${(prevPos + prevRight + upVec).toGdxVec()}, ${(prevPos + prevRight).toGdxVec()}, ${-prevDir.toGdxVec()}")
+//                    println("${(prevPos + prevLeft + upVec).toGdxVec()}, ${(pos + left + upVec).toGdxVec()}, ${(pos + right + upVec).toGdxVec()}, ${(prevPos + prevRight + upVec).toGdxVec()}, ${Vec3.UP.toGdxVec()}")
+                    if (direction.dot(prevDir) < 0.0) {
+                        prevLeft = prevRight.also { prevRight = prevLeft }
+                    }
+                    // Top
+                    meshPartBuilder.rect(
+                        (prevPos + prevRight + upVec).toGdxVec(),
+                        (pos + right + upVec).toGdxVec(),
+                        (pos + left + upVec).toGdxVec(),
+                        (prevPos + prevLeft + upVec).toGdxVec(),
+                        Vec3.UP.toGdxVec()
+                    )
+                    // Right
+                    meshPartBuilder.rect(
+                        (prevPos + prevRight).toGdxVec(),
+                        (pos + right).toGdxVec(),
+                        (pos + right + upVec).toGdxVec(),
+                        (prevPos + prevRight + upVec).toGdxVec(),
+                        (pos - prevPos).cross(Vec3.UP).toGdxVec()
+                    )
+
+                    // Right
+                    meshPartBuilder.rect(
+                        (pos + left).toGdxVec(),
+                        (prevPos + prevLeft).toGdxVec(),
+                        (prevPos + prevLeft + upVec).toGdxVec(),
+                        (pos + left + upVec).toGdxVec(),
+                        -(pos - prevPos).cross(Vec3.UP).toGdxVec()
+                    )
+                    prevPos = pos
+                    prevLeft = left
+                    prevRight = right
+                    prevDir = direction
+                }
+                val t = road.geometry!!.length - intersectionPadding
+                val pos = road.geometry!!.getPoint(t).toVec3()
+                val direction = road.geometry!!.getDirection(t).toVec3().normalized()
+                val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
+                val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
+                meshPartBuilder.rect(
+                    (prevPos + prevRight + upVec).toGdxVec(),
+                    (pos + right + upVec).toGdxVec(),
+                    (pos + left + upVec).toGdxVec(),
+                    (prevPos + prevLeft + upVec).toGdxVec(),
+                    Vec3.UP.toGdxVec()
+                )
+                // Right
+                meshPartBuilder.rect(
+                    (prevPos + prevRight).toGdxVec(),
+                    (pos + right).toGdxVec(),
+                    (pos + right + upVec).toGdxVec(),
+                    (prevPos + prevRight + upVec).toGdxVec(),
+                    (pos - prevPos).cross(Vec3.UP).toGdxVec()
+                )
+
+                // Right
+                meshPartBuilder.rect(
+                    (pos + left).toGdxVec(),
+                    (prevPos + prevLeft).toGdxVec(),
+                    (prevPos + prevLeft + upVec).toGdxVec(),
+                    (pos + left + upVec).toGdxVec(),
+                    -(pos - prevPos).cross(Vec3.UP).toGdxVec()
+                )
+
+                meshPartBuilder.rect(
+                    (pos + right).toGdxVec(),
+                    (pos + left).toGdxVec(),
+                    (pos + left + upVec).toGdxVec(),
+                    (pos + right + upVec).toGdxVec(),
+                    direction.toGdxVec()
                 )
             }
+//            return modelBuilder.end()
 
             val getDistanceToSegment = { point: Vec3, from: Vec3, to: Vec3 ->
                 val dir = to - from
@@ -89,7 +200,6 @@ class Main : ApplicationAdapter() {
             val intersectionBoxSize = 20.0
             val samplePerSide = 40
             val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
-            val upVec = Vec3(0.0, roadHeight, 0.0)
             val upDir = Vec3(0.0, 1.0, 0.0)
             for (intersection in layout.intersections) {
                 val node = modelBuilder.node()
@@ -100,7 +210,12 @@ class Main : ApplicationAdapter() {
                     var minDist = intersectionBoxSize * intersectionBoxSize
                     var laneCount = 1
                     for (road in intersection.incomingRoads) {
-                        val dist = getDistanceToSegment(point, road.startIntersection.position, road.endIntersection.position)
+                        val dist = if (road.geometry != null) {
+                            val proj = Vec2(point.x, point.z)
+                            (road.geometry!!.closestPoint(proj) - proj).length()
+                        } else {
+                            getDistanceToSegment(point, road.startIntersection.position, road.endIntersection.position)
+                        }
                         if (abs(dist) < abs(minDist)) {
                             minDist = dist
                             val right = (road.endIntersection.position - road.startIntersection.position).cross(Vec3(0.0, 1.0, 0.0))
@@ -279,7 +394,7 @@ class Main : ApplicationAdapter() {
 
         sceneManager = SceneManager()
         sceneAsset = GLBLoader().load(Gdx.files.internal("car.glb"))
-        // sceneManager?.addScene(Scene(sceneAsset?.scene))
+//        sceneManager?.addScene(Scene(sceneAsset?.scene))
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
@@ -291,14 +406,19 @@ class Main : ApplicationAdapter() {
         val inter2 = layout.addIntersection(Vec3(100.0, 0.0, 0.0))
         val inter3 = layout.addIntersection(Vec3(100.0, 0.0, -100.0))
         val inter4 = layout.addIntersection(Vec3(0.0, 0.0, 100.0))
-        layout.addRoad(inter1, inter2)
-        layout.addRoad(inter3, inter2)
-        layout.addRoad(inter1, inter4)
-        layout.addRoad(Vec3(100.0, 0.0, 100.0), inter4)
-        layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
-        layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
+//        layout.addRoad(inter1, inter2)
+//        layout.addRoad(inter3, inter2)
+//        layout.addRoad(inter1, inter4)
+//        layout.addRoad(Vec3(100.0, 0.0, 100.0), inter4)
+//        layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
+        val road = layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
+        road.geometry = Spline(Vec2(0.0, 0.0), Vec2(1.0, 1.0).normalized() * 100.0, Vec2(-100.0, -100.0), Vec2(-100.0, -100.0) + Vec2(-10.0, -1.0).normalized() * 120.01)
+        val road2 = layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
+        road2.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 100.0), Vec2(100.0, 100.0) + Vec2(10.0, 1.0).normalized() * 120.0)
+        val road3 = layout.addRoad(inter1, Vec3(100.0, 0.0, 0.0))
+        road3.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 0.0), Vec2(100.0, 0.0) + Vec2(1.0, 1.0).normalized() * 120.0)
 //        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
-        layout.addRoad(inter1, inter3)
+//        layout.addRoad(inter1, inter3)
         val time = measureTime {
             layoutModel = createLayoutModel(layout)
         }

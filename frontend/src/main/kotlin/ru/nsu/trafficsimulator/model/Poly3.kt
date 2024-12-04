@@ -9,6 +9,10 @@ data class Poly3(val a: Double, val b: Double, val c: Double, val d: Double) { /
         return b + 2 * c * x + 3 * d * x * x
     }
 
+    fun secondDerivativeValue(x: Double): Double {
+        return 2 * c + 6 * d * x
+    }
+
     operator fun times(x: Double): Poly3 {
         return Poly3(a * x, b * x, c * x, d * x)
     }
