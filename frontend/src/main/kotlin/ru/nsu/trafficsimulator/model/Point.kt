@@ -27,4 +27,12 @@ data class Point2(var x: Double, var y: Double) {
     operator fun plus(other: Point2): Point2 {
         return Point2(x + other.x, y + other.y)
     }
+
+    operator fun minus(other: Point2): Point2 {
+        return Point2(x - other.x, y - other.y)
+    }
+
+    operator fun times(scalar: Double): Point2 {
+        return Point2(x * scalar, y * scalar)
+    }
 }

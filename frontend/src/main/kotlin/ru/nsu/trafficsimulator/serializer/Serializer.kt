@@ -30,14 +30,20 @@ class Serializer {
             junction = "-1"
 
             link = TRoadLink()
-            link.predecessor = TRoadLinkPredecessorSuccessor().apply {
-                elementType = ERoadLinkElementType.JUNCTION
-                elementId = road.startIntersection.id.toString()
+            road.startIntersection?.let {
+                link.predecessor = TRoadLinkPredecessorSuccessor().apply {
+                    elementType = ERoadLinkElementType.JUNCTION
+                    elementId = it.id.toString()
+                }
             }
-            link.successor = TRoadLinkPredecessorSuccessor().apply {
-                elementType = ERoadLinkElementType.JUNCTION
-                elementId = road.endIntersection.id.toString()
+
+            road.endIntersection?.let {
+                link.successor = TRoadLinkPredecessorSuccessor().apply {
+                    elementType = ERoadLinkElementType.JUNCTION
+                    elementId = it.id.toString()
+                }
             }
+
 
             planView = generateRoadPlaneView(road)
 

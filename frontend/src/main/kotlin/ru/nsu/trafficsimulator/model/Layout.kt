@@ -56,18 +56,21 @@ class Layout {
 
     fun deleteRoad(road: Road) {
         val start = road.startIntersection
-        start.removeRoad(road)
-        if (start.getIncomingRoadsCount() == 0) {
-            deleteIntersection(start)
+        start?.let {
+            it.removeRoad(road)
+            if (it.getIncomingRoadsCount() == 0) {
+                deleteIntersection(start)
+            }
         }
+
 
         val end = road.startIntersection
-        end.removeRoad(road)
-        if (end.getIncomingRoadsCount() == 0) {
-            deleteIntersection(end)
+        end?.let {
+            it.removeRoad(road)
+            if (it.getIncomingRoadsCount() == 0) {
+                deleteIntersection(end)
+            }
         }
-
-        road.endIntersection.removeRoad(road)
     }
 
     private fun addIntersection(position: Point): Intersection {
