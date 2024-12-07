@@ -3,9 +3,10 @@ package ru.nsu.trafficsimulator.model
 import java.util.*
 import kotlin.math.*
 
-class Spline(start: SplineVertex, end: SplineVertex) {
+class Spline(start: Pair<Point2, Point2>, end: Pair<Point2, Point2>) {
     val splineParts: MutableList<SplinePart>
     var length: Double
+        private set
 
     init {
         this.splineParts = LinkedList()
@@ -32,12 +33,12 @@ class Spline(start: SplineVertex, end: SplineVertex) {
     }
 
 
-    fun addPoint(newPoint: SplineVertex) {
+    fun addPoint(newPoint: Pair<Point2, Point2>) {
         val prevPoint = splineParts.last().end
         addSplinePart(prevPoint, newPoint)
     }
 
-    fun addSplinePart(start: SplineVertex, end: SplineVertex) {
+    fun addSplinePart(start: Pair<Point2, Point2>, end: Pair<Point2, Point2>) {
         val (x, y) = normalizedPolynom(start, end)
         val partLength = calculateLength(x, y)
         splineParts.add(SplinePart(x, y, this.length, partLength, true))
@@ -46,11 +47,10 @@ class Spline(start: SplineVertex, end: SplineVertex) {
 
 
     fun addLane(start: Point2, angle: Double, length: Double) {
-        val startVertex = SplineVertex(start, start + Point2(cos(angle), sin(angle)))
-        val endVertex = SplineVertex(
-            start + Point2(cos(angle), sin(angle)) * length,
-            start + Point2(cos(angle), sin(angle)) * (length + 1)
-        )
+        val startVertex = start to start + Point2(cos(angle), sin(angle))
+        val endVertex =
+            start + Point2(cos(angle), sin(angle)) * length to
+                start + Point2(cos(angle), sin(angle)) * (length + 1)
         addSplinePart(startVertex, endVertex)
     }
 
@@ -93,8 +93,9 @@ class Spline(start: SplineVertex, end: SplineVertex) {
             ) * r
 
             addSplinePart(
-                SplineVertex(curPoint, curPoint + Point2(cos(curAngle), sin(curAngle)) * (length / parts)),
-                SplineVertex(endPoint, endPoint + Point2(cos(endAngle), sin(endAngle)) * (length / parts)))
+                curPoint to curPoint + Point2(cos(curAngle), sin(curAngle)) * (length / parts),
+                endPoint to endPoint + Point2(cos(endAngle), sin(endAngle)) * (length / parts)
+            )
 
             curPoint = endPoint
             curAngle = endAngle
@@ -116,19 +117,22 @@ class Spline(start: SplineVertex, end: SplineVertex) {
     }
 
 
-    private fun normalizedPolynom(start: SplineVertex, end: SplineVertex): Pair<Poly3, Poly3> {
+    private fun normalizedPolynom(start: Pair<Point2, Point2>, end: Pair<Point2, Point2>): Pair<Poly3, Poly3> {
+        val (startPoint, startDir) = start
+        val (endPoint, endDir) = end
+
         val x = Poly3(
-            start.position.x,
-            start.direction.x - start.position.x,
-            4 * end.position.x - 2 * start.direction.x - start.position.x - end.direction.x,
-            end.direction.x + start.position.x + start.direction.x - 3 * end.position.x
+            startPoint.x,
+            startDir.x - startPoint.x,
+            4 * endPoint.x - 2 * startDir.x - startPoint.x - endDir.x,
+            endDir.x + startPoint.x + startDir.x - 3 * endPoint.x
         )
 
         val y = Poly3(
-            start.position.y,
-            start.direction.y - start.position.y,
-            4 * end.position.y - 2 * start.direction.y - start.position.y - end.direction.y,
-            end.direction.y + start.position.y + start.direction.y - 3 * end.position.y
+            startPoint.y,
+            startDir.y - startPoint.y,
+            4 * endPoint.y - 2 * startDir.y - startPoint.y - endDir.y,
+            endDir.y + startPoint.y + startDir.y - 3 * endPoint.y
         )
         return (x to y)
     }
@@ -163,18 +167,16 @@ class Spline(start: SplineVertex, end: SplineVertex) {
 class SplinePart(val x: Poly3, val y: Poly3, val offset: Double, val length: Double, val normalized: Boolean) {
     private val endDist = if (normalized) 1.0 else length
 
-    val start: SplineVertex by lazy {
-        SplineVertex(
-            Point2(x.value(0.0), y.value(0.0)),
+    val start: Pair<Point2, Point2> by lazy {
+
+        Point2(x.value(0.0), y.value(0.0)) to
             Point2(x.value(0.0), y.value(0.0)) + Point2(x.derivativeValue(0.0), y.derivativeValue(0.0))
-        )
+
     }
 
-    val end: SplineVertex by lazy {
-        SplineVertex(
-            Point2(x.value(endDist), y.value(endDist)),
+    val end: Pair<Point2, Point2> by lazy {
+        Point2(x.value(endDist), y.value(endDist)) to
             Point2(x.value(endDist), y.value(endDist)) + Point2(x.derivativeValue(endDist), y.derivativeValue(endDist))
-        )
     }
 
     fun getPoint(distance: Double): Point2 {
@@ -185,16 +187,15 @@ class SplinePart(val x: Poly3, val y: Poly3, val offset: Double, val length: Dou
     }
 }
 
-data class SplineVertex(val position: Point2, val direction: Point2)
 
 fun main() {
 
     val spline =
-        Spline(SplineVertex(Point2(0.0, 0.0), Point2(0.0, 5.0)), SplineVertex(Point2(2.0, 2.0), Point2(6.0, 2.0)))
+        Spline(Point2(0.0, 0.0) to Point2(0.0, 5.0), Point2(2.0, 2.0) to Point2(6.0, 2.0))
     spline.addLane(Point2(2.0, 2.0), 0.0, 4.0)
     spline.addArc(Point2(6.0, 2.0), 0.0, 1.0, 6 * PI / 4)
-    spline.addArc(Point2(5.0, 3.0), 3 * PI / 2.0, -2.0,  PI / 2)
-    spline.addPoint(SplineVertex(Point2(3.0, 3.0), Point2(1.0, 3.0)))
+    spline.addArc(Point2(5.0, 3.0), 3 * PI / 2.0, -2.0, PI / 2)
+    spline.addPoint(Point2(3.0, 3.0) to Point2(1.0, 3.0))
 
 
     for (sp in spline.splineParts) {

@@ -13,20 +13,18 @@ class Deserializer {
     fun deserialize(openDRIVE: OpenDRIVE): Layout {
         val layout = Layout()
 
-        val intersections = openDRIVE.junction.stream()
+        val intersections = openDRIVE.junction
             .map { deserializeIntersection(it) }
-            .toList()
+
         val idToIntersection = intersections.associateBy { it.id }
 
-        val roads = openDRIVE.road.stream()
+        val roads = openDRIVE.road
             .filter { it.junction == "-1" }
             .map { deserializeRoad(it, idToIntersection) }
-            .toList()
 
-        val intersectionRoads = openDRIVE.road.stream()
+        val intersectionRoads = openDRIVE.road
             .filter { it.junction != "-1" }
             .map { deserializeIntersectionRoad(it, idToIntersection) }
-            .toList()
 
         return layout
     }
@@ -38,17 +36,16 @@ class Deserializer {
         var startIntersection: Intersection? = null
         var endIntersection: Intersection? = null
 
+        // TODO add support for connections between roads
         tRoad.link?.predecessor?.let {
-            if (it.elementType != ERoadLinkElementType.JUNCTION) {
-                throw IllegalArgumentException("Predecessor must be junction")
+            if (it.elementType == ERoadLinkElementType.JUNCTION) {
+                startIntersection = idToIntersection[it.elementId.toLong()]
             }
-            startIntersection = idToIntersection[it.elementId.toLong()]
         }
         tRoad.link?.successor?.let {
-            if (it.elementType != ERoadLinkElementType.JUNCTION) {
-                throw IllegalArgumentException("Successor must be junction")
+            if (it.elementType == ERoadLinkElementType.JUNCTION) {
+                endIntersection = idToIntersection[it.elementId.toLong()]
             }
-            endIntersection = idToIntersection[it.elementId.toLong()]
         }
 
 //        tRoad.planView.geometry.get
