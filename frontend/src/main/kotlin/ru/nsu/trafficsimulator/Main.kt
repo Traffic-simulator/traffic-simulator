@@ -4,15 +4,15 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.PerspectiveCamera
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.VertexAttributes
+import com.badlogic.gdx.files.FileHandle
+import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.Environment
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
+import com.badlogic.gdx.graphics.g3d.model.data.ModelData
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
@@ -23,9 +23,11 @@ import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import ktx.math.unaryMinus
 import net.mgsx.gltf.loaders.glb.GLBLoader
+import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
+import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.model.*
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -48,7 +50,7 @@ class Main : ApplicationAdapter() {
     private var layoutModel: Model? = null
 
     companion object {
-        private val roadHeight = 0.5
+        private val roadHeight = 1.0
         private val laneWidth = 2.0
         private val intersectionPadding = 10.0
         private val splineRoadSegmentLen = 5.0f
@@ -384,13 +386,12 @@ class Main : ApplicationAdapter() {
         camera = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         camera?.position?.set(10f, 10f, 10f)
         camera?.lookAt(0.0f, 0.0f, 0.0f)
-        camera?.near = 0.5f
-        camera?.far = 1000f
+        camera?.near = 10.0f
+        camera?.far = 700f
         camera?.update()
 
         environment = Environment()
-        environment!!.set(ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f))
-        environment!!.add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -0f, -1.0f, -0.2f))
+        environment!!.add(DirectionalShadowLight(1024, 1024, 1000.0f, 1000.0f, 0.1f, 1000.0f).set(0.9f, 0.9f, 0.9f, -0f, -1.0f, -0.2f))
 
         sceneManager = SceneManager()
         sceneAsset = GLBLoader().load(Gdx.files.internal("car.glb"))
@@ -425,6 +426,24 @@ class Main : ApplicationAdapter() {
         println("Road layout model generation took $time")
         val layoutScene = Scene(layoutModel)
         sceneManager?.addScene(layoutScene)
+
+        // Add ground
+        val modelBuilder = ModelBuilder()
+        val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
+        modelBuilder.begin()
+        val meshPartBuilder = modelBuilder.part("Ground", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), groundMaterial)
+        BoxShapeBuilder.build(meshPartBuilder, 1000000.0f, 0.1f, 100000.0f)
+        val ground = modelBuilder.end()
+        sceneManager?.addScene(Scene(ground))
+
+        sceneManager?.skyBox = SceneSkybox(Cubemap(
+            Gdx.files.internal("skybox/right.png"),
+            Gdx.files.internal("skybox/left.png"),
+            Gdx.files.internal("skybox/top.png"),
+            Gdx.files.internal("skybox/bottom.png"),
+            Gdx.files.internal("skybox/front.png"),
+            Gdx.files.internal("skybox/back.png"),
+        ))
     }
 
     override fun render() {
