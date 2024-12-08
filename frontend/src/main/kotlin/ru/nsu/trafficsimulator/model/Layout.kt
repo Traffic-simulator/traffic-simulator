@@ -1,12 +1,33 @@
 package ru.nsu.trafficsimulator.model
 
 class Layout {
-    val layoutRoads = mutableSetOf<Road>()
-    val layoutIntersectionRoads = mutableSetOf<IntersectionRoad>()
-    val layoutIntersections = mutableSetOf<Intersection>()
+    val layoutRoads = mutableMapOf<Long, Road>()
+    val layoutIntersectionRoads = mutableMapOf<Long, IntersectionRoad>()
+    val layoutIntersections = mutableMapOf<Long, Intersection>()
 
     private var roadIdCount: Long = 0
     private var intersectionIdCount: Long = 0
+
+    fun addRoad(road: Road) {
+        if (road.id > roadIdCount) {
+            roadIdCount = road.id + 1
+        }
+        layoutRoads[road.id] = road
+    }
+
+    fun addIntersectionRoad(intersectionRoad: IntersectionRoad) {
+        if (intersectionRoad.id > roadIdCount) {
+            roadIdCount = intersectionRoad.id + 1
+        }
+        layoutIntersectionRoads[intersectionRoad.id] = intersectionRoad
+    }
+
+    fun addIntersection(intersection: Intersection) {
+        if (intersection.id > intersectionIdCount) {
+            intersectionIdCount = intersection.id + 1
+        }
+        layoutIntersections[intersection.id] = (intersection)
+    }
 
     fun addRoad(startPosition: Point, endPosition: Point): Road {
         val startIntersection = addIntersection(startPosition)
@@ -27,7 +48,7 @@ class Layout {
         connectRoadToIntersection(newRoad, startIntersection)
         connectRoadToIntersection(newRoad, endIntersection)
 
-        layoutRoads.add(newRoad)
+        layoutRoads[newRoadId] = (newRoad)
         return newRoad
     }
 
@@ -76,7 +97,7 @@ class Layout {
     private fun addIntersection(position: Point): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection = Intersection(newIntersectionId, position)
-        layoutIntersections.add(newIntersection)
+        layoutIntersections[newIntersectionId] = (newIntersection)
         return (newIntersection)
     }
 

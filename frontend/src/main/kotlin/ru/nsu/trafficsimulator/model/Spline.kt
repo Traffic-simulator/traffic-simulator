@@ -3,7 +3,7 @@ package ru.nsu.trafficsimulator.model
 import java.util.*
 import kotlin.math.*
 
-class Spline(start: Pair<Point2, Point2>, end: Pair<Point2, Point2>) {
+class Spline{
     val splineParts: MutableList<SplinePart>
     var length: Double
         private set
@@ -12,6 +12,12 @@ class Spline(start: Pair<Point2, Point2>, end: Pair<Point2, Point2>) {
         this.splineParts = LinkedList()
         this.length = 0.0
 
+
+    }
+
+    constructor()
+
+    constructor(start: Pair<Point2, Point2>, end: Pair<Point2, Point2>) {
         addSplinePart(start, end)
     }
 
@@ -46,7 +52,7 @@ class Spline(start: Pair<Point2, Point2>, end: Pair<Point2, Point2>) {
     }
 
 
-    fun addLane(start: Point2, angle: Double, length: Double) {
+    fun addLine(start: Point2, angle: Double, length: Double) {
         val startVertex = start to start + Point2(cos(angle), sin(angle))
         val endVertex =
             start + Point2(cos(angle), sin(angle)) * length to
@@ -192,7 +198,7 @@ fun main() {
 
     val spline =
         Spline(Point2(0.0, 0.0) to Point2(0.0, 5.0), Point2(2.0, 2.0) to Point2(6.0, 2.0))
-    spline.addLane(Point2(2.0, 2.0), 0.0, 4.0)
+    spline.addLine(Point2(2.0, 2.0), 0.0, 4.0)
     spline.addArc(Point2(6.0, 2.0), 0.0, 1.0, 6 * PI / 4)
     spline.addArc(Point2(5.0, 3.0), 3 * PI / 2.0, -2.0, PI / 2)
     spline.addPoint(Point2(3.0, 3.0) to Point2(1.0, 3.0))
