@@ -7,5 +7,5 @@ data class Road(
     var length: Double,
     var leftLane: Int = 1,
     var rightLane: Int = 1,
-    val geometry: Spline? = null
+    var geometry: Spline? = null
 )
