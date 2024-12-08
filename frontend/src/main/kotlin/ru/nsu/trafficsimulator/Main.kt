@@ -58,8 +58,8 @@ class Main : ApplicationAdapter() {
 
         fun buildStraightRoad(modelBuilder: ModelBuilder, road: Road) {
             val node = modelBuilder.node()
-            val pos = (road.startIntersection.position + road.endIntersection.position) / 2.0
-            val dir = road.endIntersection.position - road.startIntersection.position
+            val pos = (road.startIntersection!!.position + road.endIntersection!!.position) / 2.0
+            val dir = road.endIntersection!!.position - road.startIntersection!!.position
             val halfLen = dir.length() / 2.0 - intersectionPadding
             if (halfLen < 0)
                 return
@@ -85,7 +85,7 @@ class Main : ApplicationAdapter() {
             val modelBuilder = ModelBuilder()
             var meshPartBuilder: MeshPartBuilder
             modelBuilder.begin()
-            for (road in layout.roads) {
+            for (road in layout.roads.values) {
                 if (road.geometry == null) {
                     buildStraightRoad(modelBuilder, road)
                     continue
@@ -203,7 +203,7 @@ class Main : ApplicationAdapter() {
             val samplePerSide = 40
             val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
             val upDir = Vec3(0.0, 1.0, 0.0)
-            for (intersection in layout.intersections) {
+            for (intersection in layout.intersections.values) {
                 val node = modelBuilder.node()
                 node.translation.set(intersection.position.toGdxVec())
                 meshPartBuilder = modelBuilder.part("intersection${intersection.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
@@ -216,11 +216,11 @@ class Main : ApplicationAdapter() {
                             val proj = Vec2(point.x, point.z)
                             (road.geometry!!.closestPoint(proj) - proj).length()
                         } else {
-                            getDistanceToSegment(point, road.startIntersection.position, road.endIntersection.position)
+                            getDistanceToSegment(point, road.startIntersection!!.position, road.endIntersection!!.position)
                         }
                         if (abs(dist) < abs(minDist)) {
                             minDist = dist
-                            val right = (road.endIntersection.position - road.startIntersection.position).cross(Vec3(0.0, 1.0, 0.0))
+                            val right = (road.endIntersection!!.position - road.startIntersection!!.position).cross(Vec3(0.0, 1.0, 0.0))
                             laneCount = if (point.dot(right) > 0) {
                                 road.rightLane
                             } else {
