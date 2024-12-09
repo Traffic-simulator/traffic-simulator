@@ -1,110 +1,123 @@
 package ru.nsu.trafficsimulator.model
 
-import kotlin.math.cos
-import kotlin.math.sin
+import java.util.*
+import kotlin.math.*
 
 class Spline {
-    val x: Poly3
-    val y: Poly3
-    val length: Double
-    val normalized: Boolean
+    val splineParts: MutableList<SplinePart>
+    var length: Double
+        private set
 
+    init {
+        splineParts = LinkedList()
+        length = 0.0
+    }
 
-    constructor(
-        globalStart: Vec2,
+    constructor()
+
+    constructor(start: Vec2, startAnchor: Vec2, end: Vec2, endAnchor: Vec2) {
+        addSplinePart(start to startAnchor, end to endAnchor)
+    }
+
+    fun addPoint(newPoint: Pair<Vec2, Vec2>) {
+        val prevPoint = splineParts.last().getEndPoint()
+        addSplinePart(prevPoint, newPoint)
+    }
+
+    fun addSplinePart(start: Pair<Vec2, Vec2>, end: Pair<Vec2, Vec2>) {
+        val (x, y) = normalizedPolynom(start, end)
+        val partLength = calculateLength(x, y)
+        splineParts.add(SplinePart(x, y, this.length, partLength, true))
+        this.length += partLength
+    }
+
+    fun addLine(start: Vec2, angle: Double, length: Double) {
+        val startVertex = start to start + Vec2(cos(angle), sin(angle))
+        val endVertex =
+            start + Vec2(cos(angle), sin(angle)) * length to
+                start + Vec2(cos(angle), sin(angle)) * (length + 1)
+        addSplinePart(startVertex, endVertex)
+    }
+
+    fun addPoly(
+        start: Vec2,
         rotationRad: Double,
-        length: Double,
+        partLength: Double,
         xPoly: Poly3,
         yPoly: Poly3,
         normalized: Boolean
     ) {
         val rotatedX = xPoly * cos(rotationRad) - yPoly * sin(rotationRad)
         val rotatedY = xPoly * sin(rotationRad) + yPoly * cos(rotationRad)
-        this.x = Poly3(rotatedX.a + globalStart.x, rotatedX.b, rotatedX.c, rotatedX.d)
-        this.y = Poly3(rotatedY.a + globalStart.y, rotatedY.b, rotatedY.c, rotatedY.d)
-        this.length = length
-        this.normalized = normalized
+        val x = Poly3(rotatedX.a + start.x, rotatedX.b, rotatedX.c, rotatedX.d)
+        val y = Poly3(rotatedY.a + start.y, rotatedY.b, rotatedY.c, rotatedY.d)
+        splineParts.add(SplinePart(x, y, this.length, partLength, normalized))
+        this.length += partLength
     }
 
-    constructor(start: Vec2, startAnchor: Vec2, end: Vec2, endAnchor: Vec2) {
-        val startNext = start + (start - startAnchor)
-        x = Poly3(
-            start.x,
-            startNext.x - start.x,
-            4 * end.x - 2 * startNext.x - start.x - endAnchor.x,
-            endAnchor.x + start.x + startNext.x - 3 * end.x
-        )
+    fun addArc(start: Vec2, startAngle: Double, curvature: Double, length: Double) {
+        val maxPart = PI / 2.0
+        val deltaAngle = curvature * length
+        val parts = ceil(abs(deltaAngle) / maxPart).toInt()
+        val step = deltaAngle / parts
+        val r = 1 / curvature
+        var curPoint = start
+        var curAngle = startAngle
+        for (i in 0 until parts) {
+            val endAngle = curAngle + step
 
-        y = Poly3(
-            start.y,
-            startNext.y - start.y,
-            4 * end.y - 2 * startNext.y - start.y - endAnchor.y,
-            endAnchor.y + start.y + startNext.y - 3 * end.y
-        )
+            val endPoint = curPoint - Vec2(
+                sin(curAngle) - sin(endAngle),
+                -cos(curAngle) + cos(endAngle)
+            ) * r
 
-        this.length = calculateLength(x, y)
-        this.normalized = true
+            addSplinePart(
+                curPoint to curPoint + Vec2(cos(curAngle), sin(curAngle)) * (length / parts),
+                endPoint to endPoint + Vec2(cos(endAngle), sin(endAngle)) * (length / parts)
+            )
+
+            curPoint = endPoint
+            curAngle = endAngle
+
+        }
     }
 
     fun getPoint(distance: Double): Vec2 {
         if (distance < 0 || distance > length) {
-            throw IllegalArgumentException("distance should be between 0 and length")
+            throw IllegalArgumentException("Offset must be between 0 and length")
         }
 
-        if (normalized) {
-            return Vec2(x.value(distance / length), y.value(distance / length))
+        var sp: SplinePart = splineParts.first()
+        for (splinePart in splineParts) {
+            if (splinePart.offset < distance) {
+                sp = splinePart
+            } else {
+                break
+            }
         }
-        return Vec2(x.value(distance), y.value(distance))
+        return sp.getPoint(distance - sp.offset)
     }
 
     fun getDirection(distance: Double): Vec2 {
         if (distance < 0 || distance > length) {
-            throw IllegalArgumentException("distance should be between 0 and length")
+            throw IllegalArgumentException("Offset must be between 0 and length")
         }
 
-        if (normalized) {
-            return Vec2(x.derivativeValue(distance / length), y.derivativeValue(distance / length))
+        var sp: SplinePart = splineParts.first()
+        for (splinePart in splineParts) {
+            if (splinePart.offset < distance) {
+                sp = splinePart
+            } else {
+                break
+            }
         }
-        return Vec2(x.derivativeValue(distance), y.derivativeValue(distance))
+        return sp.getDirection(distance - sp.offset)
     }
 
     fun closestPoint(point: Vec2): Vec2 {
-        val maxValue = if (normalized) { 1.0 } else { length }
-        val iterationCount = 5
-        val sampleCount = 10
-        val converge = { start: Double ->
-            var guess = start
-            for (i in 0..<iterationCount) {
-                val xErr = (x.value(guess) - point.x)
-                val yErr = (y.value(guess) - point.y)
-                val xDer = x.derivativeValue(guess)
-                val yDer = y.derivativeValue(guess)
-                guess -= (xErr * xDer + yErr * yDer) / (x.secondDerivativeValue(guess) * xErr + xDer * xDer + y.secondDerivativeValue(guess) * yErr + yDer * yDer)
-            }
-            guess
-        }
-        val distanceSqFrom = { t: Double ->
-            val dx = x.value(t) - point.x
-            val dy = y.value(t) - point.y
-            dx * dx + dy * dy
-        }
-        var bestGuess = 0.0
-        var bestDistSq = distanceSqFrom(0.0)
-        val distFromMax = distanceSqFrom(maxValue)
-        if (distFromMax < bestDistSq) {
-            bestGuess = maxValue
-            bestDistSq = distFromMax
-        }
-        for (i in 0..<sampleCount) {
-            val guess = converge(maxValue * i / sampleCount.toDouble())
-            val dist = distanceSqFrom(guess)
-            if (guess > 0.0 && guess < 1.0 && dist < bestDistSq) {
-                bestGuess = guess
-                bestDistSq = dist
-            }
-        }
-
-        return Vec2(x.value(bestGuess), y.value(bestGuess))
+        return splineParts
+            .map { it.closestPoint(point) }
+            .minBy { closest -> point.distance(closest) }
     }
 
     private fun calculateLength(x: Poly3, y: Poly3): Double {
@@ -120,7 +133,110 @@ class Spline {
         return length
     }
 
+    private fun normalizedPolynom(start: Pair<Vec2, Vec2>, end: Pair<Vec2, Vec2>): Pair<Poly3, Poly3> {
+        val (startPoint, startDir) = start
+        val (endPoint, endDir) = end
+
+        val x = Poly3(
+            startPoint.x,
+            startDir.x - startPoint.x,
+            4 * endPoint.x - 2 * startDir.x - startPoint.x - endDir.x,
+            endDir.x + startPoint.x + startDir.x - 3 * endPoint.x
+        )
+
+        val y = Poly3(
+            startPoint.y,
+            startDir.y - startPoint.y,
+            4 * endPoint.y - 2 * startDir.y - startPoint.y - endDir.y,
+            endDir.y + startPoint.y + startDir.y - 3 * endPoint.y
+        )
+        return (x to y)
+    }
+
+
+    class SplinePart(val x: Poly3, val y: Poly3, val offset: Double, val length: Double, val normalized: Boolean) {
+        private val endDist = if (normalized) 1.0 else length
+
+        fun getStartPoint(): Pair<Vec2, Vec2> {
+            return Vec2(x.value(0.0), y.value(0.0)) to
+                Vec2(x.value(0.0), y.value(0.0)) + Vec2(x.derivativeValue(0.0), y.derivativeValue(0.0))
+        }
+
+        fun getEndPoint(): Pair<Vec2, Vec2> {
+            return Vec2(x.value(endDist), y.value(endDist)) to
+                Vec2(x.value(endDist), y.value(endDist)) + Vec2(x.derivativeValue(endDist), y.derivativeValue(endDist))
+        }
+
+        fun getPoint(distance: Double): Vec2 {
+            if (normalized) {
+                return Vec2(x.value(distance / length), y.value(distance / length))
+            }
+            return Vec2(x.value(distance), y.value(distance))
+        }
+
+        fun getDirection(distance: Double): Vec2 {
+            if (normalized) {
+                return Vec2(x.derivativeValue(distance / length), y.derivativeValue(distance / length))
+            }
+            return Vec2(x.derivativeValue(distance), y.derivativeValue(distance))
+        }
+
+        fun closestPoint(point: Vec2): Vec2 {
+            val maxValue = if (normalized) {
+                1.0
+            } else {
+                length
+            }
+            val iterationCount = 5
+            val sampleCount = 10
+            val converge = { start: Double ->
+                var guess = start
+                for (i in 0..<iterationCount) {
+                    val xErr = (x.value(guess) - point.x)
+                    val yErr = (y.value(guess) - point.y)
+                    val xDer = x.derivativeValue(guess)
+                    val yDer = y.derivativeValue(guess)
+                    guess -= (xErr * xDer + yErr * yDer) / (x.secondDerivativeValue(guess) * xErr + xDer * xDer + y.secondDerivativeValue(
+                        guess
+                    ) * yErr + yDer * yDer)
+                }
+                guess
+            }
+            val distanceSqFrom = { t: Double ->
+                val dx = x.value(t) - point.x
+                val dy = y.value(t) - point.y
+                dx * dx + dy * dy
+            }
+            var bestGuess = 0.0
+            var bestDistSq = distanceSqFrom(0.0)
+            val distFromMax = distanceSqFrom(maxValue)
+            if (distFromMax < bestDistSq) {
+                bestGuess = maxValue
+                bestDistSq = distFromMax
+            }
+            for (i in 0..<sampleCount) {
+                val guess = converge(maxValue * i / sampleCount.toDouble())
+                val dist = distanceSqFrom(guess)
+                if (guess > 0.0 && guess < 1.0 && dist < bestDistSq) {
+                    bestGuess = guess
+                    bestDistSq = dist
+                }
+            }
+
+            return Vec2(x.value(bestGuess), y.value(bestGuess))
+        }
+
+        override fun toString(): String {
+            return "SplinePart(x=$x, y=$y, length=$length, normalized=$normalized)"
+        }
+    }
+
     override fun toString(): String {
-        return "Spline(x=$x, y=$y, length=$length, normalized=$normalized)"
+        var result = "Spline(length=$length, ["
+        for (sp in splineParts) {
+            result += "\n$sp,"
+        }
+        result += "\n])"
+        return result
     }
 }

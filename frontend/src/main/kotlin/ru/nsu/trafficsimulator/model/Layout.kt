@@ -1,12 +1,42 @@
 package ru.nsu.trafficsimulator.model
 
 class Layout {
-    val roads = mutableSetOf<Road>()
-    val intersectionRoads = mutableSetOf<IntersectionRoad>()
-    val intersections = mutableSetOf<Intersection>()
+    val roads = mutableMapOf<Long, Road>()
+    val intersectionRoads = mutableMapOf<Long, IntersectionRoad>()
+    val intersections = mutableMapOf<Long, Intersection>()
 
     private var roadIdCount: Long = 0
     private var intersectionIdCount: Long = 0
+
+    fun pushRoad(road: Road) {
+        if (roads.containsKey(road.id) || intersectionRoads.containsKey(road.id)) {
+            throw IllegalArgumentException("Road with id ${road.id} already exists.")
+        }
+        if (road.id > roadIdCount) {
+            roadIdCount = road.id + 1
+        }
+        roads[road.id] = road
+    }
+
+    fun pushIntersection(intersection: Intersection) {
+        if (roads.containsKey(intersection.id)) {
+            throw IllegalArgumentException("Intersection with id ${intersection.id} already exists.")
+        }
+        if (intersection.id > roadIdCount) {
+            roadIdCount = intersection.id + 1
+        }
+        intersections[intersection.id] = intersection
+    }
+
+    fun pushIntersectionRoad(road: IntersectionRoad) {
+        if (roads.containsKey(road.id) || intersectionRoads.containsKey(road.id)) {
+            throw IllegalArgumentException("Road with id ${road.id} already exists.")
+        }
+        if (road.id > roadIdCount) {
+            roadIdCount = road.id + 1
+        }
+        intersectionRoads[road.id] = road
+    }
 
     fun addRoad(startPosition: Vec3, endPosition: Vec3): Road {
         val startIntersection = addIntersection(startPosition)
@@ -30,7 +60,7 @@ class Layout {
         connectRoadToIntersection(newRoad, startIntersection)
         connectRoadToIntersection(newRoad, endIntersection)
 
-        roads.add(newRoad)
+        roads[newRoadId] = newRoad
         return newRoad
     }
 
@@ -58,25 +88,24 @@ class Layout {
     }
 
     fun deleteRoad(road: Road) {
-        val start = road.startIntersection
-        start.removeRoad(road)
-        if (start.getIncomingRoadsCount() == 0) {
-            deleteIntersection(start)
+        road.startIntersection?.let {
+            it.removeRoad(road)
+            if (it.getIncomingRoadsCount() == 0) {
+                deleteIntersection(it)
+            }
         }
-
-        val end = road.startIntersection
-        end.removeRoad(road)
-        if (end.getIncomingRoadsCount() == 0) {
-            deleteIntersection(end)
+        road.startIntersection?.let {
+            it.removeRoad(road)
+            if (it.getIncomingRoadsCount() == 0) {
+                deleteIntersection(it)
+            }
         }
-
-        road.endIntersection.removeRoad(road)
     }
 
     fun addIntersection(position: Vec3): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection = Intersection(newIntersectionId, position)
-        intersections.add(newIntersection)
+        intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
 

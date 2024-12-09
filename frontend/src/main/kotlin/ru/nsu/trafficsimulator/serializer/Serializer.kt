@@ -8,15 +8,15 @@ class Serializer {
     fun serialize(layout: Layout): OpenDRIVE {
         val openDrive = OpenDRIVE()
 
-        for (road in layout.roads) {
+        for (road in layout.roads.values) {
             openDrive.road.add(serializeRoad(road))
         }
 
-        for (intersectionRoad in layout.intersectionRoads) {
+        for (intersectionRoad in layout.intersectionRoads.values) {
             openDrive.road.add(serializeIntersectionRoad(intersectionRoad))
         }
 
-        for (intersection in layout.intersections) {
+        for (intersection in layout.intersections.values) {
             openDrive.junction.add(serializeIntersection(intersection))
         }
         return openDrive
@@ -32,11 +32,11 @@ class Serializer {
             link = TRoadLink()
             link.predecessor = TRoadLinkPredecessorSuccessor().apply {
                 elementType = ERoadLinkElementType.JUNCTION
-                elementId = road.startIntersection.id.toString()
+                elementId = road.startIntersection!!.id.toString()
             }
             link.successor = TRoadLinkPredecessorSuccessor().apply {
                 elementType = ERoadLinkElementType.JUNCTION
-                elementId = road.endIntersection.id.toString()
+                elementId = road.endIntersection!!.id.toString()
             }
 
             planView = generateRoadPlaneView(road)
