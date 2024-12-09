@@ -46,8 +46,8 @@ class Deserializer {
             }
         }
 
-        val leftLane = tRoad.lanes.laneSection[0].left.lane.count { it.type == ELaneType.DRIVING }
-        val rightLane = tRoad.lanes.laneSection[0].right.lane.count { it.type == ELaneType.DRIVING }
+        val leftLane = tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
+        val rightLane = tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
 
         val spline = planeViewToSpline(tRoad.planView)
 
@@ -116,7 +116,7 @@ class Deserializer {
             } else if (geometry.paramPoly3 != null) {
                 with(geometry.paramPoly3) {
                     val x = Poly3(au, bu, cu, du)
-                    val y = Poly3(au, bu, cu, du)
+                    val y = Poly3(av, bv, cv ,dv)
                     val normalized = pRange == EParamPoly3PRange.NORMALIZED
                     spline.addPoly(startPoint, hdg, length, x, y, normalized)
                 }

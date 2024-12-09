@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator;
 
+import OpenDriveReader
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
@@ -29,6 +30,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.serializer.Deserializer
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -403,23 +405,27 @@ class Main : ApplicationAdapter() {
         camController.translateUnits = 100.0f
         Gdx.input.inputProcessor = camController
 
-        val inter1 = layout.addIntersection(Vec3(0.0, 0.0, 0.0))
-        val inter2 = layout.addIntersection(Vec3(100.0, 0.0, 0.0))
-        val inter3 = layout.addIntersection(Vec3(100.0, 0.0, -100.0))
-        val inter4 = layout.addIntersection(Vec3(0.0, 0.0, 100.0))
+//        val inter1 = layout.addIntersection(Vec3(0.0, 0.0, 0.0))
+//        val inter2 = layout.addIntersection(Vec3(100.0, 0.0, 0.0))
+//        val inter3 = layout.addIntersection(Vec3(100.0, 0.0, -100.0))
+//        val inter4 = layout.addIntersection(Vec3(0.0, 0.0, 100.0))
 //        layout.addRoad(inter1, inter2)
 //        layout.addRoad(inter3, inter2)
 //        layout.addRoad(inter1, inter4)
 //        layout.addRoad(Vec3(100.0, 0.0, 100.0), inter4)
 //        layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
-        val road = layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
-        road.geometry = Spline(Vec2(0.0, 0.0), Vec2(1.0, 1.0).normalized() * 100.0, Vec2(-100.0, -100.0), Vec2(-100.0, -100.0) + Vec2(-10.0, -1.0).normalized() * 120.01)
-        val road2 = layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
-        road2.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 100.0), Vec2(100.0, 100.0) + Vec2(10.0, 1.0).normalized() * 120.0)
-        val road3 = layout.addRoad(inter1, Vec3(100.0, 0.0, 0.0))
-        road3.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 0.0), Vec2(100.0, 0.0) + Vec2(1.0, 1.0).normalized() * 120.0)
+//        val road = layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
+//        road.geometry = Spline(Vec2(0.0, 0.0), Vec2(1.0, 1.0).normalized() * 100.0, Vec2(-100.0, -100.0), Vec2(-100.0, -100.0) + Vec2(-10.0, -1.0).normalized() * 120.01)
+//        val road2 = layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
+//        road2.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 100.0), Vec2(100.0, 100.0) + Vec2(10.0, 1.0).normalized() * 120.0)
+//        val road3 = layout.addRoad(inter1, Vec3(100.0, 0.0, 0.0))
+//        road3.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 0.0), Vec2(100.0, 0.0) + Vec2(1.0, 1.0).normalized() * 120.0)
 //        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
 //        layout.addRoad(inter1, inter3)
+
+        layout = Deserializer().deserialize(OpenDriveReader().read("UC_ParamPoly3.xodr"))
+
+
         val time = measureTime {
             layoutModel = createLayoutModel(layout)
         }
