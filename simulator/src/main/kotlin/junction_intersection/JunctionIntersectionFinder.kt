@@ -1,13 +1,14 @@
 package junction_intersection
 
-import network.Junction
+import network.junction.Junction
 import network.Network
 import network.Road
 import kotlin.math.pow
 
+
 class JunctionIntersectionFinder(private val network: Network) {
     companion object {
-        private val NUMBER_OF_SECTIONS_IN_SPLINES = 100
+        private val NUMBER_OF_SECTIONS_IN_SPLINES = 1000
     }
     private var allRoads : List<Road> = network.roads;
     private var allRoadsMap : MutableMap<String, Road> = HashMap()
@@ -26,10 +27,10 @@ class JunctionIntersectionFinder(private val network: Network) {
 
 
     //return list of intersection points
-    private fun twoSplinesIntersection (
+    internal fun twoSplinesIntersection (
         firstSpline: Spline,
         secondSpline: Spline
-    ): List<Pair<Double, Double>>{
+    ): List<Pair<Double, Double>> {
         var first = firstSpline
         if (firstSpline.pRange == PRange.ARC_LENGTH) {
             first = normalizingSpline(firstSpline)
@@ -117,8 +118,8 @@ class JunctionIntersectionFinder(private val network: Network) {
         if (p < 0 || p > 1.0) {
             throw IllegalArgumentException("parameter p is should be between 0 and 1.")
         }
-        val x = spline.aU + spline.bU * p + spline.cU * p + spline.dU * p;
-        val y = spline.aV + spline.bV * p + spline.cV * p + spline.dV * p;
+        val x = spline.aU + spline.bU * p + spline.cU * p.pow(2)  + spline.dU * p.pow(3);
+        val y = spline.aV + spline.bV * p + spline.cV * p.pow(2) + spline.dV * p.pow(3);
         return Pair(x, y)
     }
 

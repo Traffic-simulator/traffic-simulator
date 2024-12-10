@@ -19,6 +19,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+
+    testImplementation "org.jetbrains.kotlin:kotlin-test"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.0"
 }
 
 test {
