@@ -16,6 +16,8 @@ class Layout {
             roadIdCount = road.id + 1
         }
         roads[road.id] = road
+        road.endIntersection?.incomingRoads?.add(road)
+        road.startIntersection?.incomingRoads?.add(road)
     }
 
     fun pushIntersection(intersection: Intersection) {
@@ -36,6 +38,7 @@ class Layout {
             roadIdCount = road.id + 1
         }
         intersectionRoads[road.id] = road
+        road.intersection.intersectionRoads.add(road)
     }
 
     fun addRoad(startPosition: Vec3, endPosition: Vec3): Road {

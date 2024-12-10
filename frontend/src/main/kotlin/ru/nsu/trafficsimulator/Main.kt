@@ -54,7 +54,7 @@ class Main : ApplicationAdapter() {
     companion object {
         private val roadHeight = 1.0
         private val laneWidth = 2.0
-        private val intersectionPadding = 10.0
+        private val intersectionPadding = 0.0
         private val splineRoadSegmentLen = 5.0f
         private val upVec = Vec3(0.0, roadHeight, 0.0)
 
@@ -108,7 +108,6 @@ class Main : ApplicationAdapter() {
                     (prevPos + prevLeft + upVec).toGdxVec(),
                     -prevDir.toGdxVec()
                 )
-                println("${road.geometry}")
 
                 for (i in 1..stepCount) {
                     val t = intersectionPadding + i * splineRoadSegmentLen.toDouble()
@@ -116,11 +115,6 @@ class Main : ApplicationAdapter() {
                     val direction = road.geometry!!.getDirection(t).toVec3().normalized()
                     val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
                     val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
-//                    println(road.geometry!!.getDirection(i * splineRoadSegmentLen.toDouble()))
-//                    println("$prevDir, $prevPos")
-//                    println("$prevPos, $prevLeft, $prevRight")
-//                    println("${(prevPos + prevLeft).toGdxVec()}, ${(prevPos + prevLeft + upVec).toGdxVec()}, ${(prevPos + prevRight + upVec).toGdxVec()}, ${(prevPos + prevRight).toGdxVec()}, ${-prevDir.toGdxVec()}")
-//                    println("${(prevPos + prevLeft + upVec).toGdxVec()}, ${(pos + left + upVec).toGdxVec()}, ${(pos + right + upVec).toGdxVec()}, ${(prevPos + prevRight + upVec).toGdxVec()}, ${Vec3.UP.toGdxVec()}")
                     if (direction.dot(prevDir) < 0.0) {
                         prevLeft = prevRight.also { prevRight = prevLeft }
                     }
@@ -192,7 +186,6 @@ class Main : ApplicationAdapter() {
                     direction.toGdxVec()
                 )
             }
-//            return modelBuilder.end()
 
             val getDistanceToSegment = { point: Vec3, from: Vec3, to: Vec3 ->
                 val dir = to - from
@@ -201,7 +194,7 @@ class Main : ApplicationAdapter() {
                 (point - projected).length()
             }
 
-            val intersectionBoxSize = 20.0
+            val intersectionBoxSize = 25.0
             val samplePerSide = 40
             val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
             val upDir = Vec3(0.0, 1.0, 0.0)
@@ -213,21 +206,16 @@ class Main : ApplicationAdapter() {
                     val point = intersection.position + local
                     var minDist = intersectionBoxSize * intersectionBoxSize
                     var laneCount = 1
-                    for (road in intersection.incomingRoads) {
+                    for (road in intersection.intersectionRoads) {
                         val dist = if (road.geometry != null) {
                             val proj = Vec2(point.x, point.z)
-                            (road.geometry!!.closestPoint(proj) - proj).length()
+                            (road.geometry.closestPoint(proj) - proj).length()
                         } else {
-                            getDistanceToSegment(point, road.startIntersection!!.position, road.endIntersection!!.position)
+                            minDist
                         }
                         if (abs(dist) < abs(minDist)) {
                             minDist = dist
-                            val right = (road.endIntersection!!.position - road.startIntersection!!.position).cross(Vec3(0.0, 1.0, 0.0))
-                            laneCount = if (point.dot(right) > 0) {
-                                road.rightLane
-                            } else {
-                                road.leftLane
-                            }
+                            laneCount = 1
                         }
                     }
                     minDist - laneWidth * laneCount
@@ -300,14 +288,14 @@ class Main : ApplicationAdapter() {
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
                             val bdPoint = getRefinedGuess(b, d)
                             val acPoint = getRefinedGuess(a, c)
-                            val normal = -(bdPoint - acPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            val normal = -(bdPoint - acPoint).cross(upDir).normalized()
                             insertRect(acPoint, bdPoint, normal)
                             meshPartBuilder.rect(
                                 (acPoint + upVec).toGdxVec(),
                                 (c + upVec).toGdxVec(),
                                 (d + upVec).toGdxVec(),
                                 (bdPoint + upVec).toGdxVec(),
-                                Vec3(0.0, 1.0, 0.0).toGdxVec()
+                                upDir.toGdxVec()
                             )
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
@@ -316,16 +304,16 @@ class Main : ApplicationAdapter() {
                             val acPoint = getRefinedGuess(a, c)
                             val bdPoint = getRefinedGuess(b, d)
                             val cdPoint = getRefinedGuess(c, d)
-                            var normal = (abPoint - cdPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            var normal = (abPoint - cdPoint).cross(upDir).normalized()
                             insertRect(abPoint, bdPoint, normal)
-                            normal = (cdPoint - abPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            normal = (cdPoint - abPoint).cross(upDir).normalized()
                             insertRect(cdPoint, acPoint, normal)
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
                             val abPoint = getRefinedGuess(a, b)
                             val acPoint = getRefinedGuess(a, c)
-                            val normal = (abPoint - acPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            val normal = (abPoint - acPoint).cross(upDir).normalized()
                             insertRect(abPoint, acPoint, normal)
                             insertTriangle(acPoint + upVec, abPoint + upVec, a + upVec, upDir)
                         },
@@ -336,7 +324,7 @@ class Main : ApplicationAdapter() {
                                 (c + upVec).toGdxVec(),
                                 (d + upVec).toGdxVec(),
                                 (b + upVec).toGdxVec(),
-                                Vec3(0.0, 1.0, 0.0).toGdxVec()
+                                upDir.toGdxVec()
                             )
                         },
                 )
@@ -372,8 +360,8 @@ class Main : ApplicationAdapter() {
                         }
                     }
                 }
+                System.gc()
             }
-
             return modelBuilder.end()
         }
     }
@@ -423,7 +411,7 @@ class Main : ApplicationAdapter() {
 //        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
 //        layout.addRoad(inter1, inter3)
 
-        layout = Deserializer().deserialize(OpenDriveReader().read("UC_ParamPoly3.xodr"))
+        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
 
 
         val time = measureTime {
