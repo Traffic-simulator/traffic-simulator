@@ -5,9 +5,8 @@ data class IntersectionRoad(
     val intersection: Intersection,
     val fromRoad: Road,
     val toRoad: Road,
-    val length: Double,
     val lane: Int = 1,
-    val geometry: Spline? = null
+    val geometry: Spline
 ) {
     val laneLinkage: MutableList<Triple<Int, Int, Int>> = mutableListOf()
 }

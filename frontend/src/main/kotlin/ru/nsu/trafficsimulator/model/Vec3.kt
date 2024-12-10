@@ -26,6 +26,7 @@ data class Vec3(val x: Double, val y: Double, val z: Double) {
     fun lengthSq(): Double = dot(this)
     fun normalized(): Vec3 = this / length()
     fun toGdxVec(): Vector3 = Vector3(x.toFloat(), y.toFloat(), z.toFloat())
+    fun xzProjection() = Vec2(x, z)
 
     companion object {
         val UP: Vec3 = Vec3(0.0, 1.0, 0.0)

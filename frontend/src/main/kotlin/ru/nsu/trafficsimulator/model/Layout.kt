@@ -5,65 +5,42 @@ class Layout {
     val intersectionRoads = mutableMapOf<Long, IntersectionRoad>()
     val intersections = mutableMapOf<Long, Intersection>()
 
-    private var roadIdCount: Long = 0
-    private var intersectionIdCount: Long = 0
+    var roadIdCount: Long = 0
+    var intersectionIdCount: Long = 0
 
-    fun pushRoad(road: Road) {
-        if (roads.containsKey(road.id) || intersectionRoads.containsKey(road.id)) {
-            throw IllegalArgumentException("Road with id ${road.id} already exists.")
-        }
-        if (road.id > roadIdCount) {
-            roadIdCount = road.id + 1
-        }
-        roads[road.id] = road
-        road.endIntersection?.incomingRoads?.add(road)
-        road.startIntersection?.incomingRoads?.add(road)
-    }
-
-    fun pushIntersection(intersection: Intersection) {
-        if (roads.containsKey(intersection.id)) {
-            throw IllegalArgumentException("Intersection with id ${intersection.id} already exists.")
-        }
-        if (intersection.id > roadIdCount) {
-            roadIdCount = intersection.id + 1
-        }
-        intersections[intersection.id] = intersection
-    }
-
-    fun pushIntersectionRoad(road: IntersectionRoad) {
-        if (roads.containsKey(road.id) || intersectionRoads.containsKey(road.id)) {
-            throw IllegalArgumentException("Road with id ${road.id} already exists.")
-        }
-        if (road.id > roadIdCount) {
-            roadIdCount = road.id + 1
-        }
-        intersectionRoads[road.id] = road
-        road.intersection.intersectionRoads.add(road)
-    }
-
-    fun addRoad(startPosition: Vec3, endPosition: Vec3): Road {
+    fun addRoad(startPosition: Vec3, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
         val startIntersection = addIntersection(startPosition)
         val endIntersection = addIntersection(endPosition)
-        return addRoad(startIntersection, endIntersection)
+        return addRoad(startIntersection, startDirection, endIntersection, endDirection)
     }
 
-    fun addRoad(startIntersection: Intersection, endPosition: Vec3): Road {
+    fun addRoad(startIntersection: Intersection, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
         val endIntersection = addIntersection(endPosition)
-        return addRoad(startIntersection, endIntersection)
-    }
-    fun addRoad(startPosition: Vec3, endIntersection: Intersection): Road {
-        return addRoad(endIntersection, startPosition)
+        return addRoad(startIntersection, startDirection, endIntersection, endDirection)
     }
 
-    fun addRoad(startIntersection: Intersection, endIntersection: Intersection): Road {
-        val newRoadId = roadIdCount++
-        val length = endIntersection.position.distance(startIntersection.position)
-        val newRoad = Road(newRoadId, startIntersection, endIntersection, length)
+    fun addRoad(
+        startIntersection: Intersection,
+        startDirection: Vec3,
+        endIntersection: Intersection,
+        endDirection: Vec3
+    ): Road {
+        val startPoint = startIntersection.position.xzProjection()
+        val startDir = startDirection.xzProjection()
+        val endPoint = endIntersection.position.xzProjection()
+        val endDir = endDirection.xzProjection()
+
+        val newRoad = Road(
+            id = roadIdCount++,
+            startIntersection = startIntersection,
+            endIntersection = endIntersection,
+            geometry = Spline(startPoint, startDir, endPoint, endDir)
+        )
 
         connectRoadToIntersection(newRoad, startIntersection)
         connectRoadToIntersection(newRoad, endIntersection)
 
-        roads[newRoadId] = newRoad
+        roads[newRoad.id] = newRoad
         return newRoad
     }
 
@@ -75,7 +52,7 @@ class Layout {
                 intersection,
                 road,
                 incomingRoad,
-                1.0
+                geometry = Spline()
             )
             intersection.intersectionRoads.add(outIR)
             val inIR = IntersectionRoad(
@@ -83,7 +60,7 @@ class Layout {
                 intersection,
                 incomingRoad,
                 road,
-                1.0
+                geometry = Spline()
             )
             intersection.intersectionRoads.add(inIR)
         }

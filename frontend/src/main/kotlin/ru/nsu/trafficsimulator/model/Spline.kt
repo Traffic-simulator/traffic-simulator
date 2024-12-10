@@ -39,7 +39,7 @@ class Spline {
         addSplinePart(startVertex, endVertex)
     }
 
-    fun addPoly(
+    fun addParamPoly(
         start: Vec2,
         rotationRad: Double,
         partLength: Double,

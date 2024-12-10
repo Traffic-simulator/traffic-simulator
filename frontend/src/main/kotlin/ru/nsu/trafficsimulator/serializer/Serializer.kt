@@ -26,7 +26,7 @@ class Serializer {
     private fun serializeRoad(road: Road): TRoad {
         return TRoad().apply {
             id = road.id.toString()
-            length = road.length
+            length = road.geometry.length
             junction = "-1"
 
             link = TRoadLink()
@@ -79,7 +79,7 @@ class Serializer {
     private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
         return TRoad().apply {
             id = road.id.toString()
-            length = road.length
+            length = road.geometry.length
             junction = road.intersection.id.toString()
 
 //            link = TRoadLink()
@@ -142,16 +142,3 @@ class Serializer {
     }
 }
 
-fun main() {
-    val odr = OpenDriveWriter()
-    val ser = Serializer()
-
-    val layout = Layout()
-    layout.addRoad(Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 2.0))
-
-    val od = ser.serialize(layout)
-
-    odr.write(od, "testOpenDrive")
-
-
-}

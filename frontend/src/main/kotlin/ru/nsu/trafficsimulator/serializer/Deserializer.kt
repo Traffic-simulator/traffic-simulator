@@ -1,7 +1,5 @@
 package ru.nsu.trafficsimulator.serializer
 
-import OpenDriveReader
-import javazoom.jl.decoder.SynthesisFilter.deserialize
 import opendrive.*
 import ru.nsu.trafficsimulator.model.*
 import kotlin.math.max
@@ -12,33 +10,20 @@ class Deserializer {
 
         val intersections = openDRIVE.junction
             .map { deserializeIntersection(it) }
-        intersections.forEach(layout::pushIntersection)
+        intersections.forEach { pushIntersection(it, layout) }
 
         val roads = openDRIVE.road
             .filter { it.junction == "-1" }
             .map { deserializeRoad(it, layout.intersections) }
-            .forEach(layout::pushRoad)
+        roads.forEach { pushRoad(it, layout) }
 
         val intersectionRoads = openDRIVE.road
             .filter { it.junction != "-1" }
             .map { deserializeIntersectionRoad(it, layout.intersections, layout.roads) }
-            .forEach(layout::pushIntersectionRoad)
+        intersectionRoads.forEach { pushIntersectionRoad(it, layout) }
 
-        for (intersection in layout.intersections.values) {
-            var pos = Vec3(0.0, 0.0, 0.0)
-            for (road in intersection.incomingRoads) {
-                if (road.startIntersection == intersection) {
-                    road.geometry?.getPoint(0.0)?.let {
-                        pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
-                    }
-                } else {
-                    road.geometry?.getPoint(road.geometry!!.length)?.let {
-                        pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
-                    }
-                }
-            }
-            intersection.position = pos / intersection.incomingRoads.size.toDouble()
-        }
+        recalculateIntersectionPosition(layout)
+
         return layout
     }
 
@@ -71,11 +56,13 @@ class Deserializer {
             id,
             startIntersection,
             endIntersection,
-            tRoad.length,
             leftLane,
             rightLane,
             spline
         )
+
+        road.endIntersection?.incomingRoads?.add(road)
+        road.startIntersection?.incomingRoads?.add(road)
 
         return road
     }
@@ -85,29 +72,25 @@ class Deserializer {
         idToIntersection: Map<Long, Intersection>,
         idToRoad: Map<Long, Road>
     ): IntersectionRoad {
-        val id = tRoad.id.toLong()
         val intersection = idToIntersection[tRoad.junction.toLong()]
-            ?: throw IllegalArgumentException("Intersection road have no intersection")
-        val from = idToRoad[tRoad.link.predecessor.elementId.toLong()]
-            ?: throw IllegalArgumentException("Intersection road have no predecessor")
-        val to = idToRoad[tRoad.link.successor.elementId.toLong()]
-            ?: throw IllegalArgumentException("Intersection road have no successor")
-        val length = tRoad.length
-        val spline = planeViewToSpline(tRoad.planView)
         val lanes = max(
             tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0,
             tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
         )
-
-        return IntersectionRoad(
-            id,
-            intersection,
-            from,
-            to,
-            length,
-            lanes,
-            spline
+        val intersectionRoad = IntersectionRoad(
+            id = tRoad.id.toLong(),
+            intersection = intersection
+                ?: throw IllegalArgumentException("Intersection road have no intersection"),
+            fromRoad = idToRoad[tRoad.link.predecessor.elementId.toLong()]
+                ?: throw IllegalArgumentException("Intersection road have no predecessor"),
+            toRoad = idToRoad[tRoad.link.successor.elementId.toLong()]
+                ?: throw IllegalArgumentException("Intersection road have no successor"),
+            lane = lanes,
+            geometry = planeViewToSpline(tRoad.planView)
         )
+
+        intersection.intersectionRoads.add(intersectionRoad)
+        return intersectionRoad
     }
 
     private fun deserializeIntersection(junction: TJunction): Intersection {
@@ -115,7 +98,7 @@ class Deserializer {
         return intersection
     }
 
-    fun planeViewToSpline(planView: TRoadPlanView): Spline {
+    private fun planeViewToSpline(planView: TRoadPlanView): Spline {
         val spline = Spline()
 
         for (geometry in planView.geometry) {
@@ -130,9 +113,9 @@ class Deserializer {
             } else if (geometry.paramPoly3 != null) {
                 with(geometry.paramPoly3) {
                     val x = Poly3(au, bu, cu, du)
-                    val y = Poly3(av, bv, cv ,dv)
-                    val normalized = pRange == EParamPoly3PRange.NORMALIZED
-                    spline.addPoly(startPoint, hdg, length, x, y, normalized)
+                    val y = Poly3(av, bv, cv, dv)
+                    val normalized = (pRange == EParamPoly3PRange.NORMALIZED)
+                    spline.addParamPoly(startPoint, hdg, length, x, y, normalized)
                 }
             } else {
                 throw NotImplementedError("Unsupported geometry: $geometry")
@@ -141,4 +124,53 @@ class Deserializer {
 
         return spline
     }
+
+    private fun recalculateIntersectionPosition(layout: Layout) {
+        for (intersection in layout.intersections.values) {
+            var pos = Vec3(0.0, 0.0, 0.0)
+            for (road in intersection.incomingRoads) {
+                if (road.startIntersection == intersection) {
+                    road.geometry.getPoint(0.0).let {
+                        pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
+                    }
+                } else {
+                    road.geometry.getPoint(road.geometry.length).let {
+                        pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
+                    }
+                }
+            }
+            intersection.position = pos / intersection.incomingRoads.size.toDouble()
+        }
+    }
+
+    fun pushRoad(road: Road, layout: Layout) {
+        if (layout.roads.containsKey(road.id) || layout.intersectionRoads.containsKey(road.id)) {
+            throw IllegalArgumentException("Road with id ${road.id} already exists.")
+        }
+        if (road.id > layout.roadIdCount) {
+            layout.roadIdCount = road.id + 1
+        }
+        layout.roads[road.id] = road
+    }
+
+    fun pushIntersection(intersection: Intersection, layout: Layout) {
+        if (layout.roads.containsKey(intersection.id)) {
+            throw IllegalArgumentException("Intersection with id ${intersection.id} already exists.")
+        }
+        if (intersection.id > layout.roadIdCount) {
+            layout.roadIdCount = intersection.id + 1
+        }
+        layout.intersections[intersection.id] = intersection
+    }
+
+    fun pushIntersectionRoad(road: IntersectionRoad, layout: Layout) {
+        if (layout.roads.containsKey(road.id) || layout.intersectionRoads.containsKey(road.id)) {
+            throw IllegalArgumentException("Road with id ${road.id} already exists.")
+        }
+        if (road.id > layout.roadIdCount) {
+            layout.roadIdCount = road.id + 1
+        }
+        layout.intersectionRoads[road.id] = road
+    }
+
 }
