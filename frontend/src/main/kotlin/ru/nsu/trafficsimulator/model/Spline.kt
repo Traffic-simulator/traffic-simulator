@@ -87,14 +87,7 @@ class Spline {
             throw IllegalArgumentException("Offset must be between 0 and length")
         }
 
-        var sp: SplinePart = splineParts.first()
-        for (splinePart in splineParts) {
-            if (splinePart.offset < distance) {
-                sp = splinePart
-            } else {
-                break
-            }
-        }
+        val sp = splineParts.last { it.offset <= distance }
         return sp.getPoint(distance - sp.offset)
     }
 
@@ -103,14 +96,7 @@ class Spline {
             throw IllegalArgumentException("Offset must be between 0 and length")
         }
 
-        var sp: SplinePart = splineParts.first()
-        for (splinePart in splineParts) {
-            if (splinePart.offset < distance) {
-                sp = splinePart
-            } else {
-                break
-            }
-        }
+        val sp = splineParts.last { it.offset <= distance }
         return sp.getDirection(distance - sp.offset)
     }
 

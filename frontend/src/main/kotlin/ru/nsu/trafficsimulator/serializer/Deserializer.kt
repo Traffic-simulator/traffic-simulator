@@ -24,6 +24,21 @@ class Deserializer {
             .map { deserializeIntersectionRoad(it, layout.intersections, layout.roads) }
             .forEach(layout::pushIntersectionRoad)
 
+        for (intersection in layout.intersections.values) {
+            var pos = Vec3(0.0, 0.0, 0.0)
+            for (road in intersection.incomingRoads) {
+                if (road.startIntersection == intersection) {
+                    road.geometry?.getPoint(0.0)?.let {
+                        pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
+                    }
+                } else {
+                    road.geometry?.getPoint(road.geometry!!.length)?.let {
+                        pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
+                    }
+                }
+            }
+            intersection.position = pos / intersection.incomingRoads.size.toDouble()
+        }
         return layout
     }
 
@@ -70,7 +85,6 @@ class Deserializer {
         idToIntersection: Map<Long, Intersection>,
         idToRoad: Map<Long, Road>
     ): IntersectionRoad {
-
         val id = tRoad.id.toLong()
         val intersection = idToIntersection[tRoad.junction.toLong()]
             ?: throw IllegalArgumentException("Intersection road have no intersection")
