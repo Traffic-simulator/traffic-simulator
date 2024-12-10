@@ -4,6 +4,7 @@ class Layout {
     val roads = mutableSetOf<Road>()
     val intersectionRoads = mutableSetOf<IntersectionRoad>()
     val intersections = mutableSetOf<Intersection>()
+    val intersectionsList = mutableListOf<Intersection>()
 
     private var roadIdCount: Long = 0
     private var intersectionIdCount: Long = 0
@@ -18,6 +19,7 @@ class Layout {
         val endIntersection = addIntersection(endPosition)
         return addRoad(startIntersection, endIntersection)
     }
+
     fun addRoad(startPosition: Vec3, endIntersection: Intersection): Road {
         return addRoad(endIntersection, startPosition)
     }
@@ -76,8 +78,29 @@ class Layout {
     fun addIntersection(position: Vec3): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection = Intersection(newIntersectionId, position)
+        if (!intersections.contains(newIntersection)) {
+            intersectionsList.add(newIntersection)
+        }
         intersections.add(newIntersection)
         return newIntersection
+    }
+
+    override fun toString(): String {
+        val roadsInfo = roads.joinToString(separator = "\n") { road ->
+            "Road(id=${road.id}, startIntersection=${road.startIntersection.id}, endIntersection=${road.endIntersection.id}, length=${road.length})"
+        }
+
+        val intersectionsInfo = intersections.joinToString(separator = "\n") { intersection ->
+            "Intersection(id=${intersection.id}, position=${intersection.position})"
+        }
+
+        return buildString {
+            append("Layout:\n")
+            append("Intersections:\n")
+            append(intersectionsInfo)
+            append("\nRoads:\n")
+            append(roadsInfo)
+        }
     }
 
 

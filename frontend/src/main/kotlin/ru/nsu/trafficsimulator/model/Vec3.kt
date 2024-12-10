@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.Vector3
 import kotlin.math.sqrt
 import kotlin.math.abs
 
-data class Vec3(val x: Double, val y: Double, val z: Double) {
+data class Vec3(var x: Double, var y: Double, var z: Double) {
     fun distance(other: Vec3): Double {
         val dx = x - other.x
         val dy = y - other.y

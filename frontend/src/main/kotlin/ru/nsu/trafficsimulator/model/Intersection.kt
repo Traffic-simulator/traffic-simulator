@@ -8,6 +8,9 @@ data class Intersection(
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
 
+    override fun toString(): String {
+        return "Intersection(id=$id, position=$position)"
+    }
 
     fun addRoad(road: Road) {
         incomingRoads.add(road)
