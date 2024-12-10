@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator;
 
+import OpenDriveReader
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
@@ -29,6 +30,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.serializer.Deserializer
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -52,14 +54,14 @@ class Main : ApplicationAdapter() {
     companion object {
         private val roadHeight = 1.0
         private val laneWidth = 2.0
-        private val intersectionPadding = 10.0
-        private val splineRoadSegmentLen = 5.0f
+        private val intersectionPadding = 0.0
+        private val splineRoadSegmentLen = 2.0f
         private val upVec = Vec3(0.0, roadHeight, 0.0)
 
         fun buildStraightRoad(modelBuilder: ModelBuilder, road: Road) {
             val node = modelBuilder.node()
-            val pos = (road.startIntersection.position + road.endIntersection.position) / 2.0
-            val dir = road.endIntersection.position - road.startIntersection.position
+            val pos = (road.startIntersection!!.position + road.endIntersection!!.position) / 2.0
+            val dir = road.endIntersection!!.position - road.startIntersection!!.position
             val halfLen = dir.length() / 2.0 - intersectionPadding
             if (halfLen < 0)
                 return
@@ -85,7 +87,7 @@ class Main : ApplicationAdapter() {
             val modelBuilder = ModelBuilder()
             var meshPartBuilder: MeshPartBuilder
             modelBuilder.begin()
-            for (road in layout.roads) {
+            for (road in layout.roads.values) {
                 if (road.geometry == null) {
                     buildStraightRoad(modelBuilder, road)
                     continue
@@ -106,7 +108,6 @@ class Main : ApplicationAdapter() {
                     (prevPos + prevLeft + upVec).toGdxVec(),
                     -prevDir.toGdxVec()
                 )
-                println("${road.geometry}")
 
                 for (i in 1..stepCount) {
                     val t = intersectionPadding + i * splineRoadSegmentLen.toDouble()
@@ -114,11 +115,6 @@ class Main : ApplicationAdapter() {
                     val direction = road.geometry!!.getDirection(t).toVec3().normalized()
                     val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
                     val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
-//                    println(road.geometry!!.getDirection(i * splineRoadSegmentLen.toDouble()))
-//                    println("$prevDir, $prevPos")
-//                    println("$prevPos, $prevLeft, $prevRight")
-//                    println("${(prevPos + prevLeft).toGdxVec()}, ${(prevPos + prevLeft + upVec).toGdxVec()}, ${(prevPos + prevRight + upVec).toGdxVec()}, ${(prevPos + prevRight).toGdxVec()}, ${-prevDir.toGdxVec()}")
-//                    println("${(prevPos + prevLeft + upVec).toGdxVec()}, ${(pos + left + upVec).toGdxVec()}, ${(pos + right + upVec).toGdxVec()}, ${(prevPos + prevRight + upVec).toGdxVec()}, ${Vec3.UP.toGdxVec()}")
                     if (direction.dot(prevDir) < 0.0) {
                         prevLeft = prevRight.also { prevRight = prevLeft }
                     }
@@ -190,7 +186,6 @@ class Main : ApplicationAdapter() {
                     direction.toGdxVec()
                 )
             }
-//            return modelBuilder.end()
 
             val getDistanceToSegment = { point: Vec3, from: Vec3, to: Vec3 ->
                 val dir = to - from
@@ -199,11 +194,11 @@ class Main : ApplicationAdapter() {
                 (point - projected).length()
             }
 
-            val intersectionBoxSize = 20.0
+            val intersectionBoxSize = 25.0
             val samplePerSide = 40
             val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
             val upDir = Vec3(0.0, 1.0, 0.0)
-            for (intersection in layout.intersections) {
+            for (intersection in layout.intersections.values) {
                 val node = modelBuilder.node()
                 node.translation.set(intersection.position.toGdxVec())
                 meshPartBuilder = modelBuilder.part("intersection${intersection.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
@@ -211,21 +206,16 @@ class Main : ApplicationAdapter() {
                     val point = intersection.position + local
                     var minDist = intersectionBoxSize * intersectionBoxSize
                     var laneCount = 1
-                    for (road in intersection.incomingRoads) {
+                    for (road in intersection.intersectionRoads) {
                         val dist = if (road.geometry != null) {
                             val proj = Vec2(point.x, point.z)
-                            (road.geometry!!.closestPoint(proj) - proj).length()
+                            (road.geometry.closestPoint(proj) - proj).length()
                         } else {
-                            getDistanceToSegment(point, road.startIntersection.position, road.endIntersection.position)
+                            minDist
                         }
                         if (abs(dist) < abs(minDist)) {
                             minDist = dist
-                            val right = (road.endIntersection.position - road.startIntersection.position).cross(Vec3(0.0, 1.0, 0.0))
-                            laneCount = if (point.dot(right) > 0) {
-                                road.rightLane
-                            } else {
-                                road.leftLane
-                            }
+                            laneCount = 1
                         }
                     }
                     minDist - laneWidth * laneCount
@@ -298,14 +288,14 @@ class Main : ApplicationAdapter() {
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
                             val bdPoint = getRefinedGuess(b, d)
                             val acPoint = getRefinedGuess(a, c)
-                            val normal = -(bdPoint - acPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            val normal = -(bdPoint - acPoint).cross(upDir).normalized()
                             insertRect(acPoint, bdPoint, normal)
                             meshPartBuilder.rect(
                                 (acPoint + upVec).toGdxVec(),
                                 (c + upVec).toGdxVec(),
                                 (d + upVec).toGdxVec(),
                                 (bdPoint + upVec).toGdxVec(),
-                                Vec3(0.0, 1.0, 0.0).toGdxVec()
+                                upDir.toGdxVec()
                             )
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
@@ -314,16 +304,16 @@ class Main : ApplicationAdapter() {
                             val acPoint = getRefinedGuess(a, c)
                             val bdPoint = getRefinedGuess(b, d)
                             val cdPoint = getRefinedGuess(c, d)
-                            var normal = (abPoint - cdPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            var normal = (abPoint - cdPoint).cross(upDir).normalized()
                             insertRect(abPoint, bdPoint, normal)
-                            normal = (cdPoint - abPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            normal = (cdPoint - abPoint).cross(upDir).normalized()
                             insertRect(cdPoint, acPoint, normal)
                         },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
                         to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
                             val abPoint = getRefinedGuess(a, b)
                             val acPoint = getRefinedGuess(a, c)
-                            val normal = (abPoint - acPoint).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+                            val normal = (abPoint - acPoint).cross(upDir).normalized()
                             insertRect(abPoint, acPoint, normal)
                             insertTriangle(acPoint + upVec, abPoint + upVec, a + upVec, upDir)
                         },
@@ -334,7 +324,7 @@ class Main : ApplicationAdapter() {
                                 (c + upVec).toGdxVec(),
                                 (d + upVec).toGdxVec(),
                                 (b + upVec).toGdxVec(),
-                                Vec3(0.0, 1.0, 0.0).toGdxVec()
+                                upDir.toGdxVec()
                             )
                         },
                 )
@@ -370,8 +360,8 @@ class Main : ApplicationAdapter() {
                         }
                     }
                 }
+                System.gc()
             }
-
             return modelBuilder.end()
         }
     }
@@ -403,23 +393,27 @@ class Main : ApplicationAdapter() {
         camController.translateUnits = 100.0f
         Gdx.input.inputProcessor = camController
 
-        val inter1 = layout.addIntersection(Vec3(0.0, 0.0, 0.0))
-        val inter2 = layout.addIntersection(Vec3(100.0, 0.0, 0.0))
-        val inter3 = layout.addIntersection(Vec3(100.0, 0.0, -100.0))
-        val inter4 = layout.addIntersection(Vec3(0.0, 0.0, 100.0))
+//        val inter1 = layout.addIntersection(Vec3(0.0, 0.0, 0.0))
+//        val inter2 = layout.addIntersection(Vec3(100.0, 0.0, 0.0))
+//        val inter3 = layout.addIntersection(Vec3(100.0, 0.0, -100.0))
+//        val inter4 = layout.addIntersection(Vec3(0.0, 0.0, 100.0))
 //        layout.addRoad(inter1, inter2)
 //        layout.addRoad(inter3, inter2)
 //        layout.addRoad(inter1, inter4)
 //        layout.addRoad(Vec3(100.0, 0.0, 100.0), inter4)
 //        layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
-        val road = layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
-        road.geometry = Spline(Vec2(0.0, 0.0), Vec2(1.0, 1.0).normalized() * 100.0, Vec2(-100.0, -100.0), Vec2(-100.0, -100.0) + Vec2(-10.0, -1.0).normalized() * 120.01)
-        val road2 = layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
-        road2.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 100.0), Vec2(100.0, 100.0) + Vec2(10.0, 1.0).normalized() * 120.0)
-        val road3 = layout.addRoad(inter1, Vec3(100.0, 0.0, 0.0))
-        road3.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 0.0), Vec2(100.0, 0.0) + Vec2(1.0, 1.0).normalized() * 120.0)
+//        val road = layout.addRoad(inter1, Vec3(-100.0, 0.0, -100.0))
+//        road.geometry = Spline(Vec2(0.0, 0.0), Vec2(1.0, 1.0).normalized() * 100.0, Vec2(-100.0, -100.0), Vec2(-100.0, -100.0) + Vec2(-10.0, -1.0).normalized() * 120.01)
+//        val road2 = layout.addRoad(inter1, Vec3(100.0, 0.0, 100.0))
+//        road2.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 100.0), Vec2(100.0, 100.0) + Vec2(10.0, 1.0).normalized() * 120.0)
+//        val road3 = layout.addRoad(inter1, Vec3(100.0, 0.0, 0.0))
+//        road3.geometry = Spline(Vec2(0.0, 0.0), Vec2(-1.0, -1.0).normalized() * 100.0, Vec2(100.0, 0.0), Vec2(100.0, 0.0) + Vec2(1.0, 1.0).normalized() * 120.0)
 //        layout.addRoad(Vec3(0.0, 0.0, 0.0), Vec3(-100.0, 0.0, 100.0))
 //        layout.addRoad(inter1, inter3)
+
+        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
+
+
         val time = measureTime {
             layoutModel = createLayoutModel(layout)
         }

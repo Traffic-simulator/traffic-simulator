@@ -8,15 +8,15 @@ class Serializer {
     fun serialize(layout: Layout): OpenDRIVE {
         val openDrive = OpenDRIVE()
 
-        for (road in layout.roads) {
+        for (road in layout.roads.values) {
             openDrive.road.add(serializeRoad(road))
         }
 
-        for (intersectionRoad in layout.intersectionRoads) {
+        for (intersectionRoad in layout.intersectionRoads.values) {
             openDrive.road.add(serializeIntersectionRoad(intersectionRoad))
         }
 
-        for (intersection in layout.intersections) {
+        for (intersection in layout.intersections.values) {
             openDrive.junction.add(serializeIntersection(intersection))
         }
         return openDrive
@@ -26,17 +26,17 @@ class Serializer {
     private fun serializeRoad(road: Road): TRoad {
         return TRoad().apply {
             id = road.id.toString()
-            length = road.length
+            length = road.geometry.length
             junction = "-1"
 
             link = TRoadLink()
             link.predecessor = TRoadLinkPredecessorSuccessor().apply {
                 elementType = ERoadLinkElementType.JUNCTION
-                elementId = road.startIntersection.id.toString()
+                elementId = road.startIntersection!!.id.toString()
             }
             link.successor = TRoadLinkPredecessorSuccessor().apply {
                 elementType = ERoadLinkElementType.JUNCTION
-                elementId = road.endIntersection.id.toString()
+                elementId = road.endIntersection!!.id.toString()
             }
 
             planView = generateRoadPlaneView(road)
@@ -79,7 +79,7 @@ class Serializer {
     private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
         return TRoad().apply {
             id = road.id.toString()
-            length = road.length
+            length = road.geometry.length
             junction = road.intersection.id.toString()
 
 //            link = TRoadLink()
@@ -142,16 +142,3 @@ class Serializer {
     }
 }
 
-fun main() {
-    val odr = OpenDriveWriter()
-    val ser = Serializer()
-
-    val layout = Layout()
-    layout.addRoad(Vec3(1.0, 1.0, 1.0), Vec3(2.0, 2.0, 2.0))
-
-    val od = ser.serialize(layout)
-
-    odr.write(od, "testOpenDrive")
-
-
-}
