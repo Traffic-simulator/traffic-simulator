@@ -55,7 +55,7 @@ class Main : ApplicationAdapter() {
         private val roadHeight = 1.0
         private val laneWidth = 2.0
         private val intersectionPadding = 0.0
-        private val splineRoadSegmentLen = 5.0f
+        private val splineRoadSegmentLen = 2.0f
         private val upVec = Vec3(0.0, roadHeight, 0.0)
 
         fun buildStraightRoad(modelBuilder: ModelBuilder, road: Road) {
