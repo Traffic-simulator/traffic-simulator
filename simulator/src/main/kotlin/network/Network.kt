@@ -57,7 +57,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                             prevLane -> prevLane.id
                         }?.contains(candidate.laneId.toBigInteger()) ?: false
                     }?.map {
-                        resLane -> if (road.successor?.contactPoint == EContactPoint.START) {
+                        resLane -> if (road.predecessor?.contactPoint == EContactPoint.START) {
                             // We're connected to the start of the predecessor, change direction
                             Pair(resLane, true)
                         } else {
