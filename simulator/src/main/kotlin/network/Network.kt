@@ -181,7 +181,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
     fun verbose() {
         for (road in roads) {
             println("\nRoad ${road.id}:")
-            println("Road at junction?: ${road.junction == "1"}")
+            println("Road at junction?: ${road.junction != "-1"}")
             println("Predecessor type id ${road.predecessor?.elementType}${road.predecessor?.elementId} " +
                 "contactPoint ${road.predecessor?.contactPoint}")
             if (road.predecessor?.elementType == ERoadLinkElementType.JUNCTION) {

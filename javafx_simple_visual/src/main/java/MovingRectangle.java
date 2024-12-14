@@ -72,24 +72,24 @@ public class MovingRectangle extends Application {
             @Override public void handle(long currentNanoTime) {
                 simulator.update(dt);
 
-                rectangles.forEach(it -> pane.getChildren().remove(it));
-                simulator.getVehicles().forEach(it -> {
-                    var xPos = it.getPosition();
-                    var roadId = Integer.valueOf(it.getLane().getRoad().getId());
-                    Color color = Color.AQUA;
-                    if (roadId % 2 == 0) {
-                        color = Color.color((240.0f - roadId * 15) / 255, 0, (240.0f - roadId * 15) / 255);
-                    } else {
-                        color = Color.color((240.0f - roadId * 15) / 255, (240.0f - roadId * 15) / 255, 0);
-                    }
-                    rectangles.add(drawRectangle(
-                        100 + xPos * 8,
-                        100 + it.getLaneNumber() * 30,
-                        it.getLength() * 8,
-                        it.getWidth() * 8,
-                        color
-                    ));
-                });
+//                rectangles.forEach(it -> pane.getChildren().remove(it));
+//                simulator.getVehicles().forEach(it -> {
+//                    var xPos = it.getPosition();
+//                    var roadId = Integer.valueOf(it.getLane().getRoad().getId());
+//                    Color color = Color.AQUA;
+//                    if (roadId % 2 == 0) {
+//                        color = Color.color((240.0f - roadId * 15) / 255, 0, (240.0f - roadId * 15) / 255);
+//                    } else {
+//                        color = Color.color((240.0f - roadId * 15) / 255, (240.0f - roadId * 15) / 255, 0);
+//                    }
+//                    rectangles.add(drawRectangle(
+//                        100 + xPos * 8,
+//                        100 + it.getLaneNumber() * 30,
+//                        it.getLength() * 8,
+//                        it.getWidth() * 8,
+//                        color
+//                    ));
+//                });
 
 
                 try {

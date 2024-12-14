@@ -71,7 +71,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         }
 
         val nextLane = getNextLane(vehicle.direction)
-        if (nextLane == null) {
+        if (nextLane == null || nextLane.isEmpty()) {
             return Pair(null, SimulationConfig.INF)
         }
 
@@ -83,7 +83,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
         val nextLane = getNextLane(direction)
         if (vehicles.size == 0) {
-            if (nextLane == null || accDistance + road.troad.length > SimulationConfig.MAX_VALUABLE_DISTANCE) {
+            if (nextLane == null || nextLane.isEmpty() || accDistance + road.troad.length > SimulationConfig.MAX_VALUABLE_DISTANCE) {
                 return Pair(null, SimulationConfig.INF)
             }
 
@@ -128,7 +128,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
 
         val nextLane = getNextLane(vehicle.direction)
-        if (nextLane == null) {
+        if (nextLane == null || nextLane.isEmpty()) {
             return Pair(null, SimulationConfig.INF)
         }
 
@@ -141,7 +141,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     private fun getFirstVehicleInternal(direction: Direction, accDistance: Double): Pair<Vehicle?, Double> {
         val nextLane = getNextLane(direction)
         if (vehicles.size == 0) {
-            if (nextLane == null || accDistance + road.troad.length > SimulationConfig.MAX_VALUABLE_DISTANCE) {
+            if (nextLane == null || nextLane.isEmpty() || accDistance + road.troad.length > SimulationConfig.MAX_VALUABLE_DISTANCE) {
                 return Pair(null, SimulationConfig.INF)
             }
 

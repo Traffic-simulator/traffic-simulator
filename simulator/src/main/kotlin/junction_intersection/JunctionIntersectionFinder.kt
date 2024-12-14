@@ -1,6 +1,6 @@
 package junction_intersection
 
-import network.Junction
+import network.junction.Junction
 import network.Network
 import network.Road
 import kotlin.math.pow

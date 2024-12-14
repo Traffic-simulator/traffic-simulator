@@ -97,6 +97,7 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
 
         val nextLane = pathBuilder.getNextPathLane(this)
         if (nextLane != null ) {
+            println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
 
             // If was blockingJunction have to unlock
             // TODO: If connection is junc to junc?... By idea have to detect it before and block before...
@@ -112,6 +113,8 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
             position = newPosition
         } else {
             // Despawn vehicle
+            println("${vehicleId} despawned")
+
             lane.removeVehicle(this)
             despawned = true
             return false
