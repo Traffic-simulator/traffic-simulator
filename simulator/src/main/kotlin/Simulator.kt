@@ -50,6 +50,8 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long
             for (toLane in lanesToChange) {
                 val balance = MOBIL.calcAccelerationBalance(it, toLane)
                 if (balance > 0.0) {
+                    println("Vehicle ${it.vehicleId} is lane changing ${balance}.")
+                    it.pathBuilder.removePath(it)
                     it.performLaneChange(toLane)
                     return@forEach
                 }

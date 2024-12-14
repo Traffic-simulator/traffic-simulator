@@ -54,6 +54,12 @@ class RandomPathBuilder: IPathBuilder {
         return getNextPathLane(vehicle, vehicle.lane, vehicle.direction)
     }
 
+    override fun removePath(vehicle: Vehicle) {
+        if (vehiclesPaths.containsKey(vehicle.vehicleId)) {
+            vehiclesPaths.remove(vehicle.vehicleId)
+        }
+    }
+
     // In this realization direction is not used, but you have to use it in prod version
     override fun getNextPathLane(vehicle: Vehicle, lane: Lane, direction: Direction): Pair<Lane, Boolean>? {
 
