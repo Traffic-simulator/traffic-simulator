@@ -27,6 +27,6 @@ class BackendAPI : ISimulation{
             vehicle.lane.laneId,
             ISimulation.VehicleType.PassengerCar,
             vehicle.position,
-            Direction.FORWARD)
+            vehicle.direction)
     }
 }
