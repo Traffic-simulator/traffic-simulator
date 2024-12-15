@@ -7,23 +7,18 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.Environment
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
-import com.badlogic.gdx.graphics.g3d.model.data.ModelData
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
-import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -41,7 +36,6 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.time.measureTime
 
@@ -60,7 +54,7 @@ class Main : ApplicationAdapter() {
 
     companion object {
         private val roadHeight = 1.0
-        private val laneWidth = 2.0
+        private val laneWidth = 3.5
         private val intersectionPadding = 0.0
         private val splineRoadSegmentLen = 2.0f
         private val upVec = Vec3(0.0, roadHeight, 0.0)
@@ -380,6 +374,8 @@ class Main : ApplicationAdapter() {
     private val back = BackendAPI()
     private val carInstances = mutableMapOf<Int, ModelInstance>()
     private val carRotationFlags = mutableMapOf<Int, Boolean>()
+    val previousGeometries = mutableMapOf<Long, TRoadPlanViewGeometry?>()
+
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -388,13 +384,11 @@ class Main : ApplicationAdapter() {
         imGuiGlfw.init(windowHandle, true)
         imGuiGl3.init()
 
-        // Устанавливаем камеру сверху
         camera = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
-        camera?.position?.set(-20f, 20f, 240f)  // Камера будет находиться 20 единиц выше по оси Y
-        camera?.lookAt(-20f, 0.0f, 240.0f)  // Камера будет смотреть вниз, в центр сцены
-        camera?.up?.set(0f, 0f, -1f)  // Устанавливаем, что "вверх" будет по оси Z, чтобы камера смотрела вниз
-        camera?.near = 10f
-        camera?.far = 700f
+        camera?.position?.set(170f, 20f, -170f)
+        camera?.lookAt(170f, 0.0f, -170.0f)
+        camera?.near = 10.0f
+        camera?.far = 1000f
         camera?.update()
 
         environment = Environment()
@@ -406,44 +400,29 @@ class Main : ApplicationAdapter() {
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
-        modelInstance1 = ModelInstance(carModel)
-        modelBatch = ModelBatch()
-
-        val odr = OpenDriveReader()
-        val openDRIVE = odr.read("single_segment_road.xodr")
-
-        val spawnDetails = ArrayList<Triple<String, String, Direction>>()
-//        spawnDetails.add(Triple("21", "1", Direction.BACKWARD))
-//        spawnDetails.add(Triple("21", "2", Direction.BACKWARD))
-        spawnDetails.add(Triple("21", "-1", Direction.FORWARD))
-        spawnDetails.add(Triple("21", "-2", Direction.FORWARD))
-
-        /*val openDRIVE = odr.read("UC_Simple-X-Junction.xodr")
-        val spawnDetails = ArrayList<Triple<String, String, Direction>>()
-        spawnDetails.add(Triple("0", "1", Direction.BACKWARD))
-        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
-        spawnDetails.add(Triple("6", "1", Direction.BACKWARD))
-        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))*/
-
-//        val simulator: Simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), 228);
-
-//        Вот пример spawnDetails для UC_Simple-X-Junction.xodr, который лежит у нас в ресурсах
-
-        /*val openDRIVE = odr.read("Town01.xodr")
-        val spawnDetails = ArrayList<Triple<String, String, Direction>>()
-        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-//        spawnDetails.add(Triple("6", "1", Direction.BACKWARD))
-//        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))*/
-
-        back.init(openDRIVE, SpawnDetails(spawnDetails), 500)
-
         val camController = CameraInputController(camera)
         camController.translateUnits = 100.0f
         Gdx.input.inputProcessor = camController
 
-        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
+        modelInstance1 = ModelInstance(carModel)
+        modelBatch = ModelBatch()
 
+        val odr = OpenDriveReader()
+        val openDRIVE = odr.read("Town01.xodr")
+        val spawnDetails = ArrayList<Triple<String, String, Direction>>()
+//        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
+//        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
+        spawnDetails.add(Triple("6", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
+
+        back.init(openDRIVE, SpawnDetails(spawnDetails), 500)
+
+        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
+//        println(layout.roads)
+//        for (i in layout.roads) {
+//            println("${i.value.id} ${i.value.geometry}")
+//        }
+//        println(layout.intersectionRoads)
 
         val time = measureTime {
             layoutModel = createLayoutModel(layout)
@@ -486,7 +465,7 @@ class Main : ApplicationAdapter() {
         }
 
         // Получаем данные о положении машинок
-        val vehicleData = back.getNextFrame(0.005)
+        val vehicleData = back.getNextFrame(0.01)
 //        println("Vehicle data: $vehicleData")
 
         // Обновляем позиции машинок
@@ -496,7 +475,7 @@ class Main : ApplicationAdapter() {
         Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT or GL20.GL_DEPTH_BUFFER_BIT)
 
-        //sceneManager?.update(Gdx.graphics.deltaTime)
+        sceneManager?.update(Gdx.graphics.deltaTime)
         sceneManager?.render()
 
         modelBatch?.begin(camera)
@@ -505,7 +484,6 @@ class Main : ApplicationAdapter() {
         }
         modelBatch?.end()
 
-        ImGui.render()
         imGuiGl3.renderDrawData(ImGui.getDrawData())
     }
 
@@ -521,28 +499,30 @@ class Main : ApplicationAdapter() {
         sceneManager?.updateViewport(width.toFloat(), height.toFloat())
     }
 
+    // Храним предыдущую геометрию для каждой машины
     private fun updateCars(vehicleData: List<ISimulation.VehicleDTO>) {
         val laneWidth = 3.5 // Ширина одной полосы в метрах
 
         for (vehicle in vehicleData) {
             val vehicleId = vehicle.id
-            var carPosition = vehicle.distance
+            val carPosition = vehicle.distance
             val carRoad = vehicle.road
             val carDirection = vehicle.direction
-            val carLaneIndex = vehicle.laneId // Индекс полосы движения (-1, 0, 1 и т.д.)
+            val carLaneIndex = -vehicle.laneId // Индекс полосы движения (-1, 0, 1 и т.д.)
 
             // Если машина не добавлена, создаем новую ModelInstance
             if (!carInstances.containsKey(vehicleId)) {
                 carInstances[vehicleId] = ModelInstance(carModel)
                 carRotationFlags[vehicleId] = false
+                previousGeometries[vehicleId.toLong()] = null
             }
 
             val carInstance = carInstances[vehicleId]!!
 
             if (carRoad != null) {
                 // Определяем текущую геометрию
-                var currentGeometry: TRoadPlanViewGeometry? = carRoad.planView.geometry.firstOrNull {
-                    val distanceOnRoad = if (carDirection == Direction.FORWARD) {
+                val currentGeometry: TRoadPlanViewGeometry? = carRoad.planView.geometry.firstOrNull {
+                    val distanceOnRoad = if (carLaneIndex > 0) {
                         carPosition
                     } else {
                         carRoad.length - carPosition
@@ -551,7 +531,7 @@ class Main : ApplicationAdapter() {
                 }
 
                 // Обработка перехода между геометриями для BACKWARD
-                if (carDirection == Direction.BACKWARD && currentGeometry != null && carPosition < currentGeometry.s) {
+                /*if (carDirection == Direction.BACKWARD && currentGeometry != null && carPosition < currentGeometry.s) {
                     val prevGeometry = carRoad.planView.geometry.lastOrNull { it.s + it.length <= currentGeometry!!.s }
                     if (prevGeometry != null) {
                         currentGeometry = prevGeometry
@@ -559,6 +539,20 @@ class Main : ApplicationAdapter() {
                     } else {
                         carPosition = currentGeometry.s
                     }
+                }*/
+
+                if (vehicleId == 1) {
+                    if (currentGeometry != null) {
+                        println("id ${vehicleId} road ${carRoad.id} lane ${vehicle.laneId} curgeo ${currentGeometry.length} pos ${carPosition} dir ${carDirection}")
+                    }
+                }
+
+                // Проверяем изменение геометрии
+                val previousGeometry = previousGeometries[vehicleId.toLong()]
+                if (currentGeometry != previousGeometry) {
+                    // Геометрия изменилась, сбрасываем флажок вращения
+                    carRotationFlags[vehicleId] = false
+                    previousGeometries[vehicleId.toLong()] = currentGeometry
                 }
 
                 if (currentGeometry == null) continue
@@ -571,7 +565,7 @@ class Main : ApplicationAdapter() {
 
                 if (currentGeometry.line != null) {
                     // Линейная геометрия
-                    val offset = if (carDirection == Direction.FORWARD) {
+                    val offset = if (carLaneIndex > 0) {
                         carPosition - geometryStart
                     } else {
                         geometryEnd - carPosition
@@ -579,7 +573,7 @@ class Main : ApplicationAdapter() {
 
                     val newPosX = currentGeometry.x + offset * cos(currentGeometry.hdg) - lanePositionOffset * sin(currentGeometry.hdg)
                     val newPosZ = currentGeometry.y + offset * sin(currentGeometry.hdg) + lanePositionOffset * cos(currentGeometry.hdg)
-                    carInstance.transform.setTranslation(newPosX.toFloat(), 0f, newPosZ.toFloat())
+                    carInstance.transform.setTranslation(newPosX.toFloat(), 1f, newPosZ.toFloat())
 
                     val rotationAngle = if (carDirection == Direction.FORWARD) {
                         currentGeometry.hdg
@@ -595,28 +589,27 @@ class Main : ApplicationAdapter() {
                     // Геометрия дуги
                     val r = 1 / currentGeometry.arc.curvature
                     val startAngle = currentGeometry.hdg
-                    val offset = if (carDirection == Direction.FORWARD) {
+                    val offset = if (carLaneIndex > 0) {
                         carPosition - geometryStart
                     } else {
                         geometryEnd - carPosition
                     }
                     val endAngle = startAngle + currentGeometry.arc.curvature * offset
+                    val end = Point2(currentGeometry.x, currentGeometry.y) - Point2(
+                        sin(startAngle) - sin(endAngle),
+                        -cos(startAngle) + cos(endAngle)
+                    ) * r
 
-                    val centerX = currentGeometry.x - r * sin(startAngle)
-                    val centerY = currentGeometry.y + r * cos(startAngle)
+                    val newPosX = end.x
+                    val newPosZ = end.y
+                    carInstance.transform.setTranslation(newPosX.toFloat(), 1f, newPosZ.toFloat())
 
-                    val newPosX = centerX + (r - lanePositionOffset) * sin(endAngle)
-                    val newPosZ = centerY - (r - lanePositionOffset) * cos(endAngle)
-                    carInstance.transform.setTranslation(newPosX.toFloat(), 0f, newPosZ.toFloat())
-
-                    val rotationAngle = if (carDirection == Direction.FORWARD) {
-                        -endAngle
+                    val rotationAngle = if (carLaneIndex > 0) {
+                        -endAngle + Math.PI // Инвертируем направление вращения
                     } else {
-                        -endAngle + Math.PI
+                        -endAngle
                     }
-                    carInstance.transform.rotateRad(Vector3(0f, 1f, 0f),
-                        (rotationAngle.toFloat() / 20 / currentGeometry.length).toFloat()
-                    )
+                    carInstance.transform.rotateRad(Vector3(0f, 1f, 0f), rotationAngle.toFloat())
                 }
             }
         }
@@ -627,6 +620,7 @@ class Main : ApplicationAdapter() {
         for (key in removedKeys) {
             carInstances.remove(key)
             carRotationFlags.remove(key) // Удаление флага при удалении машины
+            previousGeometries.remove(key.toLong()) // Удаление информации о геометрии
         }
     }
 
