@@ -22,4 +22,8 @@ class Road(
             throw IllegalArgumentException("Invalid intersection")
         }
     }
+
+    override fun toString(): String {
+        return "Road(id=$id, start=${startIntersection?.id}, end=${endIntersection?.id}, spline=${geometry})"
+    }
 }
