@@ -2,35 +2,19 @@ package ru.nsu.trafficsimulator;
 
 import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
-import com.badlogic.gdx.graphics.g3d.model.data.ModelData
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
-import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
-import ktx.math.unaryMinus
-import net.mgsx.gltf.loaders.glb.GLBLoader
-import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
-import net.mgsx.gltf.scene3d.scene.Scene
-import net.mgsx.gltf.scene3d.scene.SceneAsset
-import net.mgsx.gltf.scene3d.scene.SceneManager
-import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.model.*
 import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.time.measureTime
 
 
 class MyCameraController(camera: Camera) : CameraInputController(camera) {
@@ -202,7 +186,7 @@ class Main : ApplicationAdapter() {
 
     private fun findRoadIntersectionAt(intersection: Vector3): Intersection? {
         for (i in spheres.indices) {
-            if (spheres[i].transform.getTranslation(Vector3()).dst(intersection) < 0.5f) {
+            if (spheres[i].transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
                 return layout.intersectionsList[i]
             }
         }
@@ -211,7 +195,7 @@ class Main : ApplicationAdapter() {
 
     private fun findSphereAt(intersection: Vector3): ModelInstance? {
         for (sphere in spheres) {
-            if (sphere.transform.getTranslation(Vector3()).dst(intersection) < 0.5f) {
+            if (sphere.transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
                 return sphere
             }
         }
@@ -231,7 +215,7 @@ class Main : ApplicationAdapter() {
         val modelBuilder = ModelBuilder()
         val material = Material(ColorAttribute.createDiffuse(Color.RED))
         return modelBuilder.createSphere(
-            0.5f, 0.5f, 0.5f, 10,
+            5.0f, 5.0f, 5.0f, 10,
             10, material, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
     }
