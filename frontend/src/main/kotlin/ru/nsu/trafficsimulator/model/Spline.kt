@@ -106,6 +106,36 @@ class Spline {
             .minBy { closest -> point.distance(closest) }
     }
 
+    fun moveEnd(newPoint: Vec2, newDirection: Vec2) {
+        if (splineParts.isEmpty()) throw IllegalArgumentException("SplineParts is empty")
+
+        val lastSP = splineParts.last()
+        val (x, y) = normalizedPolynom(lastSP.getStartPoint(), newPoint to newDirection)
+        val partLength = calculateLength(x, y)
+        splineParts.removeLast()
+        splineParts.addLast(SplinePart(x, y, lastSP.offset, partLength, true))
+        this.length += partLength - lastSP.length
+    }
+
+    fun moveStart(newPoint: Vec2, newDirection: Vec2) {
+        if (splineParts.isEmpty()) throw IllegalArgumentException("SplineParts is empty")
+
+        val (x, y) = normalizedPolynom(newPoint to newDirection, splineParts.first().getEndPoint())
+        val partLength = calculateLength(x, y)
+        splineParts.removeFirst()
+        splineParts.addFirst(SplinePart(x, y, 0.0, partLength, true))
+        recalculateSplineLength()
+    }
+
+    private fun recalculateSplineLength() {
+        var length = 0.0
+        for (sp in splineParts) {
+            sp.offset = length
+            length += sp.length
+        }
+        this.length = length
+    }
+
     private fun calculateLength(x: Poly3, y: Poly3): Double {
         val iterations = 1000
         var length = 0.0
@@ -140,7 +170,7 @@ class Spline {
     }
 
 
-    class SplinePart(val x: Poly3, val y: Poly3, val offset: Double, val length: Double, val normalized: Boolean) {
+    class SplinePart(val x: Poly3, val y: Poly3, var offset: Double, val length: Double, val normalized: Boolean) {
         private val endDist = if (normalized) 1.0 else length
 
         fun getStartPoint(): Pair<Vec2, Vec2> {

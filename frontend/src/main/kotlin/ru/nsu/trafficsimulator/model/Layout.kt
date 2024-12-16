@@ -44,6 +44,16 @@ class Layout {
         return newRoad
     }
 
+    fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
+        if (!intersections.containsKey(intersection.id)) {
+            throw IllegalArgumentException("Intersection with id ${intersection.id} does not exist")
+        }
+
+        for (road in intersection.incomingRoads) {
+            road.moveRoad(intersection, newPosition)
+        }
+    }
+
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
         val incomingRoads = intersection.incomingRoads
         for (incomingRoad in incomingRoads) {
