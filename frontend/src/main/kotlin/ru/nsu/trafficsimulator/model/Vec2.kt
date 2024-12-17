@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -28,6 +29,10 @@ data class Vec2(var x: Double, var y: Double) {
     fun length(): Double = sqrt(lengthSq())
     fun lengthSq(): Double = dot(this)
     fun normalized(): Vec2 = this / length()
+    /**
+    The angle in the polar coordinate system.
+     */
+    fun angle(): Double = atan2(y, x)
 
     fun toVec3(): Vec3 = Vec3(x, 0.0, y)
 }
