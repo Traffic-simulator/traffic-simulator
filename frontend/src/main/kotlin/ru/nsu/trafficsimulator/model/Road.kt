@@ -57,7 +57,7 @@ class Road(
     }
 
     override fun toString(): String {
-        return "Road(id=$id, start=${startIntersection?.id}, end=${endIntersection?.id}, spline=${geometry})"
+        return "Road(id=$id, start=${startIntersection?.id}, end=${endIntersection?.id})"
     }
 }
 

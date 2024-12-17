@@ -48,7 +48,6 @@ class Main : ApplicationAdapter() {
     private var sceneManager: SceneManager? = null
     private var sceneAsset1: SceneAsset? = null
     private var tmpInputProcessor: InputProcessor? = null
-    private var layout: Layout = Layout()
     private var layoutModel: Model? = null
 
     companion object {
@@ -390,18 +389,6 @@ class Main : ApplicationAdapter() {
     private val carRotationFlags = mutableMapOf<Int, Boolean>()
     val previousGeometries = mutableMapOf<Long, TRoadPlanViewGeometry?>()
 
-
-    private var layoutScene: Scene? = null
-    private var addRoadStatus = false;
-    private var editStatus = true;
-    private var layout_2: Layout = Layout()
-    private val lastTwoObjects = arrayOfNulls<Any>(2)
-    private val spheres = mutableListOf<ModelInstance>()
-    private val directionSpheres = mutableListOf<ModelInstance>()
-    private var sphereCounter = 0
-    private var draggingSphere: ModelInstance? = null
-
-
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
         ImGui.createContext()
@@ -494,11 +481,32 @@ class Main : ApplicationAdapter() {
         )
     }
 
+    private var layout: Layout = Layout()
+    private var layoutScene: Scene? = null
+
+    private var addRoadStatus = false;
+    private var editRoadStatus = false;
+    private var currentEditRoadId: Long = 0;
+    private var deleteRoadStatus = false;
+    private var editStatus = true;
+
+    private val lastTwoAddObjects = arrayOfNulls<Any>(2)
+    private var sphereAddCounter = 0
+    private val lastTwoDeleteIntersections = arrayOfNulls<Intersection>(2)
+    private var intersectionDeleteCounter = 0
+
+    private val spheres = mutableListOf<ModelInstance>()
+    private val directionSpheres = mutableListOf<Pair<ModelInstance, ModelInstance>>()
+    private val directionSpheresMap = mutableMapOf<Long?, Pair<ModelInstance, ModelInstance>>()
+    private val offsetDirectionSphere: Double = 25.0
+
+    private var draggingSphere: ModelInstance? = null
+
     private fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
         return object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                 if (button == Input.Buttons.LEFT && editStatus) {
-                    if (!addRoadStatus) {
+                    if (!addRoadStatus && !deleteRoadStatus && !editRoadStatus) {
                         val intersection = getIntersection(screenX, screenY)
                         if (intersection != null) {
                             draggingSphere = findSphereAt(intersection)
@@ -506,8 +514,12 @@ class Main : ApplicationAdapter() {
                                 camController.camaraEnabled = false
                             }
                         }
-                    } else {
+                    }
+                    if (addRoadStatus) {
                         handleAddRoad(screenX, screenY)
+                    }
+                    if (deleteRoadStatus) {
+                        handleDeleteRoad(screenX, screenY)
                     }
                 }
                 return false
@@ -517,13 +529,7 @@ class Main : ApplicationAdapter() {
                 if (button == Input.Buttons.LEFT && editStatus) {
                     draggingSphere = null
                     camController.camaraEnabled = true
-
-                    if (layoutScene != null) {
-                        sceneManager?.removeScene(layoutScene)
-                    }
-                    layoutModel = createLayoutModel(layout_2)
-                    layoutScene = Scene(layoutModel)
-                    sceneManager?.addScene(layoutScene)
+                    updateLayout()
                 }
                 return false
             }
@@ -535,7 +541,7 @@ class Main : ApplicationAdapter() {
                         var roadIntersection: Intersection? = null
                         for (i in spheres.indices) {
                             if (spheres[i] == draggingSphere) {
-                                roadIntersection = layout_2.intersectionsList[i]
+                                roadIntersection = layout.intersectionsList[i]
                             }
                         }
                         if (roadIntersection != null) {
@@ -552,96 +558,194 @@ class Main : ApplicationAdapter() {
         }
     }
 
+    private fun handleDeleteRoad(screenX: Int, screenY: Int) {
+        val intersection = getIntersection(screenX, screenY)
+        if (intersection != null) {
+            val roadIntersection = findRoadIntersectionAt(intersection)
+            if (roadIntersection != null) {
+                lastTwoDeleteIntersections[intersectionDeleteCounter] = roadIntersection
+                intersectionDeleteCounter += 1
+                if (intersectionDeleteCounter == 2) {
+                    val road = findRoad(lastTwoDeleteIntersections[0]!!, lastTwoDeleteIntersections[1]!!)
+                    if (road != null) {
+                        layout.deleteRoad(road)
+                    }
+                    val deleteStatus1 = lastTwoDeleteIntersections[0]!!.incomingRoads.size == 0
+                    val deleteStatus2 = lastTwoDeleteIntersections[1]!!.incomingRoads.size == 0
+                    if (deleteStatus1) {
+                        spheres.remove(findSphereAt(lastTwoDeleteIntersections[0]!!.position.toGdxVec()))
+                    }
+                    if (deleteStatus2) {
+                        spheres.remove(findSphereAt(lastTwoDeleteIntersections[1]!!.position.toGdxVec()))
+                    }
+                    updateLayout()
+                    intersectionDeleteCounter = 0
+                    deleteRoadStatus = false
+                }
+            }
+        }
+    }
+
     private fun handleAddRoad(screenX: Int, screenY: Int) {
         val intersection = getIntersection(screenX, screenY)
         if (intersection != null) {
             val roadIntersection = findRoadIntersectionAt(intersection)
             if (roadIntersection != null) {
-                lastTwoObjects[sphereCounter] = roadIntersection
+                lastTwoAddObjects[sphereAddCounter] = roadIntersection
 
             } else {
                 val sphereModel = createSphere()
                 val sphereInstance = ModelInstance(sphereModel)
                 sphereInstance.transform.setToTranslation(intersection)
                 spheres.add(sphereInstance)
-                lastTwoObjects[sphereCounter] =
+                lastTwoAddObjects[sphereAddCounter] =
                     Vec3(intersection.x.toDouble(), intersection.y.toDouble(), intersection.z.toDouble())
             }
 
-            sphereCounter += 1
-            if (sphereCounter == 2) {
-                var direction: Vec3;
+            sphereAddCounter += 1
+            if (sphereAddCounter == 2) {
+                val spherePairModel = createDirectionPairSphere()
+                val startInstance = ModelInstance(spherePairModel.first)
+                val endInstance = ModelInstance(spherePairModel.second)
                 var startDirection: Vec3
                 var endDirection: Vec3
-                if (lastTwoObjects[0] is Vec3) {
-                    if (lastTwoObjects[1] is Vec3) {
-                        direction = (lastTwoObjects[1] as Vec3) - (lastTwoObjects[0] as Vec3)
-                        direction.normalized()
-                        startDirection = (lastTwoObjects[0] as Vec3) + direction
-                        endDirection = (lastTwoObjects[1] as Vec3) + direction
-                        layout_2.addRoad(
-                            lastTwoObjects[0] as Vec3,
+                var roadId: Long? = null
+                if (lastTwoAddObjects[0] is Vec3) {
+                    startDirection = Vec3(
+                        (lastTwoAddObjects[0] as Vec3).x + offsetDirectionSphere,
+                        (lastTwoAddObjects[0] as Vec3).y,
+                        (lastTwoAddObjects[0] as Vec3).z + offsetDirectionSphere
+                    )
+                    if (lastTwoAddObjects[1] is Vec3) {
+                        endDirection = Vec3(
+                            (lastTwoAddObjects[1] as Vec3).x + offsetDirectionSphere,
+                            (lastTwoAddObjects[1] as Vec3).y,
+                            (lastTwoAddObjects[1] as Vec3).z + offsetDirectionSphere
+                        )
+                        startInstance.transform.setToTranslation(startDirection.toGdxVec())
+                        endInstance.transform.setToTranslation(endDirection.toGdxVec())
+                        layout.addRoad(
+                            lastTwoAddObjects[0] as Vec3,
                             startDirection,
-                            lastTwoObjects[1] as Vec3,
+                            lastTwoAddObjects[1] as Vec3,
                             endDirection
                         )
-                    }
-                    if (lastTwoObjects[1] is Intersection) {
-                        direction = (lastTwoObjects[1] as Intersection).position - (lastTwoObjects[0] as Vec3)
-                        direction.normalized()
-                        startDirection = (lastTwoObjects[0] as Vec3) + direction
-                        endDirection = (lastTwoObjects[1] as Intersection).position + direction
-                        layout_2.addRoad(
-                            lastTwoObjects[0] as Vec3,
-                            startDirection,
-                            lastTwoObjects[1] as Intersection,
-                            endDirection
+                        roadId = findRoadId(
+                            findRoadIntersectionAt((lastTwoAddObjects[0] as Vec3).toGdxVec()),
+                            findRoadIntersectionAt((lastTwoAddObjects[1] as Vec3).toGdxVec())
                         )
                     }
-                }
-                if (lastTwoObjects[0] is Intersection) {
-                    if (lastTwoObjects[1] is Vec3) {
-                        direction = (lastTwoObjects[1] as Vec3) - (lastTwoObjects[0] as Intersection).position
-                        direction.normalized()
-                        startDirection = (lastTwoObjects[0] as Intersection).position + direction
-                        endDirection = (lastTwoObjects[1] as Vec3) + direction
-                        layout_2.addRoad(
-                            lastTwoObjects[0] as Intersection,
+                    if (lastTwoAddObjects[1] is Intersection) {
+                        endDirection = Vec3(
+                            (lastTwoAddObjects[1] as Intersection).position.x + offsetDirectionSphere,
+                            (lastTwoAddObjects[1] as Intersection).position.y,
+                            (lastTwoAddObjects[1] as Intersection).position.z + offsetDirectionSphere
+                        )
+                        startInstance.transform.setToTranslation(startDirection.toGdxVec())
+                        endInstance.transform.setToTranslation(endDirection.toGdxVec())
+                        layout.addRoad(
+                            lastTwoAddObjects[0] as Vec3,
                             startDirection,
-                            lastTwoObjects[1] as Vec3,
+                            lastTwoAddObjects[1] as Intersection,
                             endDirection
                         )
-                    }
-                    if (lastTwoObjects[1] is Intersection) {
-                        direction =
-                            (lastTwoObjects[1] as Intersection).position - (lastTwoObjects[0] as Intersection).position
-                        direction.normalized()
-                        startDirection = (lastTwoObjects[0] as Intersection).position + direction
-                        endDirection = (lastTwoObjects[1] as Intersection).position + direction
-                        layout_2.addRoad(
-                            lastTwoObjects[0] as Intersection,
-                            startDirection,
-                            lastTwoObjects[1] as Intersection,
-                            endDirection
+                        roadId = findRoadId(
+                            findRoadIntersectionAt((lastTwoAddObjects[0] as Vec3).toGdxVec()),
+                            lastTwoAddObjects[1] as Intersection
                         )
                     }
                 }
-                if (layoutScene != null) {
-                    sceneManager?.removeScene(layoutScene)
+                if (lastTwoAddObjects[0] is Intersection) {
+                    startDirection = Vec3(
+                        (lastTwoAddObjects[0] as Intersection).position.x + offsetDirectionSphere,
+                        (lastTwoAddObjects[0] as Intersection).position.y,
+                        (lastTwoAddObjects[0] as Intersection).position.z + offsetDirectionSphere
+                    )
+                    if (lastTwoAddObjects[1] is Vec3) {
+                        endDirection = Vec3(
+                            (lastTwoAddObjects[1] as Vec3).x + offsetDirectionSphere,
+                            (lastTwoAddObjects[1] as Vec3).y,
+                            (lastTwoAddObjects[1] as Vec3).z + offsetDirectionSphere
+                        )
+                        startInstance.transform.setToTranslation(startDirection.toGdxVec())
+                        endInstance.transform.setToTranslation(endDirection.toGdxVec())
+                        layout.addRoad(
+                            lastTwoAddObjects[0] as Intersection,
+                            startDirection,
+                            lastTwoAddObjects[1] as Vec3,
+                            endDirection
+                        )
+                        roadId = findRoadId(
+                            lastTwoAddObjects[0] as Intersection,
+                            findRoadIntersectionAt((lastTwoAddObjects[1] as Vec3).toGdxVec())
+                        )
+                    }
+                    if (lastTwoAddObjects[1] is Intersection) {
+                        if (lastTwoAddObjects[0] !== lastTwoAddObjects[1]) {
+                            endDirection = Vec3(
+                                (lastTwoAddObjects[1] as Intersection).position.x + offsetDirectionSphere,
+                                (lastTwoAddObjects[1] as Intersection).position.y,
+                                (lastTwoAddObjects[1] as Intersection).position.z + offsetDirectionSphere
+                            )
+                            startInstance.transform.setToTranslation(startDirection.toGdxVec())
+                            endInstance.transform.setToTranslation(endDirection.toGdxVec())
+                            layout.addRoad(
+                                lastTwoAddObjects[0] as Intersection,
+                                startDirection,
+                                lastTwoAddObjects[1] as Intersection,
+                                endDirection
+                            )
+                            roadId =
+                                findRoadId(lastTwoAddObjects[0] as Intersection, lastTwoAddObjects[1] as Intersection)
+                        }
+                    }
                 }
-                layoutModel = createLayoutModel(layout_2)
-                layoutScene = Scene(layoutModel)
-                sceneManager?.addScene(layoutScene)
-                sphereCounter = 0
+                directionSpheres.add(Pair(startInstance, endInstance))
+                directionSpheresMap[roadId] = Pair(startInstance, endInstance)
+                updateLayout()
+                sphereAddCounter = 0
                 addRoadStatus = false
             }
         }
     }
 
+    private fun updateLayout() {
+        if (layoutScene != null) {
+            sceneManager?.removeScene(layoutScene)
+        }
+        layoutModel = createLayoutModel(layout)
+        layoutScene = Scene(layoutModel)
+        sceneManager?.addScene(layoutScene)
+    }
+
+    private fun findRoad(intersection1: Intersection, intersection2: Intersection): Road? {
+        for (road in layout.roads.values) {
+            if (road.startIntersection === intersection1 && road.endIntersection === intersection2) {
+                return road
+            }
+            if (road.startIntersection === intersection2 && road.endIntersection === intersection1) {
+                return road
+            }
+        }
+        return null
+    }
+
+    private fun findRoadId(intersection1: Intersection?, intersection2: Intersection?): Long? {
+        for (key in layout.roads.keys) {
+            if (layout.roads[key]?.startIntersection === intersection1 && layout.roads[key]?.endIntersection === intersection2) {
+                return key
+            }
+            if (layout.roads[key]?.startIntersection === intersection2 && layout.roads[key]?.endIntersection === intersection1) {
+                return key
+            }
+        }
+        return null
+    }
+
     private fun findRoadIntersectionAt(intersection: Vector3): Intersection? {
         for (i in spheres.indices) {
             if (spheres[i].transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
-                return layout_2.intersectionsList[i]
+                return layout.intersectionsList[i]
             }
         }
         return null
@@ -666,13 +770,30 @@ class Main : ApplicationAdapter() {
         return null
     }
 
+    private fun createDirectionPairSphere(): Pair<Model, Model> {
+        val modelBuilder = ModelBuilder()
+
+        val startMaterial = Material(ColorAttribute.createDiffuse(Color.BLUE))
+        val start = modelBuilder.createSphere(
+            5.0f, 5.0f, 5.0f, 10,
+            10, startMaterial, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+        )
+        val endMaterial = Material(ColorAttribute.createDiffuse(Color.SKY))
+        val end = modelBuilder.createSphere(
+            5.0f, 5.0f, 5.0f, 10,
+            10, endMaterial, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+        )
+        return Pair(start, end)
+    }
+
     private fun createSphere(): Model? {
         val modelBuilder = ModelBuilder()
         val material = Material(ColorAttribute.createDiffuse(Color.RED))
-        return modelBuilder.createSphere(
+        val sphere = modelBuilder.createSphere(
             5.0f, 5.0f, 5.0f, 10,
             10, material, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
+        return sphere
     }
 
     override fun render() {
@@ -687,10 +808,18 @@ class Main : ApplicationAdapter() {
             ImGui.begin("Editor")
             if (ImGui.button("Add road")) {
                 addRoadStatus = true
+                deleteRoadStatus = false
+            }
+            if (ImGui.button("Edit road")) {
+                editRoadStatus = !editRoadStatus
+            }
+            if (ImGui.button("Delete road")) {
+                deleteRoadStatus = true
+                addRoadStatus = false
             }
             if (ImGui.button("Edit mode")) {
-//                println(layout_2)
                 editStatus = !editStatus
+                println(layout)
             }
             ImGui.end()
         }
@@ -721,6 +850,10 @@ class Main : ApplicationAdapter() {
         if (editStatus) {
             for (sphere in spheres) {
                 modelBatch?.render(sphere)
+            }
+            if (editRoadStatus) {
+                modelBatch?.render(directionSpheresMap[currentEditRoadId]!!.first)
+                modelBatch?.render(directionSpheresMap[currentEditRoadId]!!.second)
             }
         }
         modelBatch?.end()

@@ -101,6 +101,7 @@ class Layout {
                 deleteIntersection(it)
             }
         }
+        roads.remove(road.id)
     }
 
     fun addIntersection(position: Vec3): Intersection {
@@ -124,5 +125,7 @@ class Layout {
         for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
+        intersections.remove(intersection.id)
+        intersectionsList.remove(intersection)
     }
 }
