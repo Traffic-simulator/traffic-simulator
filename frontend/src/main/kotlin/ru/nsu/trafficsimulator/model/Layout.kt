@@ -54,6 +54,10 @@ class Layout {
         }
     }
 
+    fun redirectRoad(road: Road, intersection: Intersection, newDirection: Vec3) {
+        road.redirectRoad(intersection, newDirection)
+    }
+
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
         val incomingRoads = intersection.incomingRoads
         for (incomingRoad in incomingRoads) {
