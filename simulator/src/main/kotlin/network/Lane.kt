@@ -14,7 +14,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
     // TODO: need clever structure for binary_search and easy .front() .back()
     private val vehicles: ArrayList<Vehicle> = ArrayList()
-    val laneLink: TRoadLanesLaneSectionLcrLaneLink? = tlane.link
+    var laneLink: TRoadLanesLaneSectionLcrLaneLink? = tlane.link
     val roadId = road.id
 
     // TODO: flag if the next lane is from junction
