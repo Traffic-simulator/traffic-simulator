@@ -25,20 +25,19 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
     }
 
     // position of front bumper in road length. Vehicle is going to the next road if the front bumper is not on the road
-    var position = 0.0
+    var position = 10.0
 
     // TODO: How to handle road narrowing without junction
     fun update(deltaTime: Double) {
-        // println("Veh id: ${vehicleId}, Road id: ${lane.roadId}, Line id: ${lane.laneId}, Position: ${position}, Speed: ${speed}, Direction: ${direction}")
+        println("Veh id: ${vehicleId}, Road id: ${lane.roadId}, Line id: ${lane.laneId}, Position: ${position}, Speed: ${speed}, Direction: ${direction}")
 
         // TODO: have to rely on PATH
         val closestJunction = getClosestJunction()
         var junctionAcc = SimulationConfig.INF
 
-
         //When close (TODO: how is depending on Block factor) to junction need block it.
         // TODO: smart distance logic... Multiple params... Depends on block type..
-        val some_distance = 200.0
+        val some_distance = 80.0
         if (closestJunction != null && closestJunction.distance < some_distance) {
             val junction = network.getJunctionById(closestJunction.junctionId)
 
@@ -53,7 +52,7 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
         }
 
         // TODO: Not lane, have to use PathBuilder
-        val nextVeh = lane.getNextVehicle(this)
+        val nextVeh = pathBuilder.getNextVehicle(this, this.lane, this.direction, this.lane.road.troad.length - this.position)
         acc = Math.min(junctionAcc, IDM.getAcceleration(this, nextVeh.first, nextVeh.second))
 
         speed += acc
@@ -97,7 +96,7 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
 
         val nextLane = pathBuilder.getNextPathLane(this)
         if (nextLane != null ) {
-            println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
+           // println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
 
             // If was blockingJunction have to unlock
             // TODO: If connection is junc to junc?... By idea have to detect it before and block before...
@@ -147,7 +146,7 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
 
     companion object {
         var counter: Int =  0
-        val randomPathBuilder: IPathBuilder = RandomPathBuilder()
+        val randomPathBuilder: IPathBuilder = RandomPathBuilder(12)
 
         fun NewVehicle(network: Network, lane: Lane, direction: Direction, maxSpeed: Double, maxAcc: Double): Vehicle {
             return Vehicle(counter++, network, lane, direction, randomPathBuilder, maxSpeed, maxAcc)

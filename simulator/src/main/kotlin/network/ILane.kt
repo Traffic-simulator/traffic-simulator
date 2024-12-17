@@ -14,9 +14,5 @@ interface ILane {
 
     fun getMinPositionVehicle(): Vehicle?
 
-    // TODO: Check with reference line random directions
-    fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double>
-
-    // TODO: Check with reference line random directions
     fun getPrevVehicle(vehicle: Vehicle): Pair<Vehicle?, Double>
 }

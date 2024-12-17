@@ -411,6 +411,11 @@ class Main : ApplicationAdapter() {
 //        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
         spawnDetails.add(Triple("6", "-1", Direction.FORWARD))
+        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
+        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
+        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
+        spawnDetails.add(Triple("15", "-1", Direction.FORWARD))
+        spawnDetails.add(Triple("12", "-1", Direction.FORWARD))
 //        spawnDetails.add(Triple("6", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
 
