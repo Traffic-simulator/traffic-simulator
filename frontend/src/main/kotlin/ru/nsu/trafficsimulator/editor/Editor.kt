@@ -32,16 +32,14 @@ class Editor {
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
 
-        private val lastTwoAddObjects = arrayOfNulls<Intersection>(2)
-        private var sphereAddCounter = 0
-        private val lastTwoDeleteIntersections = arrayOfNulls<Intersection>(2)
-        private var intersectionDeleteCounter = 0
+        private val selectedIntersections = arrayOfNulls<Intersection>(2)
+        private var selectedIntersectionCount = 0
         private val offsetDirectionSphere: Double = 25.0
         private var draggingSphere: ModelInstance? = null
 
         private var addRoadStatus = false
         private var editRoadStatus = false
-        private var currentEditRoadId: Long = 0
+        private var currentEditRoadId: Long? = null
         private var deleteRoadStatus = false
         private var editStatus = true
 
@@ -53,16 +51,20 @@ class Editor {
             if (ImGui.button("Add road")) {
                 addRoadStatus = true
                 deleteRoadStatus = false
+                selectedIntersectionCount = 0
             }
             if (ImGui.button("Edit road")) {
                 editRoadStatus = !editRoadStatus
+                selectedIntersectionCount = 0
             }
             if (ImGui.button("Delete road")) {
                 deleteRoadStatus = true
                 addRoadStatus = false
+                selectedIntersectionCount = 0
             }
             if (ImGui.button("Edit mode")) {
                 editStatus = !editStatus
+                selectedIntersectionCount = 0
             }
             ImGui.end()
         }
@@ -72,7 +74,7 @@ class Editor {
                 for ((_, sphere) in spheres) {
                     modelBatch?.render(sphere)
                 }
-                if (editRoadStatus) {
+                if (editRoadStatus && currentEditRoadId != null) {
                     modelBatch?.render(directionSpheres[currentEditRoadId]!!.first)
                     modelBatch?.render(directionSpheres[currentEditRoadId]!!.second)
                 }
@@ -97,6 +99,9 @@ class Editor {
                         }
                         if (deleteRoadStatus) {
                             handleDeleteRoad(screenX, screenY)
+                        }
+                        if (editRoadStatus) {
+//                            handleEditRoad(screenX, screenY)
                         }
                     }
                     return false
@@ -138,25 +143,25 @@ class Editor {
         private fun handleDeleteRoad(screenX: Int, screenY: Int) {
             val intersection = getIntersection(screenX, screenY) ?: return
             val roadIntersection = findRoadIntersectionAt(intersection) ?: return
-            lastTwoDeleteIntersections[intersectionDeleteCounter] = roadIntersection
-            intersectionDeleteCounter += 1
-            if (intersectionDeleteCounter != 2)
+            selectedIntersections[selectedIntersectionCount] = roadIntersection
+            selectedIntersectionCount += 1
+            if (selectedIntersectionCount != 2)
                 return
 
-            val road = findRoad(lastTwoDeleteIntersections[0]!!, lastTwoDeleteIntersections[1]!!)
+            val road = findRoad(selectedIntersections[0]!!, selectedIntersections[1]!!)
             if (road != null) {
                 layout.deleteRoad(road)
             }
-            val deleteStatus1 = lastTwoDeleteIntersections[0]!!.incomingRoads.size == 0
-            val deleteStatus2 = lastTwoDeleteIntersections[1]!!.incomingRoads.size == 0
+            val deleteStatus1 = selectedIntersections[0]!!.incomingRoads.size == 0
+            val deleteStatus2 = selectedIntersections[1]!!.incomingRoads.size == 0
             if (deleteStatus1) {
-                spheres.remove(findSphereAt(lastTwoDeleteIntersections[0]!!.position.toGdxVec())!!.first)
+                spheres.remove(findSphereAt(selectedIntersections[0]!!.position.toGdxVec())!!.first)
             }
             if (deleteStatus2) {
-                spheres.remove(findSphereAt(lastTwoDeleteIntersections[1]!!.position.toGdxVec())!!.first)
+                spheres.remove(findSphereAt(selectedIntersections[1]!!.position.toGdxVec())!!.first)
             }
             updateLayout()
-            intersectionDeleteCounter = 0
+            selectedIntersectionCount = 0
             deleteRoadStatus = false
         }
 
@@ -171,25 +176,25 @@ class Editor {
                 sphereInstance.transform.setToTranslation(intersectionPoint)
                 spheres[roadIntersection.id] = sphereInstance
             }
-            lastTwoAddObjects[sphereAddCounter] = roadIntersection
+            selectedIntersections[selectedIntersectionCount] = roadIntersection
 
-            sphereAddCounter += 1
-            if (sphereAddCounter != 2)
+            selectedIntersectionCount += 1
+            if (selectedIntersectionCount != 2)
                 return
-            sphereAddCounter = 0
+            selectedIntersectionCount = 0
             addRoadStatus = false
-            if (lastTwoAddObjects[0] == lastTwoAddObjects[1])
+            if (selectedIntersections[0] == selectedIntersections[1])
                 return
 
             val startDirection = Vec3(
-                lastTwoAddObjects[0]!!.position.x + offsetDirectionSphere,
-                lastTwoAddObjects[0]!!.position.y,
-                lastTwoAddObjects[0]!!.position.z + offsetDirectionSphere
+                selectedIntersections[0]!!.position.x + offsetDirectionSphere,
+                selectedIntersections[0]!!.position.y,
+                selectedIntersections[0]!!.position.z + offsetDirectionSphere
             )
             val endDirection = Vec3(
-                lastTwoAddObjects[1]!!.position.x + offsetDirectionSphere,
-                lastTwoAddObjects[1]!!.position.y,
-                lastTwoAddObjects[1]!!.position.z + offsetDirectionSphere
+                selectedIntersections[1]!!.position.x + offsetDirectionSphere,
+                selectedIntersections[1]!!.position.y,
+                selectedIntersections[1]!!.position.z + offsetDirectionSphere
             )
             val spherePairModel = createDirectionPairSphere()
             val startInstance = ModelInstance(spherePairModel.first)
@@ -197,14 +202,29 @@ class Editor {
             startInstance.transform.setToTranslation(startDirection.toGdxVec())
             endInstance.transform.setToTranslation(endDirection.toGdxVec())
             val road = layout.addRoad(
-                lastTwoAddObjects[0]!!,
+                selectedIntersections[0]!!,
                 startDirection,
-                lastTwoAddObjects[1]!!,
+                selectedIntersections[1]!!,
                 endDirection
             )
             directionSpheres[road.id] = startInstance to endInstance
             updateLayout()
 
+        }
+
+        private fun handleEditRoad(screenX: Int, screenY: Int) {
+            val intersection = getIntersection(screenX, screenY) ?: return
+            val roadIntersection = findRoadIntersectionAt(intersection) ?: return
+            selectedIntersections[selectedIntersectionCount] = roadIntersection
+            selectedIntersectionCount += 1
+            if (selectedIntersectionCount != 2)
+                return
+
+            selectedIntersectionCount = 0
+            val road = findRoad(selectedIntersections[0]!!, selectedIntersections[1]!!)
+            if (road != null) {
+                currentEditRoadId = road.id
+            }
         }
 
         private fun updateLayout() {

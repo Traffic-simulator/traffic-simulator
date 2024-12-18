@@ -51,18 +51,14 @@ class Layout {
     }
 
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
-//        if (!intersections.contains(intersection.id)) {
-//            throw IllegalArgumentException("Intersection with id ${intersection.id} does not exist")
-//        }
+        if (!intersections.contains(intersection.id)) {
+            throw IllegalArgumentException("Intersection with id ${intersection.id} does not exist")
+        }
 
         for (road in intersection.incomingRoads) {
             road.moveRoad(intersection, newPosition)
         }
         intersection.position = newPosition
-    }
-
-    fun redirectRoad(road: Road, intersection: Intersection, newDirection: Vec3) {
-        road.redirectRoad(intersection, newDirection)
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
