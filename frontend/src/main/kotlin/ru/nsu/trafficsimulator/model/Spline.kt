@@ -33,11 +33,11 @@ class Spline {
     }
 
     fun addLine(start: Vec2, angle: Double, length: Double) {
-        val end = start + Vec2(cos(angle), sin(angle)) * length
-        val x = Poly3(start.x, end.x - start.x, 0.0, 0.0)
-        val y = Poly3(start.y, end.y - start.y, 0.0, 0.0)
-        splineParts.add(SplinePart(x, y, this.length, length, true))
-        this.length += length
+        val startVertex = start to start + Vec2(cos(angle), sin(angle))
+        val endVertex =
+            start + Vec2(cos(angle), sin(angle)) * length to
+                start + Vec2(cos(angle), sin(angle)) * (length + 1)
+        addSplinePart(startVertex, endVertex)
     }
 
     fun addParamPoly(
@@ -154,6 +154,12 @@ class Spline {
     private fun normalizedPolynom(start: Pair<Vec2, Vec2>, end: Pair<Vec2, Vec2>): Pair<Poly3, Poly3> {
         val (startPoint, startDir) = start
         val (endPoint, endDir) = end
+
+        val startDeriv = startDir - startPoint
+        val endDeriv = endDir - endPoint
+        if ((startDeriv - endDeriv).lengthSq() < 1e-6) {
+            return Poly3(startPoint.x, endPoint.x - startPoint.x, 0.0, 0.0) to Poly3(startPoint.y, endPoint.y - startPoint.y, 0.0, 0.0)
+        }
 
         val x = Poly3(
             startPoint.x,
