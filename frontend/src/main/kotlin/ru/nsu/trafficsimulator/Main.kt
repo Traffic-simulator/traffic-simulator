@@ -184,7 +184,6 @@ class Main : ApplicationAdapter() {
         sceneManager?.updateViewport(width.toFloat(), height.toFloat())
     }
 
-    private var lastPos = Vec2(0.0, 0.0)
     // Храним предыдущую геометрию для каждой машины
     private fun updateCars(vehicleData: List<ISimulation.VehicleDTO>) {
 
@@ -205,8 +204,6 @@ class Main : ApplicationAdapter() {
             val right = Vec3(dir.x, 0.0, dir.y).cross(Vec3(0.0, 1.0, 0.0)).normalized()
             val angle = - acos(dir.x) * sign(dir.y)
             val laneOffset = (abs(vehicle.laneId) - 0.5)
-//            println("${lastPos.x} -> ${pos.x} (${pos.x - lastPos.x})")
-            lastPos = pos
             carInstance.transform.setToRotationRad(Vector3(0.0f, 1.0f, 0.0f), angle.toFloat())
                 .setTranslation((pos.x + laneOffset * right.x * ModelGenerator.laneWidth).toFloat(), 1.0f, (pos.y + laneOffset * right.z * ModelGenerator.laneWidth).toFloat())
         }
