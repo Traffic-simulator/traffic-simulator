@@ -28,10 +28,10 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long
         // despawn vehicles
         vehicles.removeAll { it.despawned == true}
 
-        spawnTimer += dt
-        if (spawnTimer >= 2.0) {
+//        spawnTimer
+        if (spawnTimer <= 2.0) {
             addVehicle()
-            spawnTimer = 0.0
+            spawnTimer = 3.0
         }
 
         return vehicles

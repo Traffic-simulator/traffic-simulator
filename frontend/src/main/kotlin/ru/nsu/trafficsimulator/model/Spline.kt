@@ -28,15 +28,16 @@ class Spline {
         val (x, y) = normalizedPolynom(start, end)
         val partLength = calculateLength(x, y)
         splineParts.add(SplinePart(x, y, this.length, partLength, true))
+
         this.length += partLength
     }
 
     fun addLine(start: Vec2, angle: Double, length: Double) {
-        val startVertex = start to start + Vec2(cos(angle), sin(angle))
-        val endVertex =
-            start + Vec2(cos(angle), sin(angle)) * length to
-                start + Vec2(cos(angle), sin(angle)) * (length + 1)
-        addSplinePart(startVertex, endVertex)
+        val end = start + Vec2(cos(angle), sin(angle)) * length
+        val x = Poly3(start.x, end.x - start.x, 0.0, 0.0)
+        val y = Poly3(start.y, end.y - start.y, 0.0, 0.0)
+        splineParts.add(SplinePart(x, y, this.length, length, true))
+        this.length += length
     }
 
     fun addParamPoly(
@@ -88,6 +89,7 @@ class Spline {
         }
 
         val sp = splineParts.last { it.offset <= distance }
+//        println("Current spline part = ${sp}")
         return sp.getPoint(distance - sp.offset)
     }
 
@@ -243,7 +245,7 @@ class Spline {
         }
 
         override fun toString(): String {
-            return "SplinePart(x=$x, y=$y, length=$length, normalized=$normalized)"
+            return "SplinePart(x=$x, y=$y, length=$length, normalized=$normalized offset=$offset)"
         }
     }
 
