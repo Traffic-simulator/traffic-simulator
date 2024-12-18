@@ -68,7 +68,7 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long
             return true
         }
 
-        if (minVeh.position > 10) {
+        if (minVeh.position > 50) {
             return true
         }
 

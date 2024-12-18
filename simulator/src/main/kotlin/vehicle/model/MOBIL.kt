@@ -17,7 +17,8 @@ class MOBIL {
             // TODO: check type of toLane, to not change lane to entrance lane...
 
             // New Front
-            val newFront = toLane.getNextVehicle(me)
+            // TODO:
+            val newFront = toLane.mockNextVehicle() // vehicle.pathBuilder.getNextVehicle(me)
             if (newFront.first?.isInLaneChange() ?: false || newFront.second < minimumGap) {
                 return negativeBalance
             }
@@ -29,7 +30,8 @@ class MOBIL {
             }
 
             // Cur Front
-            val curFront = me.lane.getNextVehicle(me)
+            // TODO:
+            val curFront = me.lane.mockNextVehicle() //null //me.lane.getNextVehicle(me)
             if (curFront.first?.isInLaneChange() ?: false) {
                 return negativeBalance
             }

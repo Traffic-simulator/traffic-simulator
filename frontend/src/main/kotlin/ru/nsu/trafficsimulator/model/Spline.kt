@@ -28,6 +28,7 @@ class Spline {
         val (x, y) = normalizedPolynom(start, end)
         val partLength = calculateLength(x, y)
         splineParts.add(SplinePart(x, y, this.length, partLength, true))
+
         this.length += partLength
     }
 
@@ -88,6 +89,7 @@ class Spline {
         }
 
         val sp = splineParts.last { it.offset <= distance }
+//        println("Current spline part = ${sp}")
         return sp.getPoint(distance - sp.offset)
     }
 
@@ -152,6 +154,12 @@ class Spline {
     private fun normalizedPolynom(start: Pair<Vec2, Vec2>, end: Pair<Vec2, Vec2>): Pair<Poly3, Poly3> {
         val (startPoint, startDir) = start
         val (endPoint, endDir) = end
+
+        val startDeriv = startDir - startPoint
+        val endDeriv = endDir - endPoint
+        if ((startDeriv - endDeriv).lengthSq() < 1e-6) {
+            return Poly3(startPoint.x, endPoint.x - startPoint.x, 0.0, 0.0) to Poly3(startPoint.y, endPoint.y - startPoint.y, 0.0, 0.0)
+        }
 
         val x = Poly3(
             startPoint.x,
@@ -243,7 +251,7 @@ class Spline {
         }
 
         override fun toString(): String {
-            return "SplinePart(x=$x, y=$y, length=$length, normalized=$normalized)"
+            return "SplinePart(x=$x, y=$y, length=$length, normalized=$normalized offset=$offset)"
         }
     }
 

@@ -5,6 +5,9 @@ import kotlin.math.sqrt
 import kotlin.math.abs
 
 data class Vec3(var x: Double, var y: Double, var z: Double) {
+    constructor() : this(0.0, 0.0, 0.0) {}
+    constructor(vec: Vector3) : this(vec.x, vec.y, vec.z) {}
+    constructor(x: Float, y: Float, z: Float) : this(x.toDouble(), y.toDouble(), z.toDouble()) {}
     fun distance(other: Vec3): Double {
         val dx = x - other.x
         val dy = y - other.y

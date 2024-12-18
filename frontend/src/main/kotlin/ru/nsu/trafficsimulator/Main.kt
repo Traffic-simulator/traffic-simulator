@@ -15,7 +15,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import com.badlogic.gdx.math.Intersector
@@ -23,20 +22,20 @@ import com.badlogic.gdx.math.Plane
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
-import ktx.math.unaryMinus
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import opendrive.TRoadPlanViewGeometry
 import vehicle.Direction
 import kotlin.math.*
 
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model_generation.ModelGenerator
+import ru.nsu.trafficsimulator.serializer.Deserializer
+import java.lang.Math.clamp
 import kotlin.math.abs
-import kotlin.math.floor
 
 
 class Main : ApplicationAdapter() {
@@ -50,344 +49,12 @@ class Main : ApplicationAdapter() {
     private var tmpInputProcessor: InputProcessor? = null
     private var layoutModel: Model? = null
 
-    companion object {
-        private val roadHeight = 1.0
-        private val laneWidth = 3.5
-        private val intersectionPadding = 0.0
-        private val splineRoadSegmentLen = 2.0f
-        private val upVec = Vec3(0.0, roadHeight, 0.0)
-
-        fun buildStraightRoad(modelBuilder: ModelBuilder, road: Road) {
-            val node = modelBuilder.node()
-            val pos = (road.startIntersection!!.position + road.endIntersection!!.position) / 2.0
-            val dir = road.endIntersection!!.position - road.startIntersection!!.position
-            val halfLen = dir.length() / 2.0 - intersectionPadding
-            if (halfLen < 0)
-                return
-            val halfDir = dir.normalized() * halfLen
-            val right = halfDir.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-            val left = -halfDir.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
-            node.translation.set(pos.toGdxVec())
-            val meshPartBuilder = modelBuilder.part(
-                "road${road.id}",
-                GL20.GL_TRIANGLES,
-                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(),
-                Material()
-            )
-            BoxShapeBuilder.build(
-                meshPartBuilder,
-                Vector3((-halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + left.z).toFloat()),
-                Vector3((-halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + right.z).toFloat()),
-                Vector3((halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (halfDir.z + left.z).toFloat()),
-                Vector3((halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (halfDir.z + right.z).toFloat()),
-                Vector3((-halfDir.x + left.x).toFloat(), 0.0f, (-halfDir.z + left.z).toFloat()),
-                Vector3((-halfDir.x + right.x).toFloat(), 0.0f, (-halfDir.z + right.z).toFloat()),
-                Vector3((halfDir.x + left.x).toFloat(), 0.0f, (halfDir.z + left.z).toFloat()),
-                Vector3((halfDir.x + right.x).toFloat(), 0.0f, (halfDir.z + right.z).toFloat()),
-            )
-        }
-
-        fun createLayoutModel(layout: Layout): Model {
-            val modelBuilder = ModelBuilder()
-            var meshPartBuilder: MeshPartBuilder
-            modelBuilder.begin()
-            for (road in layout.roads.values) {
-                if (road.geometry == null) {
-                    buildStraightRoad(modelBuilder, road)
-                    continue
-                }
-                val node = modelBuilder.node()
-                node.translation.set(0.0f, 0.0f, 0.0f)
-                meshPartBuilder = modelBuilder.part(
-                    "intersection${road.id}",
-                    GL20.GL_TRIANGLES,
-                    (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(),
-                    Material()
-                )
-
-                val stepCount = floor((road.geometry!!.length - 2 * intersectionPadding) / splineRoadSegmentLen).toInt()
-                var prevPos = road.geometry!!.getPoint(intersectionPadding).toVec3()
-                var prevDir = road.geometry!!.getDirection(intersectionPadding).toVec3().normalized()
-                var prevRight = prevDir.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-                var prevLeft = -prevDir.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
-                meshPartBuilder.rect(
-                    (prevPos + prevLeft).toGdxVec(),
-                    (prevPos + prevRight).toGdxVec(),
-                    (prevPos + prevRight + upVec).toGdxVec(),
-                    (prevPos + prevLeft + upVec).toGdxVec(),
-                    -prevDir.toGdxVec()
-                )
-
-                for (i in 1..stepCount) {
-                    val t = intersectionPadding + i * splineRoadSegmentLen.toDouble()
-                    val pos = road.geometry!!.getPoint(t).toVec3()
-                    val direction = road.geometry!!.getDirection(t).toVec3().normalized()
-                    val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-                    val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
-                    if (direction.dot(prevDir) < 0.0) {
-                        prevLeft = prevRight.also { prevRight = prevLeft }
-                    }
-                    // Top
-                    meshPartBuilder.rect(
-                        (prevPos + prevRight + upVec).toGdxVec(),
-                        (pos + right + upVec).toGdxVec(),
-                        (pos + left + upVec).toGdxVec(),
-                        (prevPos + prevLeft + upVec).toGdxVec(),
-                        Vec3.UP.toGdxVec()
-                    )
-                    // Right
-                    meshPartBuilder.rect(
-                        (prevPos + prevRight).toGdxVec(),
-                        (pos + right).toGdxVec(),
-                        (pos + right + upVec).toGdxVec(),
-                        (prevPos + prevRight + upVec).toGdxVec(),
-                        (pos - prevPos).cross(Vec3.UP).toGdxVec()
-                    )
-
-                    // Right
-                    meshPartBuilder.rect(
-                        (pos + left).toGdxVec(),
-                        (prevPos + prevLeft).toGdxVec(),
-                        (prevPos + prevLeft + upVec).toGdxVec(),
-                        (pos + left + upVec).toGdxVec(),
-                        -(pos - prevPos).cross(Vec3.UP).toGdxVec()
-                    )
-                    prevPos = pos
-                    prevLeft = left
-                    prevRight = right
-                    prevDir = direction
-                }
-                val t = road.geometry!!.length - intersectionPadding
-                val pos = road.geometry!!.getPoint(t).toVec3()
-                val direction = road.geometry!!.getDirection(t).toVec3().normalized()
-                val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-                val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
-                meshPartBuilder.rect(
-                    (prevPos + prevRight + upVec).toGdxVec(),
-                    (pos + right + upVec).toGdxVec(),
-                    (pos + left + upVec).toGdxVec(),
-                    (prevPos + prevLeft + upVec).toGdxVec(),
-                    Vec3.UP.toGdxVec()
-                )
-                // Right
-                meshPartBuilder.rect(
-                    (prevPos + prevRight).toGdxVec(),
-                    (pos + right).toGdxVec(),
-                    (pos + right + upVec).toGdxVec(),
-                    (prevPos + prevRight + upVec).toGdxVec(),
-                    (pos - prevPos).cross(Vec3.UP).toGdxVec()
-                )
-
-                // Right
-                meshPartBuilder.rect(
-                    (pos + left).toGdxVec(),
-                    (prevPos + prevLeft).toGdxVec(),
-                    (prevPos + prevLeft + upVec).toGdxVec(),
-                    (pos + left + upVec).toGdxVec(),
-                    -(pos - prevPos).cross(Vec3.UP).toGdxVec()
-                )
-
-                meshPartBuilder.rect(
-                    (pos + right).toGdxVec(),
-                    (pos + left).toGdxVec(),
-                    (pos + left + upVec).toGdxVec(),
-                    (pos + right + upVec).toGdxVec(),
-                    direction.toGdxVec()
-                )
-            }
-
-            val getDistanceToSegment = { point: Vec3, from: Vec3, to: Vec3 ->
-                val dir = to - from
-                val t = Math.clamp((point - from).dot(dir) / dir.lengthSq(), 0.0, 1.0)
-                val projected = from + dir * t
-                (point - projected).length()
-            }
-
-            val intersectionBoxSize = 25.0
-            val samplePerSide = 40
-            val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
-            val upDir = Vec3(0.0, 1.0, 0.0)
-            for (intersection in layout.intersections.values) {
-                val node = modelBuilder.node()
-                node.translation.set(intersection.position.toGdxVec())
-                meshPartBuilder = modelBuilder.part(
-                    "intersection${intersection.id}",
-                    GL20.GL_TRIANGLES,
-                    (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(),
-                    Material()
-                )
-                val intersectionSdf = { local: Vec3 ->
-                    val point = intersection.position + local
-                    var minDist = intersectionBoxSize * intersectionBoxSize
-                    var laneCount = 1
-                    for (road in intersection.intersectionRoads) {
-                        val dist = if (road.geometry != null) {
-                            val proj = Vec2(point.x, point.z)
-                            (road.geometry.closestPoint(proj) - proj).length()
-                        } else {
-                            minDist
-                        }
-                        if (abs(dist) < abs(minDist)) {
-                            minDist = dist
-                            laneCount = 1
-                        }
-                    }
-                    minDist - laneWidth * laneCount
-                }
-                val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
-                    meshPartBuilder.rect(
-                        a.toGdxVec(),
-                        (a + upVec).toGdxVec(),
-                        (b + upVec).toGdxVec(),
-                        b.toGdxVec(),
-                        normal.toGdxVec()
-                    )
-                }
-                val insertTriangle = { a: Vec3, b: Vec3, c: Vec3, normal: Vec3 ->
-                    meshPartBuilder.triangle(
-                        MeshPartBuilder.VertexInfo().set(
-                            a.toGdxVec(),
-                            normal.toGdxVec(),
-                            null,
-                            null
-                        ),
-                        MeshPartBuilder.VertexInfo().set(
-                            b.toGdxVec(),
-                            normal.toGdxVec(),
-                            null,
-                            null
-                        ),
-                        MeshPartBuilder.VertexInfo().set(
-                            c.toGdxVec(),
-                            normal.toGdxVec(),
-                            null,
-                            null
-                        ),
-                    )
-                }
-                val getRefinedGuess = { a: Vec3, b: Vec3 ->
-                    val iterationCount = 5
-                    var guess = (a + b) / 2.0
-                    var left = a
-                    var right = b
-                    var guessType = intersectionSdf(guess) > 0
-                    val leftType = intersectionSdf(left) > 0
-                    val rightType = intersectionSdf(right) > 0
-                    assert(leftType != rightType)
-                    for (i in 0..<iterationCount) {
-                        if (guessType == rightType) {
-                            right = guess
-                            guess = (left + guess) / 2.0
-                        } else {
-                            left = guess
-                            guess = (right + guess) / 2.0
-                        }
-                        guessType = intersectionSdf(guess) > 0
-                    }
-                    guess
-                }
-                val leftBottomCorner = Vec3(-intersectionBoxSize / 2.0, 0.0, -intersectionBoxSize / 2.0)
-                val patterns = arrayOf(
-                    { aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and !bType and !cType and !dType }
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val abPoint = getRefinedGuess(a, b)
-                        val acPoint = getRefinedGuess(a, c)
-                        val normal = (abPoint - acPoint).cross(Vec3(0.0, -1.0, 0.0)).normalized()
-                        insertRect(acPoint, abPoint, normal)
-                        insertTriangle(d + upVec, b + upVec, abPoint + upVec, upDir)
-                        insertTriangle(d + upVec, abPoint + upVec, acPoint + upVec, upDir)
-                        insertTriangle(d + upVec, acPoint + upVec, c + upVec, upDir)
-                    },
-                    { aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType }
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val bdPoint = getRefinedGuess(b, d)
-                        val acPoint = getRefinedGuess(a, c)
-                        val normal = -(bdPoint - acPoint).cross(upDir).normalized()
-                        insertRect(acPoint, bdPoint, normal)
-                        meshPartBuilder.rect(
-                            (acPoint + upVec).toGdxVec(),
-                            (c + upVec).toGdxVec(),
-                            (d + upVec).toGdxVec(),
-                            (bdPoint + upVec).toGdxVec(),
-                            upDir.toGdxVec()
-                        )
-                    },
-                    { aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType }
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val abPoint = getRefinedGuess(a, b)
-                        val acPoint = getRefinedGuess(a, c)
-                        val bdPoint = getRefinedGuess(b, d)
-                        val cdPoint = getRefinedGuess(c, d)
-                        var normal = (abPoint - cdPoint).cross(upDir).normalized()
-                        insertRect(abPoint, bdPoint, normal)
-                        normal = (cdPoint - abPoint).cross(upDir).normalized()
-                        insertRect(cdPoint, acPoint, normal)
-                    },
-                    { aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType }
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val abPoint = getRefinedGuess(a, b)
-                        val acPoint = getRefinedGuess(a, c)
-                        val normal = (abPoint - acPoint).cross(upDir).normalized()
-                        insertRect(abPoint, acPoint, normal)
-                        insertTriangle(acPoint + upVec, abPoint + upVec, a + upVec, upDir)
-                    },
-                    { aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and !bType and !cType and !dType }
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        meshPartBuilder.rect(
-                            (a + upVec).toGdxVec(),
-                            (c + upVec).toGdxVec(),
-                            (d + upVec).toGdxVec(),
-                            (b + upVec).toGdxVec(),
-                            upDir.toGdxVec()
-                        )
-                    },
-                )
-                for (i in 0..<(samplePerSide - 1)) {
-                    for (j in 0..<(samplePerSide - 1)) {
-                        val a = leftBottomCorner + Vec3(i * cellSize, 0.0, j * cellSize)
-                        val b = leftBottomCorner + Vec3((i + 1) * cellSize, 0.0, j * cellSize)
-                        val c = leftBottomCorner + Vec3(i * cellSize, 0.0, (j + 1) * cellSize)
-                        val d = leftBottomCorner + Vec3((i + 1) * cellSize, 0.0, (j + 1) * cellSize)
-                        val aSample = intersectionSdf(a)
-                        val bSample = intersectionSdf(b)
-                        val cSample = intersectionSdf(c)
-                        val dSample = intersectionSdf(d)
-                        val aType = aSample > 0.0
-                        val bType = bSample > 0.0
-                        val cType = cSample > 0.0
-                        val dType = dSample > 0.0
-
-                        for ((match, action) in patterns) {
-                            if (match(aType, bType, cType, dType)) {
-                                action(a, b, c, d)
-                                break
-                            } else if (match(cType, aType, dType, bType)) {
-                                action(c, a, d, b)
-                                break
-                            } else if (match(bType, dType, aType, cType)) {
-                                action(b, d, a, c)
-                                break
-                            } else if (match(dType, cType, bType, aType)) {
-                                action(d, c, b, a)
-                                break
-                            }
-                        }
-                    }
-                }
-                System.gc()
-            }
-            return modelBuilder.end()
-        }
-    }
-
     private var carModel: Model? = null
     private var modelInstance1: ModelInstance? = null
     private var modelBatch: ModelBatch? = null
 
     private val back = BackendAPI()
     private val carInstances = mutableMapOf<Int, ModelInstance>()
-    private val carRotationFlags = mutableMapOf<Int, Boolean>()
-    val previousGeometries = mutableMapOf<Long, TRoadPlanViewGeometry?>()
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -437,6 +104,12 @@ class Main : ApplicationAdapter() {
 //        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
         spawnDetails.add(Triple("6", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
+//        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
+//        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("15", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("12", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("6", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
 
         back.init(openDRIVE, SpawnDetails(spawnDetails), 500)
@@ -490,14 +163,13 @@ class Main : ApplicationAdapter() {
     private var deleteRoadStatus = false;
     private var editStatus = true;
 
-    private val lastTwoAddObjects = arrayOfNulls<Any>(2)
+    private val lastTwoAddObjects = arrayOfNulls<Intersection>(2)
     private var sphereAddCounter = 0
     private val lastTwoDeleteIntersections = arrayOfNulls<Intersection>(2)
     private var intersectionDeleteCounter = 0
 
-    private val spheres = mutableListOf<ModelInstance>()
-    private val directionSpheres = mutableListOf<Pair<ModelInstance, ModelInstance>>()
-    private val directionSpheresMap = mutableMapOf<Long?, Pair<ModelInstance, ModelInstance>>()
+    private val spheres = mutableMapOf<Long, ModelInstance>()
+    private val directionSpheres = mutableMapOf<Long, Pair<ModelInstance, ModelInstance>>()
     private val offsetDirectionSphere: Double = 25.0
 
     private var draggingSphere: ModelInstance? = null
@@ -509,7 +181,7 @@ class Main : ApplicationAdapter() {
                     if (!addRoadStatus && !deleteRoadStatus && !editRoadStatus) {
                         val intersection = getIntersection(screenX, screenY)
                         if (intersection != null) {
-                            draggingSphere = findSphereAt(intersection)
+                            draggingSphere = findSphereAt(intersection)?.second
                             if (draggingSphere != null) {
                                 camController.camaraEnabled = false
                             }
@@ -539,9 +211,9 @@ class Main : ApplicationAdapter() {
                     val intersection = getIntersection(screenX, screenY)
                     if (intersection != null) {
                         var roadIntersection: Intersection? = null
-                        for (i in spheres.indices) {
-                            if (spheres[i] == draggingSphere) {
-                                roadIntersection = layout.intersectionsList[i]
+                        for ((id, sphere) in spheres) {
+                            if (sphere == draggingSphere) {
+                                roadIntersection = layout.intersections[id]
                             }
                         }
                         if (roadIntersection != null) {
@@ -573,10 +245,11 @@ class Main : ApplicationAdapter() {
                     val deleteStatus1 = lastTwoDeleteIntersections[0]!!.incomingRoads.size == 0
                     val deleteStatus2 = lastTwoDeleteIntersections[1]!!.incomingRoads.size == 0
                     if (deleteStatus1) {
-                        spheres.remove(findSphereAt(lastTwoDeleteIntersections[0]!!.position.toGdxVec()))
+
+                        spheres.remove(findSphereAt(lastTwoDeleteIntersections[0]!!.position.toGdxVec())!!.first)
                     }
                     if (deleteStatus2) {
-                        spheres.remove(findSphereAt(lastTwoDeleteIntersections[1]!!.position.toGdxVec()))
+                        spheres.remove(findSphereAt(lastTwoDeleteIntersections[1]!!.position.toGdxVec())!!.first)
                     }
                     updateLayout()
                     intersectionDeleteCounter = 0
@@ -587,122 +260,46 @@ class Main : ApplicationAdapter() {
     }
 
     private fun handleAddRoad(screenX: Int, screenY: Int) {
-        val intersection = getIntersection(screenX, screenY)
-        if (intersection != null) {
-            val roadIntersection = findRoadIntersectionAt(intersection)
-            if (roadIntersection != null) {
-                lastTwoAddObjects[sphereAddCounter] = roadIntersection
-
-            } else {
+        val intersectionPoint = getIntersection(screenX, screenY)
+        if (intersectionPoint != null) {
+            var roadIntersection = findRoadIntersectionAt(intersectionPoint)
+            if (roadIntersection == null) {
+                roadIntersection = layout.addIntersection(Vec3(intersectionPoint))
                 val sphereModel = createSphere()
                 val sphereInstance = ModelInstance(sphereModel)
-                sphereInstance.transform.setToTranslation(intersection)
-                spheres.add(sphereInstance)
-                lastTwoAddObjects[sphereAddCounter] =
-                    Vec3(intersection.x.toDouble(), intersection.y.toDouble(), intersection.z.toDouble())
+                sphereInstance.transform.setToTranslation(intersectionPoint)
+                spheres[roadIntersection.id] = sphereInstance
             }
+            lastTwoAddObjects[sphereAddCounter] = roadIntersection
 
             sphereAddCounter += 1
             if (sphereAddCounter == 2) {
                 val spherePairModel = createDirectionPairSphere()
                 val startInstance = ModelInstance(spherePairModel.first)
                 val endInstance = ModelInstance(spherePairModel.second)
-                var startDirection: Vec3
-                var endDirection: Vec3
-                var roadId: Long? = null
-                if (lastTwoAddObjects[0] is Vec3) {
-                    startDirection = Vec3(
-                        (lastTwoAddObjects[0] as Vec3).x + offsetDirectionSphere,
-                        (lastTwoAddObjects[0] as Vec3).y,
-                        (lastTwoAddObjects[0] as Vec3).z + offsetDirectionSphere
+
+                if (lastTwoAddObjects[0] !== lastTwoAddObjects[1]) {
+                    val startDirection = Vec3(
+                        lastTwoAddObjects[0]!!.position.x + offsetDirectionSphere,
+                        lastTwoAddObjects[0]!!.position.y,
+                        lastTwoAddObjects[0]!!.position.z + offsetDirectionSphere
                     )
-                    if (lastTwoAddObjects[1] is Vec3) {
-                        endDirection = Vec3(
-                            (lastTwoAddObjects[1] as Vec3).x + offsetDirectionSphere,
-                            (lastTwoAddObjects[1] as Vec3).y,
-                            (lastTwoAddObjects[1] as Vec3).z + offsetDirectionSphere
-                        )
-                        startInstance.transform.setToTranslation(startDirection.toGdxVec())
-                        endInstance.transform.setToTranslation(endDirection.toGdxVec())
-                        layout.addRoad(
-                            lastTwoAddObjects[0] as Vec3,
-                            startDirection,
-                            lastTwoAddObjects[1] as Vec3,
-                            endDirection
-                        )
-                        roadId = findRoadId(
-                            findRoadIntersectionAt((lastTwoAddObjects[0] as Vec3).toGdxVec()),
-                            findRoadIntersectionAt((lastTwoAddObjects[1] as Vec3).toGdxVec())
-                        )
-                    }
-                    if (lastTwoAddObjects[1] is Intersection) {
-                        endDirection = Vec3(
-                            (lastTwoAddObjects[1] as Intersection).position.x + offsetDirectionSphere,
-                            (lastTwoAddObjects[1] as Intersection).position.y,
-                            (lastTwoAddObjects[1] as Intersection).position.z + offsetDirectionSphere
-                        )
-                        startInstance.transform.setToTranslation(startDirection.toGdxVec())
-                        endInstance.transform.setToTranslation(endDirection.toGdxVec())
-                        layout.addRoad(
-                            lastTwoAddObjects[0] as Vec3,
-                            startDirection,
-                            lastTwoAddObjects[1] as Intersection,
-                            endDirection
-                        )
-                        roadId = findRoadId(
-                            findRoadIntersectionAt((lastTwoAddObjects[0] as Vec3).toGdxVec()),
-                            lastTwoAddObjects[1] as Intersection
-                        )
-                    }
-                }
-                if (lastTwoAddObjects[0] is Intersection) {
-                    startDirection = Vec3(
-                        (lastTwoAddObjects[0] as Intersection).position.x + offsetDirectionSphere,
-                        (lastTwoAddObjects[0] as Intersection).position.y,
-                        (lastTwoAddObjects[0] as Intersection).position.z + offsetDirectionSphere
+                    val endDirection = Vec3(
+                        lastTwoAddObjects[1]!!.position.x + offsetDirectionSphere,
+                        lastTwoAddObjects[1]!!.position.y,
+                        lastTwoAddObjects[1]!!.position.z + offsetDirectionSphere
                     )
-                    if (lastTwoAddObjects[1] is Vec3) {
-                        endDirection = Vec3(
-                            (lastTwoAddObjects[1] as Vec3).x + offsetDirectionSphere,
-                            (lastTwoAddObjects[1] as Vec3).y,
-                            (lastTwoAddObjects[1] as Vec3).z + offsetDirectionSphere
-                        )
-                        startInstance.transform.setToTranslation(startDirection.toGdxVec())
-                        endInstance.transform.setToTranslation(endDirection.toGdxVec())
-                        layout.addRoad(
-                            lastTwoAddObjects[0] as Intersection,
-                            startDirection,
-                            lastTwoAddObjects[1] as Vec3,
-                            endDirection
-                        )
-                        roadId = findRoadId(
-                            lastTwoAddObjects[0] as Intersection,
-                            findRoadIntersectionAt((lastTwoAddObjects[1] as Vec3).toGdxVec())
-                        )
-                    }
-                    if (lastTwoAddObjects[1] is Intersection) {
-                        if (lastTwoAddObjects[0] !== lastTwoAddObjects[1]) {
-                            endDirection = Vec3(
-                                (lastTwoAddObjects[1] as Intersection).position.x + offsetDirectionSphere,
-                                (lastTwoAddObjects[1] as Intersection).position.y,
-                                (lastTwoAddObjects[1] as Intersection).position.z + offsetDirectionSphere
-                            )
-                            startInstance.transform.setToTranslation(startDirection.toGdxVec())
-                            endInstance.transform.setToTranslation(endDirection.toGdxVec())
-                            layout.addRoad(
-                                lastTwoAddObjects[0] as Intersection,
-                                startDirection,
-                                lastTwoAddObjects[1] as Intersection,
-                                endDirection
-                            )
-                            roadId =
-                                findRoadId(lastTwoAddObjects[0] as Intersection, lastTwoAddObjects[1] as Intersection)
-                        }
-                    }
+                    startInstance.transform.setToTranslation(startDirection.toGdxVec())
+                    endInstance.transform.setToTranslation(endDirection.toGdxVec())
+                    val road = layout.addRoad(
+                        lastTwoAddObjects[0]!!,
+                        startDirection,
+                        lastTwoAddObjects[1]!!,
+                        endDirection
+                    )
+                    directionSpheres[road.id] = startInstance to endInstance
+                    updateLayout()
                 }
-                directionSpheres.add(Pair(startInstance, endInstance))
-                directionSpheresMap[roadId] = Pair(startInstance, endInstance)
-                updateLayout()
                 sphereAddCounter = 0
                 addRoadStatus = false
             }
@@ -713,7 +310,7 @@ class Main : ApplicationAdapter() {
         if (layoutScene != null) {
             sceneManager?.removeScene(layoutScene)
         }
-        layoutModel = createLayoutModel(layout)
+        layoutModel = ModelGenerator.createLayoutModel(layout)
         layoutScene = Scene(layoutModel)
         sceneManager?.addScene(layoutScene)
     }
@@ -743,18 +340,18 @@ class Main : ApplicationAdapter() {
     }
 
     private fun findRoadIntersectionAt(intersection: Vector3): Intersection? {
-        for (i in spheres.indices) {
-            if (spheres[i].transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
-                return layout.intersectionsList[i]
+        for ((id, sphere) in spheres) {
+            if (sphere.transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
+                return layout.intersections[id]
             }
         }
         return null
     }
 
-    private fun findSphereAt(intersection: Vector3): ModelInstance? {
-        for (sphere in spheres) {
+    private fun findSphereAt(intersection: Vector3): Pair<Long, ModelInstance>? {
+        for ((id, sphere) in spheres) {
             if (sphere.transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
-                return sphere
+                return id to sphere
             }
         }
         return null
@@ -848,12 +445,12 @@ class Main : ApplicationAdapter() {
             modelBatch?.render(car, environment)
         }
         if (editStatus) {
-            for (sphere in spheres) {
+            for ((_, sphere) in spheres) {
                 modelBatch?.render(sphere)
             }
             if (editRoadStatus) {
-                modelBatch?.render(directionSpheresMap[currentEditRoadId]!!.first)
-                modelBatch?.render(directionSpheresMap[currentEditRoadId]!!.second)
+                modelBatch?.render(directionSpheres[currentEditRoadId]!!.first)
+                modelBatch?.render(directionSpheres[currentEditRoadId]!!.second)
             }
         }
         modelBatch?.end()
@@ -873,121 +470,27 @@ class Main : ApplicationAdapter() {
         sceneManager?.updateViewport(width.toFloat(), height.toFloat())
     }
 
-    // Храним предыдущую геометрию для каждой машины
     private fun updateCars(vehicleData: List<ISimulation.VehicleDTO>) {
-        val laneWidth = 3.5 // Ширина одной полосы в метрах
 
         for (vehicle in vehicleData) {
             val vehicleId = vehicle.id
-            val carPosition = vehicle.distance
             val carRoad = vehicle.road
-            val carDirection = vehicle.direction
-            val carLaneIndex = -vehicle.laneId // Индекс полосы движения (-1, 0, 1 и т.д.)
 
             // Если машина не добавлена, создаем новую ModelInstance
             if (!carInstances.containsKey(vehicleId)) {
                 carInstances[vehicleId] = ModelInstance(carModel)
-                carRotationFlags[vehicleId] = false
-                previousGeometries[vehicleId.toLong()] = null
             }
-
             val carInstance = carInstances[vehicleId]!!
 
-            if (carRoad != null) {
-                // Определяем текущую геометрию
-                val currentGeometry: TRoadPlanViewGeometry? = carRoad.planView.geometry.firstOrNull {
-                    val distanceOnRoad = if (carLaneIndex > 0) {
-                        carPosition
-                    } else {
-                        carRoad.length - carPosition
-                    }
-                    distanceOnRoad in it.s..(it.s + it.length)
-                }
-
-                // Обработка перехода между геометриями для BACKWARD
-                /*if (carDirection == Direction.BACKWARD && currentGeometry != null && carPosition < currentGeometry.s) {
-                    val prevGeometry = carRoad.planView.geometry.lastOrNull { it.s + it.length <= currentGeometry!!.s }
-                    if (prevGeometry != null) {
-                        currentGeometry = prevGeometry
-                        carPosition = currentGeometry.s + currentGeometry.length - (currentGeometry.s - carPosition)
-                    } else {
-                        carPosition = currentGeometry.s
-                    }
-                }*/
-
-                /*if (vehicleId == 1) {
-                    if (currentGeometry != null) {
-                        println("id ${vehicleId} road ${carRoad.id} lane ${vehicle.laneId} curgeo ${currentGeometry.length} pos ${carPosition} dir ${carDirection}")
-                    }
-                }*/
-
-                // Проверяем изменение геометрии
-                val previousGeometry = previousGeometries[vehicleId.toLong()]
-                if (currentGeometry != previousGeometry) {
-                    // Геометрия изменилась, сбрасываем флажок вращения
-                    carRotationFlags[vehicleId] = false
-                    previousGeometries[vehicleId.toLong()] = currentGeometry
-                }
-
-                if (currentGeometry == null) continue
-
-                // Вычисляем смещение автомобиля для текущей полосы
-                val lanePositionOffset = carLaneIndex * (laneWidth / 2)
-
-                val geometryStart = currentGeometry.s
-                val geometryEnd = geometryStart + currentGeometry.length
-
-                if (currentGeometry.line != null) {
-                    // Линейная геометрия
-                    val offset = if (carLaneIndex > 0) {
-                        carPosition - geometryStart
-                    } else {
-                        geometryEnd - carPosition
-                    }
-
-                    val newPosX =
-                        currentGeometry.x + offset * cos(currentGeometry.hdg) - lanePositionOffset * sin(currentGeometry.hdg)
-                    val newPosZ =
-                        currentGeometry.y + offset * sin(currentGeometry.hdg) + lanePositionOffset * cos(currentGeometry.hdg)
-                    carInstance.transform.setTranslation(newPosX.toFloat(), 1f, newPosZ.toFloat())
-
-                    val rotationAngle = if (carDirection == Direction.FORWARD) {
-                        currentGeometry.hdg
-                    } else {
-                        currentGeometry.hdg + Math.PI
-                    }
-                    if (carRotationFlags[vehicleId] == false) {
-                        carInstance.transform.setToRotationRad(Vector3(0f, 1f, 0f), -rotationAngle.toFloat())
-                        carRotationFlags[vehicleId] = true
-                    }
-
-                } else if (currentGeometry.arc != null) {
-                    // Геометрия дуги
-                    val r = 1 / currentGeometry.arc.curvature
-                    val startAngle = currentGeometry.hdg
-                    val offset = if (carLaneIndex > 0) {
-                        carPosition - geometryStart
-                    } else {
-                        geometryEnd - carPosition
-                    }
-                    val endAngle = startAngle + currentGeometry.arc.curvature * offset
-                    val end = Point2(currentGeometry.x, currentGeometry.y) - Point2(
-                        sin(startAngle) - sin(endAngle),
-                        -cos(startAngle) + cos(endAngle)
-                    ) * r
-
-                    val newPosX = end.x
-                    val newPosZ = end.y
-                    carInstance.transform.setTranslation(newPosX.toFloat(), 1f, newPosZ.toFloat())
-
-                    val rotationAngle = if (carLaneIndex > 0) {
-                        -endAngle + Math.PI // Инвертируем направление вращения
-                    } else {
-                        -endAngle
-                    }
-                    carInstance.transform.rotateRad(Vector3(0f, 1f, 0f), rotationAngle.toFloat())
-                }
-            }
+            val spline = Deserializer.planeViewToSpline(carRoad.planView)
+            val pointOnSpline = clamp(if (vehicle.direction == Direction.BACKWARD) { spline.length - vehicle.distance } else { vehicle.distance }, 0.0, spline.length)
+            val pos = spline.getPoint(pointOnSpline)
+            val dir = spline.getDirection(pointOnSpline).normalized() * if (vehicle.direction == Direction.BACKWARD) { -1.0 } else { 1.0 }
+            val right = Vec3(dir.x, 0.0, dir.y).cross(Vec3(0.0, 1.0, 0.0)).normalized()
+            val angle = - acos(dir.x) * sign(dir.y)
+            val laneOffset = (abs(vehicle.laneId) - 0.5)
+            carInstance.transform.setToRotationRad(Vector3(0.0f, 1.0f, 0.0f), angle.toFloat())
+                .setTranslation((pos.x + laneOffset * right.x * ModelGenerator.laneWidth).toFloat(), 1.0f, (pos.y + laneOffset * right.z * ModelGenerator.laneWidth).toFloat())
         }
 
         // Удаление машин, которых больше нет в vehicleData
@@ -995,11 +498,8 @@ class Main : ApplicationAdapter() {
         val removedKeys = carInstances.keys - vehicleIds
         for (key in removedKeys) {
             carInstances.remove(key)
-            carRotationFlags.remove(key) // Удаление флага при удалении машины
-            previousGeometries.remove(key.toLong()) // Удаление информации о геометрии
         }
     }
-
 }
 
 class MyCameraController(camera: Camera) : CameraInputController(camera) {
@@ -1017,19 +517,5 @@ class MyCameraController(camera: Camera) : CameraInputController(camera) {
             super.touchDragged(screenX, screenY, pointer)
         }
         return false
-    }
-}
-
-data class Point2(var x: Double, var y: Double) {
-    operator fun plus(other: Point2): Point2 {
-        return Point2(x + other.x, y + other.y)
-    }
-
-    operator fun minus(other: Point2): Point2 {
-        return Point2(x - other.x, y - other.y)
-    }
-
-    operator fun times(scalar: Double): Point2 {
-        return Point2(x * scalar, y * scalar)
     }
 }
