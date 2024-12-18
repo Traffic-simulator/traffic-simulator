@@ -11,9 +11,9 @@ import kotlin.random.Random
  * When query for vehicle arrives for the first time, remember it and then use in next queries.
  * BE CAREFUL!!! CURRENT JUNCTION LOGIC DOESNT ALLOW PATH CHANGES.
  */
-class RandomPathBuilder: IPathBuilder {
+class RandomPathBuilder(seed: Long): IPathBuilder {
 
-    val rnd = Random(12)
+    val rnd = Random(seed)
 
     val vehiclesPaths = HashMap<Int, ArrayList<Pair<Lane, Boolean>>>()
 
@@ -73,4 +73,41 @@ class RandomPathBuilder: IPathBuilder {
         // In case of errors return null
         return null
     }
+
+    override fun getNextVehicle(vehicle: Vehicle, lane: Lane, direction: Direction, acc_distance: Double, initial_iteration: Boolean): Pair<Vehicle?, Double> {
+        var closestVehicle: Vehicle? = null
+        if (initial_iteration) {
+            // TODO: use binary search
+            lane.vehicles.forEach{ it ->
+                if (it.position > vehicle.position + SimulationConfig.EPS) {
+                    if (closestVehicle == null) {
+                        closestVehicle = it
+                    } else {
+                        if (closestVehicle!!.position > it.position) {
+                            closestVehicle = it
+                        }
+                    }
+                }
+            }
+        } else {
+            closestVehicle = lane.getMinPositionVehicle()
+        }
+
+        if (closestVehicle == null) {
+            val nextLane = getNextPathLane(vehicle, lane, direction)
+            if (nextLane == null) {
+                return Pair(null, SimulationConfig.INF)
+            }
+
+            return getNextVehicle(vehicle, nextLane.first, vehicle.direction.opposite(nextLane.second), acc_distance + lane.road.troad.length, false)
+        } else {
+            val distance = closestVehicle!!.position - closestVehicle!!.length - vehicle.position + acc_distance
+            if (distance > SimulationConfig.MAX_VALUABLE_DISTANCE) {
+                return Pair(null, SimulationConfig.INF)
+            }
+            return Pair(closestVehicle, distance)
+        }
+    }
+
+
 }
