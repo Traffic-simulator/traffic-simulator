@@ -86,29 +86,29 @@ class Road(
     }
 
     fun getIncomingLaneNumber(intersection: Intersection): Int {
-        return when (contact(intersection)) {
-            ContactPoint.START -> leftLane
-            ContactPoint.END -> -rightLane
-            ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
+        return when (intersection) {
+            startIntersection -> leftLane
+            endIntersection -> -rightLane
+            else -> throw IllegalArgumentException("Invalid intersection")
         }
     }
 
     fun getOutgoingLaneNumber(intersection: Intersection): Int {
-        return when (contact(intersection)) {
-            ContactPoint.START -> -rightLane
-            ContactPoint.END -> leftLane
-            ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
+        return when (intersection) {
+            startIntersection -> -rightLane
+            endIntersection -> leftLane
+            else -> throw IllegalArgumentException("Invalid intersection")
         }
     }
 
-    private fun contact(intersection: Intersection): ContactPoint {
+    fun contact(intersection: Intersection): ContactPoint {
         if (intersection === startIntersection) return ContactPoint.START
         if (intersection === endIntersection) return ContactPoint.END
         return ContactPoint.NULL
     }
 
     companion object {
-        private enum class ContactPoint {
+        enum class ContactPoint {
             START, END, NULL
         }
     }

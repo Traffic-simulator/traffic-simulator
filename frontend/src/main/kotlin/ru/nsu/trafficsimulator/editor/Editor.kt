@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.editor
 
+import OpenDriveWriter
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputProcessor
@@ -24,6 +25,7 @@ import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
 import ru.nsu.trafficsimulator.model.Vec3
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
+import ru.nsu.trafficsimulator.serializer.serializeLayout
 
 class Editor {
     companion object {
@@ -65,6 +67,9 @@ class Editor {
             if (ImGui.button("Edit mode")) {
                 editStatus = !editStatus
                 selectedIntersectionCount = 0
+                val openDriveWriter = OpenDriveWriter()
+                openDriveWriter.write(serializeLayout(layout), "testSerializer")
+                println(layout)
             }
             ImGui.end()
         }
