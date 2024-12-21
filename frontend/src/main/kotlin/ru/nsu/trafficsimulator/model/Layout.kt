@@ -88,7 +88,7 @@ class Layout {
 
     fun addIntersection(position: Vec3): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newIntersection = Intersection(newIntersectionId, position)
+        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING)
         if (!intersections.containsValue(newIntersection)) {
             intersectionsList.add(newIntersection)
         }
@@ -106,7 +106,8 @@ class Layout {
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection(),
             intersection.position.xzProjection(),
             toRoad.getIntersectionPoint(intersection, abs(outgoingLaneNumber) - laneNumber).xzProjection(),
-            intersection.position.xzProjection()
+            toRoad.getIntersectionPoint(intersection, abs(outgoingLaneNumber) - laneNumber)
+                .xzProjection() * 2.0 - intersection.position.xzProjection()
         )
 
         val newIntersectionRoad = IntersectionRoad(
@@ -118,10 +119,11 @@ class Layout {
             geometry = geometry
         )
         intersection.intersectionRoads.add(newIntersectionRoad)
+        intersectionRoads[newIntersectionRoad.id] = newIntersectionRoad
 
         val inSg = incomingLaneNumber.sign
         val outSg = outgoingLaneNumber.sign
-        for (lane in laneNumber..1 step -1) {
+        for (lane in 1..laneNumber) {
             newIntersectionRoad.laneLinkage.add(
                 Triple(
                     incomingLaneNumber - inSg * lane,
@@ -132,11 +134,13 @@ class Layout {
         }
 
     }
+
     override fun toString(): String {
         val roadsString = roads.values.joinToString(", ") { it.toString() }
         val intersectionsString = intersections.values.joinToString(", ") { it.toString() }
         return "Layout(roads=[$roadsString], intersections=[$intersectionsString], " +
-            "roadIdCount=$roadIdCount, intersectionIdCount=$intersectionIdCount)"
+            "roadIdCount=$roadIdCount, intersectionIdCount=$intersectionIdCount), intersectionRoads=$intersectionRoads"
+
     }
 
     private fun deleteIntersection(intersection: Intersection) {

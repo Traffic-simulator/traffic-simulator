@@ -169,10 +169,10 @@ class Main : ApplicationAdapter() {
         }
 
         // Получаем данные о положении машинок
-        val vehicleData = back.getNextFrame(0.01)
+//        val vehicleData = back.getNextFrame(0.01)
 
         // Обновляем позиции машинок
-        updateCars(vehicleData)
+//        updateCars(vehicleData)
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
