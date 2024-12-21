@@ -4,13 +4,17 @@ import com.badlogic.gdx.math.Vector3
 import kotlin.math.sqrt
 import kotlin.math.abs
 
-data class Vec3(val x: Double, val y: Double, val z: Double) {
+data class Vec3(var x: Double, var y: Double, var z: Double) {
+    constructor() : this(0.0, 0.0, 0.0) {}
+    constructor(vec: Vector3) : this(vec.x, vec.y, vec.z) {}
+    constructor(x: Float, y: Float, z: Float) : this(x.toDouble(), y.toDouble(), z.toDouble()) {}
     fun distance(other: Vec3): Double {
         val dx = x - other.x
         val dy = y - other.y
         val dz = z - other.z
         return sqrt(dx * dx + dy * dy + dz * dz)
     }
+
     operator fun plus(other: Vec3): Vec3 = Vec3(x + other.x, y + other.y, z + other.z)
     operator fun minus(other: Vec3): Vec3 = Vec3(x - other.x, y - other.y, z - other.z)
     operator fun unaryMinus(): Vec3 = Vec3(-x, -y, -z)

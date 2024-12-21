@@ -251,7 +251,7 @@ class Spline {
         }
 
         override fun toString(): String {
-            return "SplinePart(x=$x, y=$y, length=$length, normalized=$normalized offset=$offset)"
+            return "SplinePart((${x.a} + ${x.b}*t + ${x.c}*t^2 + ${x.d}*t^3, ${y.a} + ${y.b}*t + ${y.c}*t^2 + ${y.d}*t^3), length=$length, normalized=$normalized offset=$offset)"
         }
     }
 

@@ -3,9 +3,7 @@ package ru.nsu.trafficsimulator
 import BackendAPI
 import OpenDriveReader
 import SpawnDetails
-import com.badlogic.gdx.ApplicationAdapter
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.InputProcessor
+import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.Environment
@@ -16,30 +14,26 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
-import ktx.math.unaryMinus
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import opendrive.TRoadPlanViewGeometry
 import vehicle.Direction
 import kotlin.math.*
 
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
+import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import java.lang.Math.clamp
 import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.time.measureTime
 
 
 class Main : ApplicationAdapter() {
@@ -51,15 +45,13 @@ class Main : ApplicationAdapter() {
     private var sceneManager: SceneManager? = null
     private var sceneAsset1: SceneAsset? = null
     private var tmpInputProcessor: InputProcessor? = null
-    private var layout: Layout = Layout()
-    private var layoutModel: Model? = null
 
     private var carModel: Model? = null
     private var modelInstance1: ModelInstance? = null
     private var modelBatch: ModelBatch? = null
 
     private val back = BackendAPI()
-    private val carInstances = mutableMapOf<Int, ModelInstance>()
+    private val carInstances = mutableMapOf<Int, Scene>()
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -76,7 +68,16 @@ class Main : ApplicationAdapter() {
         camera?.update()
 
         environment = Environment()
-        environment!!.add(DirectionalShadowLight(1024, 1024, 1000.0f, 1000.0f, 0.1f, 1000.0f).set(0.9f, 0.9f, 0.9f, -0f, -1.0f, -0.2f))
+        environment!!.add(
+            DirectionalShadowLight(1024, 1024, 1000.0f, 1000.0f, 0.1f, 1000.0f).set(
+                0.9f,
+                0.9f,
+                0.9f,
+                -0f,
+                -1.0f,
+                -0.2f
+            )
+        )
 
         sceneManager = SceneManager()
         sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer.glb"))
@@ -84,9 +85,12 @@ class Main : ApplicationAdapter() {
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
-        val camController = CameraInputController(camera)
-        camController.translateUnits = 100.0f
-        Gdx.input.inputProcessor = camController
+        val inputMultiplexer = InputMultiplexer()
+        val camController = MyCameraController(camera!!)
+
+        inputMultiplexer.addProcessor(Editor.createSphereEditorProcessor(camController))
+        inputMultiplexer.addProcessor(camController)
+        Gdx.input.inputProcessor = inputMultiplexer
 
         modelInstance1 = ModelInstance(carModel)
         modelBatch = ModelBatch()
@@ -107,32 +111,46 @@ class Main : ApplicationAdapter() {
 
         back.init(openDRIVE, SpawnDetails(spawnDetails), 500)
 
-        layout = Deserializer.deserialize(OpenDriveReader().read("Town01.xodr"))
+//        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
+//        println(layout.roads)
+//        for (i in layout.roads) {
+//            println("${i.value.id} ${i.value.geometry}")
+//        }
+//        println(layout.intersectionRoads)
 
-        val time = measureTime {
-            layoutModel = ModelGenerator.createLayoutModel(layout)
+        /*val time = measureTime {
+            layoutModel = createLayoutModel(layout_2)
         }
         println("Road layout model generation took $time")
-        val layoutScene = Scene(layoutModel)
-        sceneManager?.addScene(layoutScene)
+        layoutScene = Scene(layoutModel)
+        sceneManager?.addScene(layoutScene)*/
 
         // Add ground
         val modelBuilder = ModelBuilder()
         val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
         modelBuilder.begin()
-        val meshPartBuilder = modelBuilder.part("Ground", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), groundMaterial)
+        val meshPartBuilder = modelBuilder.part(
+            "Ground",
+            GL20.GL_TRIANGLES,
+            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(),
+            groundMaterial
+        )
         BoxShapeBuilder.build(meshPartBuilder, 1000000.0f, 0.1f, 100000.0f)
         val ground = modelBuilder.end()
         sceneManager?.addScene(Scene(ground))
 
-        sceneManager?.skyBox = SceneSkybox(Cubemap(
-            Gdx.files.internal("skybox/right.png"),
-            Gdx.files.internal("skybox/left.png"),
-            Gdx.files.internal("skybox/top.png"),
-            Gdx.files.internal("skybox/bottom.png"),
-            Gdx.files.internal("skybox/front.png"),
-            Gdx.files.internal("skybox/back.png"),
-        ))
+        sceneManager?.skyBox = SceneSkybox(
+            Cubemap(
+                Gdx.files.internal("skybox/right.png"),
+                Gdx.files.internal("skybox/left.png"),
+                Gdx.files.internal("skybox/top.png"),
+                Gdx.files.internal("skybox/bottom.png"),
+                Gdx.files.internal("skybox/front.png"),
+                Gdx.files.internal("skybox/back.png"),
+            )
+        )
+        Editor.sceneManager = sceneManager
+        Editor.camera = camera
     }
 
     override fun render() {
@@ -143,6 +161,7 @@ class Main : ApplicationAdapter() {
         imGuiGl3.newFrame()
         imGuiGlfw.newFrame()
         ImGui.newFrame()
+        Editor.runImgui()
         ImGui.render()
         if (ImGui.getIO().wantCaptureKeyboard or ImGui.getIO().wantCaptureMouse) {
             tmpInputProcessor = Gdx.input.inputProcessor
@@ -150,11 +169,10 @@ class Main : ApplicationAdapter() {
         }
 
         // Получаем данные о положении машинок
-        val vehicleData = back.getNextFrame(0.01)
-//        println("Vehicle data: $vehicleData")
+//        val vehicleData = back.getNextFrame(0.01)
 
         // Обновляем позиции машинок
-        updateCars(vehicleData)
+//        updateCars(vehicleData)
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
@@ -164,9 +182,7 @@ class Main : ApplicationAdapter() {
         sceneManager?.render()
 
         modelBatch?.begin(camera)
-        for (car in carInstances.values) {
-            modelBatch?.render(car, environment)
-        }
+        Editor.render(modelBatch)
         modelBatch?.end()
 
         imGuiGl3.renderDrawData(ImGui.getDrawData())
@@ -184,7 +200,6 @@ class Main : ApplicationAdapter() {
         sceneManager?.updateViewport(width.toFloat(), height.toFloat())
     }
 
-    // Храним предыдущую геометрию для каждой машины
     private fun updateCars(vehicleData: List<ISimulation.VehicleDTO>) {
 
         for (vehicle in vehicleData) {
@@ -193,7 +208,8 @@ class Main : ApplicationAdapter() {
 
             // Если машина не добавлена, создаем новую ModelInstance
             if (!carInstances.containsKey(vehicleId)) {
-                carInstances[vehicleId] = ModelInstance(carModel)
+                carInstances[vehicleId] = Scene(carModel)
+                sceneManager?.addScene(carInstances[vehicleId])
             }
             val carInstance = carInstances[vehicleId]!!
 
@@ -204,7 +220,10 @@ class Main : ApplicationAdapter() {
             val right = Vec3(dir.x, 0.0, dir.y).cross(Vec3(0.0, 1.0, 0.0)).normalized()
             val angle = - acos(dir.x) * sign(dir.y)
             val laneOffset = (abs(vehicle.laneId) - 0.5)
-            carInstance.transform.setToRotationRad(Vector3(0.0f, 1.0f, 0.0f), angle.toFloat())
+            carInstance
+                .modelInstance
+                .transform
+                .setToRotationRad(Vector3(0.0f, 1.0f, 0.0f), angle.toFloat())
                 .setTranslation((pos.x + laneOffset * right.x * ModelGenerator.laneWidth).toFloat(), 1.0f, (pos.y + laneOffset * right.z * ModelGenerator.laneWidth).toFloat())
         }
 
@@ -212,7 +231,26 @@ class Main : ApplicationAdapter() {
         val vehicleIds = vehicleData.map { it.id }.toSet()
         val removedKeys = carInstances.keys - vehicleIds
         for (key in removedKeys) {
+            sceneManager?.removeScene(carInstances[key])
             carInstances.remove(key)
         }
+    }
+}
+
+class MyCameraController(camera: Camera) : CameraInputController(camera) {
+    var camaraEnabled = true
+
+    override fun keyDown(keycode: Int): Boolean {
+        if (camaraEnabled) {
+            super.keyDown(keycode)
+        }
+        return false
+    }
+
+    override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
+        if (camaraEnabled) {
+            super.touchDragged(screenX, screenY, pointer)
+        }
+        return false
     }
 }
