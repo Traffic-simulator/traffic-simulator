@@ -205,8 +205,7 @@ private fun generateRoadPlaneView(
     }
 
     println(geo)
-    for (roadGeometry in geo
-        .splineParts) {
+    for (roadGeometry in geo.splineParts) {
         val (start, direction) = roadGeometry.getStartPoint()
         val rotAngle = -((direction - start).angle())
         val x: Poly3
@@ -227,7 +226,7 @@ private fun generateRoadPlaneView(
             bv = rotatedY.b
             cv = rotatedY.c
             dv = rotatedY.d
-            pRange = EParamPoly3PRange.NORMALIZED
+            pRange = if (roadGeometry.normalized) EParamPoly3PRange.NORMALIZED else EParamPoly3PRange.ARC_LENGTH
         }
 
         tRoadPlanViewGeometry.geometry.add(TRoadPlanViewGeometry().apply {
