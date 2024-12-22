@@ -227,6 +227,7 @@ private fun generateRoadPlaneView(
             bv = rotatedY.b
             cv = rotatedY.c
             dv = rotatedY.d
+            pRange = EParamPoly3PRange.NORMALIZED
         }
 
         tRoadPlanViewGeometry.geometry.add(TRoadPlanViewGeometry().apply {
