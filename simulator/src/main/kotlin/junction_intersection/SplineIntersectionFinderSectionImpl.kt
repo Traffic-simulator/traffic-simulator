@@ -1,12 +1,12 @@
 package junction_intersection
 
 
+import opendrive.EParamPoly3PRange
 import kotlin.math.pow
 
 class SplineIntersectionFinderSectionImpl(
     private val numberOfSectionsInSpline: Int = 100
 ) : SplineIntersectionFinder {
-
 
     //return list of intersection points
     override fun twoSplinesIntersection (
@@ -14,13 +14,13 @@ class SplineIntersectionFinderSectionImpl(
         secondSpline: Spline //second spline
     ): List<Pair<Double, Double>> {
         var first = firstSpline
-        if (firstSpline.pRange == PRange.ARC_LENGTH) {
-            first = normalizingSpline(firstSpline)
-        }
+//        if (firstSpline.pRange == EParamPoly3PRange.NORMALIZED) {
+//            first = normalizingSpline(firstSpline)
+//        }
         var second = secondSpline
-        if (secondSpline.pRange == PRange.ARC_LENGTH) {
-            second = normalizingSpline(secondSpline)
-        }
+//        if (secondSpline.pRange == EParamPoly3PRange.ARC_LENGTH) {
+//            second = normalizingSpline(secondSpline)
+//        }
         //splines are normalized
 
         val listFirst = mutableListOf<Pair<Double, Double>>()
@@ -73,24 +73,6 @@ class SplineIntersectionFinderSectionImpl(
         return if (withinLine1 && withinLine2) Pair(px, py) else null
     }
 
-    //all splines will be used in normalized form
-    private fun normalizingSpline(spline: Spline): Spline {
-        if (spline.pRange == PRange.NORMALIZED) {
-            return spline
-        }
-        return Spline(
-            spline.aU,
-            spline.bU * spline.length,
-            spline.cU * spline.length.pow(2),
-            spline.dU * spline.length.pow(3),
-            spline.aV,
-            spline.bV * spline.length,
-            spline.cV * spline.length.pow(2),
-            spline.dV * spline.length.pow(3),
-            PRange.NORMALIZED,
-            1.0
-        )
-    }
 
     //direction of U(V) is equals the axis X(Y) (This say Rustam :) )
     private fun valueOfNormalizedSpline(

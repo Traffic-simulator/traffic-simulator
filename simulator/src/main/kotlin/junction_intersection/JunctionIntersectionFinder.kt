@@ -1,11 +1,7 @@
 package junction_intersection
 
-import network.junction.Junction
-import network.Network
-import network.Road
 import opendrive.OpenDRIVE
 import opendrive.TRoad
-import kotlin.math.pow
 
 
 class JunctionIntersectionFinder(
@@ -21,6 +17,40 @@ class JunctionIntersectionFinder(
         initJunctionMap()
         initAllTRoadsMap()
     }
+
+
+
+    fun findIntersection () : MutableList<Intersection> {
+        val intersectionList : MutableList<Intersection> = ArrayList()
+        var junctionId : String = "-1"
+        var junctionList : MutableList<String> = ArrayList()
+        val finder : LanesIntersectionFinder = LanesIntersectionFinderImpl()
+        for (pair in junctionMap) {
+            junctionId = pair.key
+            junctionList = pair.value
+            var road1 : TRoad
+            var road2 : TRoad
+            for (road1Id in junctionList) {
+                for (road2Id in junctionList) {
+                    road1 = allTRoadsInJunctionsMap[road1Id]!!
+                    road2 = allTRoadsInJunctionsMap[road2Id]!!
+                    if (road1 == road2) { //find intersection between road and itself has no sense
+                        continue
+                    }
+                    var spline1 : Spline = Spline(road1.planView.geometry[0])
+                    var spline2 : Spline = Spline(road2.planView.geometry[0])
+                    //TODO add normal implementation of this part
+                    var lanes1 : Lanes = Lanes(road1.id, spline1, listOf(1), listOf(-1))
+                    var lanes2 : Lanes = Lanes(road2.id, spline2, listOf(1), listOf(-1))
+                    intersectionList.addAll(finder.findIntersections(lanes1, lanes2));
+                }
+            }
+        }
+        return intersectionList
+    }
+
+
+
 
     private fun initJunctionMap() {
         val allRoads : MutableList<TRoad> = openDrive.road
@@ -53,40 +83,5 @@ class JunctionIntersectionFinder(
             }
         }
     }
-
-    fun findIntersection () {
-        val intersectionMap : MutableMap<String, MutableList<String>> = junctionMap
-        var junctionId : String = "-1"
-        var junctionList : MutableList<String> = ArrayList()
-        for (pair in junctionMap) {
-            junctionId = pair.key
-            junctionList = pair.value
-            var road1 : TRoad
-            var road2 : TRoad
-            for (road1Id in junctionList) {
-                for (road2Id in junctionList) {
-
-                }
-            }
-        }
-    }
-
-//    private var allRoads : List<Road> = network.roads
-//    private var allRoadsMap : MutableMap<String, Road> = HashMap()
-//    init {
-//    	for (road in allRoads) {
-//            allRoadsMap[road.id] = road
-//        }
-//    }
-//    fun findIntersection (junction : Junction) {
-//        var indexesOfRoadsInJunction : ArrayList<String> = ArrayList<String>()
-//        var junctionRoads : List<Road>
-//        for (connection in junction.tjunction.connection) {
-//            indexesOfRoadsInJunction.add(connection.connectingRoad);
-//        }
-//    }
-
-
-
 
 }

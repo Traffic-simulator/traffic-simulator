@@ -1,6 +1,7 @@
 package junction_intersection
 
 class Lanes (
+    val roadId: String,
     val referenceLine: Spline,
     val leftRoadsList: List<Int>,
     val rightRoadsList: List<Int>
@@ -9,8 +10,8 @@ class Lanes (
     companion object {
         val NUMBER_OF_SECTIONS : Int = 100
     }
-    private val positiveLanes : MutableList<Lane> = mutableListOf()
-    private val negativeLanes : MutableList<Lane> = mutableListOf()
+    val positiveLanes : MutableList<Lane> = mutableListOf()
+    val negativeLanes : MutableList<Lane> = mutableListOf()
     init {
         for (id in leftRoadsList) {
             positiveLanes.add(Lane(referenceLine, id))

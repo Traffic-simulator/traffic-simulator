@@ -5,16 +5,16 @@ import kotlin.math.absoluteValue
 
 
 class Lane (
-    referenceLine: Spline,
-    id: Int
+    val referenceLine: Spline,
+    val id: Int
 ) {
     companion object {
         val EPSILON = 0.01
         val OFFSET : Double = 4.0
         val NUMBER_OF_SECTIONS = 100
     }
-    private val leftPoints: MutableList<Pair<Double, Double>> = ArrayList()
-    private val rightPoints: MutableList<Pair<Double, Double>> = ArrayList()
+    val leftPoints: MutableList<Pair<Double, Double>> = ArrayList()
+    val rightPoints: MutableList<Pair<Double, Double>> = ArrayList()
     init {
         repeat(NUMBER_OF_SECTIONS + 1) { i ->  // 101 итерация, чтобы включить 1.0
             val p = i /  NUMBER_OF_SECTIONS.toDouble()
