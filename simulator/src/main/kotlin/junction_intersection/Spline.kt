@@ -5,6 +5,7 @@ import opendrive.TRoadPlanViewGeometry
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 class Spline (
     val hdg: Double = 0.0,
@@ -32,7 +33,15 @@ class Spline (
         pRange = geometry.paramPoly3.pRange
     )
 
-    //in global coordinate
+
+    fun valueOfGlobal(p: Double): Pair<Double, Double> {
+        val relativeCoords : Pair<Double, Double> = valueOf(p)
+        return addRelativeCoords(relativeCoords)
+    }
+
+
+
+    //relative x y
     //(x, y) - return
     fun valueOf(p:Double) : Pair<Double, Double> {
         val u : Double = poly3ValueOf(aU, bU, cU, dU, p)
@@ -60,9 +69,34 @@ class Spline (
     private fun rotate(coordinates: Pair<Double, Double>) : Pair<Double, Double> {
         val u = coordinates.first
         val v = coordinates.second
-        val rotatedU = x + u * cos(hdg) - v * sin(hdg)
-        val rotatedY = y + u * sin(hdg) + v * cos(hdg)
+        val rotatedU = u * cos(hdg) - v * sin(hdg)
+        val rotatedY = u * sin(hdg) + v * cos(hdg)
         return Pair(rotatedU, rotatedY)
     }
+
+    fun getPerpendicularLeft(point : Pair<Double, Double>) : Pair<Double, Double> {
+        return Pair<Double, Double> (-point.second, point.first)
+    }
+
+    fun getPerpendicularRight(point : Pair<Double, Double>) : Pair<Double, Double> {
+        return Pair<Double, Double> (point.second, -point.first)
+    }
+
+    //add x y
+    fun addRelativeCoords(coords: Pair<Double, Double>) : Pair<Double, Double> {
+        return Pair(coords.first + x, coords.second + y)
+    }
+
+    fun normalizeVector(coords: Pair<Double, Double>): Pair<Double, Double> {
+        val (x, y) = coords
+        val length = sqrt(x * x + y * y)
+
+        return if (length != 0.0) {
+            Pair(x / length, y / length)
+        } else {
+            Pair(0.0, 0.0)
+        }
+    }
+
 
 }
