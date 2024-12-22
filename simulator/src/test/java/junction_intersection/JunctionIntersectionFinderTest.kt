@@ -8,52 +8,36 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
 class JunctionIntersectionFinderTest {
-    //TODO add comparing for test 1-4 with epsilon
     @Test
-    fun test() {
-        val finder: SplineIntersectionFinderSectionImpl = SplineIntersectionFinderSectionImpl()
-        var spline1: Spline = Spline(0.0, 3.0, -2.0, 1.0, 0.0, 1.0, 1.0, 1.0, PRange.NORMALIZED, 1.0)
-        var spline2: Spline = Spline(0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, PRange.NORMALIZED, 1.0)
-        var result: List<Pair<Double, Double>> = finder.twoSplinesIntersection(spline1, spline2)
-        println(result)
-        //https://www.desmos.com/calculator/hkwypubnut
-    }
+    fun test0() {
+        val odr = OpenDriveReader()
+        val openDRIVE = odr.read("xodr_for_testing.xodr")
+        var finder : JunctionIntersectionFinder = JunctionIntersectionFinder(openDRIVE)
+        var intersectionList = finder.findIntersection()
+        for (intersect in intersectionList) {
+            println("========")
+            print("road1:" + intersect.roadId1 + "||lane1:" + intersect.roadId1)
+            print("road2:" + intersect.roadId2 + "||lane2:" + intersect.roadId2)
+            println()
+        }
+        val roadId1List = intersectionList.map { it.roadId1 }
+        val roadId2List = intersectionList.map { it.roadId2 }
+        val nonIntersectionRoads = mutableListOf("5", "6", "22", "23")
 
-    @Test
-    fun test2() {
-        val finder: SplineIntersectionFinderSectionImpl = SplineIntersectionFinderSectionImpl()
-        var spline1: Spline = Spline(0.8, -6.1, 9.1, 10.0, -0.2, -0.1, 3.5, 3.3, PRange.NORMALIZED, 1.0)
-        var spline2: Spline = Spline(0.0, 0.5, 1.0, 3.2, -0.2, 1.0, 1.0, 1.0, PRange.NORMALIZED, 1.0)
-        var result: List<Pair<Double, Double>> = finder.twoSplinesIntersection(spline1, spline2)
-        println(result)
-        //https://www.desmos.com/calculator/pv7empvtxn
-    }
+        //test that roadId1List and roadId2List aren't contain nonIntersectionRoads
+        assertTrue {
+            nonIntersectionRoads.all { id ->
+                !roadId1List.contains(id) && !roadId2List.contains(id)
+            }
+        }
 
-    @Test
-    fun test3() {
-        val finder: SplineIntersectionFinderSectionImpl = SplineIntersectionFinderSectionImpl()
-        var spline1: Spline = Spline(0.0, 3.0, -1.0, 1.0, 0.0, 1.0, 1.0, 1.0, PRange.NORMALIZED, 1.0)
-        var spline2: Spline = Spline(0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, PRange.NORMALIZED, 1.0)
-        var result: List<Pair<Double, Double>> = finder.twoSplinesIntersection(spline1, spline2)
-        println(result)
-        //https://www.desmos.com/calculator/9ep9azxa2d
-    }
 
-    @Test
-    fun test4() {
-        val finder: SplineIntersectionFinderSectionImpl = SplineIntersectionFinderSectionImpl()
-        var spline1: Spline = Spline(4.0, 3.0, -1.0, 1.0, 0.0, 1.0, 1.0, 1.0, PRange.NORMALIZED, 1.0)
-        var spline2: Spline = Spline(0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, PRange.NORMALIZED, 1.0)
-        var result: List<Pair<Double, Double>> = finder.twoSplinesIntersection(spline1, spline2)
-        println(result)
-        //https://www.desmos.com/calculator/gxfgqmfnz3
     }
-
 
     @Test
     fun test5() {
         val odr = OpenDriveReader()
-        val openDRIVE = odr.read("only_with_param_poly3.xodr")
+        val openDRIVE = odr.read("xodr_for_testing.xodr")
         var finder : JunctionIntersectionFinder = JunctionIntersectionFinder(openDRIVE)
         val map = finder.junctionMap
         assertTrue {
@@ -121,7 +105,7 @@ class JunctionIntersectionFinderTest {
     @Test
     fun test6() {
         val odr = OpenDriveReader()
-        val openDRIVE = odr.read("only_with_param_poly3.xodr")
+        val openDRIVE = odr.read("xodr_for_testing.xodr")
         var finder : JunctionIntersectionFinder = JunctionIntersectionFinder(openDRIVE)
         val map = finder.allTRoadsInJunctionsMap
         assertTrue {
