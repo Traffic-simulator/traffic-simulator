@@ -158,7 +158,12 @@ class Spline {
         val startDeriv = startDir - startPoint
         val endDeriv = endDir - endPoint
         if ((startDeriv - endDeriv).lengthSq() < 1e-6) {
-            return Poly3(startPoint.x, endPoint.x - startPoint.x, 0.0, 0.0) to Poly3(startPoint.y, endPoint.y - startPoint.y, 0.0, 0.0)
+            return Poly3(startPoint.x, endPoint.x - startPoint.x, 0.0, 0.0) to Poly3(
+                startPoint.y,
+                endPoint.y - startPoint.y,
+                0.0,
+                0.0
+            )
         }
 
         val x = Poly3(
@@ -175,6 +180,51 @@ class Spline {
             endDir.y + startPoint.y + startDir.y - 3 * endPoint.y
         )
         return (x to y)
+    }
+
+    fun copy(startPadding: Double = 0.0, endPadding: Double = 0.0): Spline {
+        if (startPadding + endPadding >= length) {
+            throw IllegalArgumentException("Padding sum must be between 0 and length")
+        }
+
+        val newSpline = Spline()
+
+        val startIdx = splineParts.indexOfFirst { it.offset + it.length > startPadding }
+        val endIdx = splineParts.indexOfLast { it.offset < length - endPadding }
+
+        if (startIdx == endIdx) {
+            val sp = splineParts[startIdx]
+
+            val gamma = (length - startPadding - endPadding) / length
+            val delta = startPadding / length
+
+            val x: Poly3
+            val y: Poly3
+            sp.x.let {
+                x = Poly3(
+                    it.a + it.b * delta + it.c * delta * delta + it.d * delta * delta * delta,
+                    gamma * (it.b + 2.0 * it.c * delta + 3.0 * it.d * delta * delta),
+                    gamma * gamma * (it.c + 3.0 * it.d * delta),
+                    gamma * gamma * gamma * it.d
+                )
+            }
+            sp.y.let {
+                y = Poly3(
+                    it.a + it.b * delta + it.c * delta * delta + it.d * delta * delta * delta,
+                    gamma * (it.b + 2.0 * it.c * delta + 3.0 * it.d * delta * delta),
+                    gamma * gamma * (it.c + 3.0 * it.d * delta),
+                    gamma * gamma * gamma * it.d
+                )
+            }
+            val partLength = calculateLength(x, y)
+            newSpline.splineParts.add(SplinePart(x, y, 0.0, partLength, true))
+            newSpline.length = partLength
+
+            return newSpline
+        }
+
+
+        return newSpline
     }
 
 
@@ -256,11 +306,24 @@ class Spline {
     }
 
     override fun toString(): String {
-        var result = "Spline(length=$length, ["
+        var result = "Spline(length=$length, parts=["
         for (sp in splineParts) {
             result += "\n$sp,"
         }
-        result += "\n])"
+        result += "\n])\n"
         return result
     }
+}
+
+fun main() {
+    val spline = Spline(Vec2(0.0, 0.0), Vec2(0.0, 1.0), Vec2(1.0, 1.0), Vec2(2.0, 1.0))
+    println(spline)
+    println(spline.getPoint(spline.length / 2.0))
+    println(spline.getDirection(spline.length / 2.0))
+
+    val spline2 = spline.copy(spline.length / 2.0)
+
+    println("dir= ${spline.getDirection(spline.length)}")
+    println("dir= ${spline2.getDirection(spline2.length)}")
+    println(spline2)
 }

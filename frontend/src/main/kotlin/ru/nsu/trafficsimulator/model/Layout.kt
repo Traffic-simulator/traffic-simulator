@@ -126,9 +126,9 @@ class Layout {
         for (lane in 1..laneNumber) {
             newIntersectionRoad.laneLinkage.add(
                 Triple(
-                    incomingLaneNumber - inSg * lane,
+                    incomingLaneNumber - inSg * (lane - 1),
                     lane,
-                    outgoingLaneNumber - outSg * lane
+                    outgoingLaneNumber - outSg * (lane - 1)
                 )
             )
         }
