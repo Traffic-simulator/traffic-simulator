@@ -118,6 +118,49 @@ class JunctionIntersectionFinderTest {
         }
     }
 
+    @Test
+    fun test6() {
+        val odr = OpenDriveReader()
+        val openDRIVE = odr.read("only_with_param_poly3.xodr")
+        var finder : JunctionIntersectionFinder = JunctionIntersectionFinder(openDRIVE)
+        val map = finder.allTRoadsInJunctionsMap
+        assertTrue {
+            map.contains("2")
+            map.contains("3")
+            map.contains("10")
+            map.contains("11")
+            map.contains("12")
+            map.contains("13")
+            map.contains("15")
+            map.contains("16")
+            map.contains("17")
+            map.contains("18")
+            map.contains("19")
+            map.contains("20")
+
+            map.contains("5")
+            map.contains("6")
+
+            map.contains("24")
+            map.contains("25")
+            map.contains("27")
+            map.contains("28")
+            map.contains("29")
+            map.contains("30")
+
+            map.contains("8")
+            map.contains("9")
+            map.contains("31")
+            map.contains("32")
+            map.contains("33")
+            map.contains("34")
+
+            map.contains("22")
+            map.contains("23")
+
+        }
+    }
+
 
 
 
