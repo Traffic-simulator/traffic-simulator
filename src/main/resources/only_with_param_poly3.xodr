@@ -1,0 +1,1105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OpenDRIVE>
+    <road id="0" junction="-1" length="114.62754821777344">
+        <link>
+            <predecessor elementId="0" elementType="junction"/>
+            <successor elementId="1" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="0.0" length="114.62754821777344" s="0.0" x="104.49613952636719" y="-208.7657928466797">
+                <paramPoly3 aU="0.0" aV="0.0" bU="114.62754821777344" bV="0.0" cU="0.0" cV="0.0" dU="0.0" dV="0.0"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="1" junction="-1" length="76.90026291565239">
+        <link>
+            <predecessor elementId="1" elementType="junction"/>
+            <successor elementId="2" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="1.5482561928905132" length="76.90026291565277" s="0.0" x="229.34906999752403" y="-198.7683330273125">
+                <paramPoly3 aU="0.0" aV="0.0" bU="76.90026291565303" bV="-7.771561172376096E-15" cU="0.0" cV="0.0" dU="0.0" dV="0.0"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="4" junction="-1" length="58.47913310506411">
+        <link>
+            <predecessor elementId="0" elementType="junction"/>
+            <successor elementId="3" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="0.6868484499178451" length="58.47913310506445" s="0.0" x="102.22862213014078" y="-202.42475879990633">
+                <paramPoly3 aU="0.0" aV="0.0" bU="58.47913310506412" bV="-3.552713678800501E-15" cU="0.0" cV="0.0" dU="0.0" dV="0.0"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="7" junction="-1" length="69.12976124855886">
+        <link>
+            <predecessor elementId="3" elementType="junction"/>
+            <successor elementId="1" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="-0.5923723521706303" length="69.12976124855875" s="0.0" x="163.47617725347246" y="-164.5852147423628">
+                <paramPoly3 aU="0.0" aV="0.0" bU="69.12976124855942" bV="-7.105427357601002E-15" cU="0.0" cV="0.0" dU="0.0" dV="0.0"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="14" junction="-1" length="109.3532949329798">
+        <link>
+            <predecessor elementId="1" elementType="junction"/>
+            <successor elementId="4" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="0.8836246072435263" length="109.35329493297996" s="0.0" x="235.46722113635863" y="-201.03536051065768">
+                <paramPoly3 aU="0.0" aV="0.0" bU="109.35329493297952" bV="2.1316282072803006E-14" cU="0.0" cV="0.0" dU="0.0" dV="0.0"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="21" junction="-1" length="59.93265068948935">
+        <link>
+            <predecessor elementId="4" elementType="junction"/>
+            <successor elementId="2" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="-3.102549362833521" length="59.93265068948979" s="0.0" x="301.1870032488126" y="-109.16043717512102">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="59.93265068948915" bV="7.105427357601002E-15" cU="-0.0" cV="0.0" dU="-0.0" dV="0.0"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="26" junction="-1" length="69.5261865225685">
+        <link>
+            <predecessor elementId="2" elementType="junction"/>
+            <successor elementId="3" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="-2.587426484152929" length="69.52618652256756" s="0.0" x="222.80425244316714" y="-117.15248878952336">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="69.52618652256885" bV="-3.552713678800501E-15" cU="-0.0" cV="0.0" dU="-0.0" dV="0.0"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="2" junction="1" length="14.99924228269733">
+        <link>
+            <predecessor contactPoint="start" elementId="1" elementType="road"/>
+            <successor contactPoint="end" elementId="0" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-1.593336460699279" length="14.99924228269733" s="0.0" x="229.34906999752403" y="-198.7683330273125">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="10.000000000000071" bV="1.4710455076283324E-15" cU="10.450764506766873" cV="-19.994919638734217" dU="-10.225382253383414" dV="9.99745981936708"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="3" junction="1" length="14.999242282697198">
+        <link>
+            <predecessor contactPoint="end" elementId="0" elementType="road"/>
+            <successor contactPoint="start" elementId="1" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.0" length="14.999242282697198" s="0.0" x="219.12368774414062" y="-208.7657928466797">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.0" bV="0.0" cU="10.450764506766802" cV="19.99491963873436" dU="-10.225382253383486" dV="-9.997459819367236"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="5" junction="0" length="8.774039331073794">
+        <link>
+            <predecessor contactPoint="start" elementId="4" elementType="road"/>
+            <successor contactPoint="start" elementId="0" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-2.454744203671947" length="8.774039331073794" s="0.0" x="102.22862213014078" y="-202.42475879990633">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="10.000000000000007" bV="8.881784197001252E-16" cU="-5.464965207547166" cV="12.68206809354671" dU="-2.2675173962263724" dV="-6.34103404677332"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="6" junction="0" length="8.774039331073714">
+        <link>
+            <predecessor contactPoint="start" elementId="0" elementType="road"/>
+            <successor contactPoint="start" elementId="4" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="3.141592653589793" length="8.774039331073714" s="0.0" x="104.49613952636719" y="-208.7657928466797">
+                <paramPoly3 aU="0.0" aV="-0.0" bU="10.0" bV="1.2246467991473533E-15" cU="-5.464965207547179" cV="-12.682068093546718" dU="-2.267517396226368" dV="6.341034046773416"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="8" junction="3" length="16.514270349393257">
+        <link>
+            <predecessor contactPoint="start" elementId="7" elementType="road"/>
+            <successor contactPoint="end" elementId="4" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="2.5492203014191634" length="16.514270349393257" s="0.0" x="163.47617725347246" y="-164.5852147423628">
+                <paramPoly3 aU="0.0" aV="-0.0" bU="10.000000000000075" bV="-1.7763568394002505E-15" cU="15.749232129489792" cV="19.155843231798606" dU="-12.874616064744949" dV="-9.577921615899278"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="9" junction="3" length="16.51427034939329">
+        <link>
+            <predecessor contactPoint="end" elementId="4" elementType="road"/>
+            <successor contactPoint="start" elementId="7" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.6868484499178453" length="16.51427034939329" s="0.0" x="147.44751007200765" y="-165.34294139540617">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000018" bV="0.0" cU="15.749232129489767" cV="-19.155843231798716" dU="-12.87461606474491" dV="9.577921615899337"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="10" junction="1" length="11.03852682634264">
+        <link>
+            <predecessor contactPoint="end" elementId="7" elementType="road"/>
+            <successor contactPoint="start" elementId="1" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-0.5923723521706323" length="11.03852682634264" s="0.0" x="220.82750316644942" y="-203.18248545294966">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000089" bV="8.881784197001252E-16" cU="-0.7898157106772041" cV="16.83983007425037" dU="-4.605092144661458" dV="-8.419915037125264"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="11" junction="1" length="11.038526826342638">
+        <link>
+            <predecessor contactPoint="start" elementId="1" elementType="road"/>
+            <successor contactPoint="end" elementId="7" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-1.593336460699279" length="11.038526826342638" s="0.0" x="229.34906999752403" y="-198.7683330273125">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="10.000000000000071" bV="1.4710455076283324E-15" cU="-0.7898157106772383" cV="-16.839830074250397" dU="-4.60509214466136" dV="8.419915037125255"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="12" junction="1" length="8.10312103210016">
+        <link>
+            <predecessor contactPoint="end" elementId="7" elementType="road"/>
+            <successor contactPoint="end" elementId="0" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-0.5923723521706323" length="8.10312103210016" s="0.0" x="220.82750316644942" y="-203.18248545294966">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000089" bV="8.881784197001252E-16" cU="-6.592369155382174" cV="-11.166614787459949" dU="-1.7038154223089332" dV="5.5833073937299895"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="13" junction="1" length="8.103121032100152">
+        <link>
+            <predecessor contactPoint="end" elementId="0" elementType="road"/>
+            <successor contactPoint="end" elementId="7" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.0" length="8.103121032100152" s="0.0" x="219.12368774414062" y="-208.7657928466797">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.0" bV="0.0" cU="-6.592369155382414" cV="11.166614787460048" dU="-1.7038154223087076" dV="-5.583307393730024"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="15" junction="1" length="8.615182092972367">
+        <link>
+            <predecessor contactPoint="start" elementId="14" elementType="road"/>
+            <successor contactPoint="start" elementId="1" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-2.257968046346267" length="8.615182092972367" s="0.0" x="235.46722113635863" y="-201.03536051065768">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="9.999999999999975" bV="-8.881784197001252E-16" cU="-5.742881303213604" cV="-12.335383588398619" dU="-2.1285593483931207" dV="6.167691794199364"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="16" junction="1" length="8.615182092972423">
+        <link>
+            <predecessor contactPoint="start" elementId="1" elementType="road"/>
+            <successor contactPoint="start" elementId="14" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-1.593336460699279" length="8.615182092972423" s="0.0" x="229.34906999752403" y="-198.7683330273125">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="10.000000000000071" bV="1.4710455076283324E-15" cU="-5.742881303213361" cV="12.335383588398502" dU="-2.1285593483933267" dV="-6.167691794199251"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="17" junction="1" length="18.298625448993402">
+        <link>
+            <predecessor contactPoint="start" elementId="14" elementType="road"/>
+            <successor contactPoint="end" elementId="0" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-2.257968046346267" length="18.298625448993402" s="0.0" x="235.46722113635863" y="-201.03536051065768">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="9.999999999999975" bV="-8.881784197001252E-16" cU="22.68706678443602" cV="-15.46086467204405" dU="-16.343533392217957" dV="7.73043233602202"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="18" junction="1" length="18.298625448993253">
+        <link>
+            <predecessor contactPoint="end" elementId="0" elementType="road"/>
+            <successor contactPoint="start" elementId="14" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.0" length="18.298625448993253" s="0.0" x="219.12368774414062" y="-208.7657928466797">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.0" bV="0.0" cU="22.687066784436013" cV="15.46086467204401" dU="-16.34353339221809" dV="-7.730432336022091"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="19" junction="1" length="15.427516795638518">
+        <link>
+            <predecessor contactPoint="start" elementId="14" elementType="road"/>
+            <successor contactPoint="end" elementId="7" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-2.257968046346267" length="15.427516795638518" s="0.0" x="235.46722113635863" y="-201.03536051065768">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="9.999999999999975" bV="-8.881784197001252E-16" cU="11.893148775629355" cV="-19.9101980832271" dU="-10.94657438781468" dV="9.955099041613613"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="20" junction="1" length="15.427516795638484">
+        <link>
+            <predecessor contactPoint="end" elementId="7" elementType="road"/>
+            <successor contactPoint="start" elementId="14" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-0.5923723521706323" length="15.427516795638484" s="0.0" x="220.82750316644942" y="-203.18248545294966">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000089" bV="8.881784197001252E-16" cU="11.893148775629424" cV="19.91019808322686" dU="-10.946574387814831" dV="-9.955099041613446"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="22" junction="4" length="9.911580951345627">
+        <link>
+            <predecessor contactPoint="start" elementId="21" elementType="road"/>
+            <successor contactPoint="end" elementId="14" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.03904329075627296" length="9.911580951345627" s="0.0" x="301.1870032488126" y="-109.16043717512102">
+                <paramPoly3 aU="0.0" aV="0.0" bU="9.999999999999945" bV="-1.1102230246251565E-16" cU="-3.2808877495147777" cV="-14.953863065602361" dU="-3.3595561252426385" dV="7.476931532801239"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="23" junction="4" length="9.911580951345696">
+        <link>
+            <predecessor contactPoint="end" elementId="14" elementType="road"/>
+            <successor contactPoint="start" elementId="21" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.8836246072435285" length="9.911580951345696" s="0.0" x="304.8358489320008" y="-116.50053579061185">
+                <paramPoly3 aU="0.0" aV="0.0" bU="9.999999999999957" bV="8.881784197001252E-16" cU="-3.2808877495147497" cV="14.953863065602341" dU="-3.3595561252426847" dV="-7.476931532801164"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="24" junction="2" length="15.232490188258506">
+        <link>
+            <predecessor contactPoint="end" elementId="21" elementType="road"/>
+            <successor contactPoint="end" elementId="1" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-3.1025493628335203" length="15.232490188258506" s="0.0" x="241.3000267804843" y="-111.49981062761336">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="9.999999999999945" bV="6.106226635438361E-16" cU="11.230890119966094" cV="19.962086802550893" dU="-10.615445059983049" dV="-9.98104340127546"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="25" junction="2" length="15.23249018825861">
+        <link>
+            <predecessor contactPoint="end" elementId="1" elementType="road"/>
+            <successor contactPoint="end" elementId="21" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="1.5482561928905143" length="15.23249018825861" s="0.0" x="231.08226545169472" y="-121.88760416751172">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000085" bV="8.049116928532385E-16" cU="11.230890119966217" cV="-19.962086802550584" dU="-10.615445059983106" dV="9.981043401275222"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="27" junction="2" length="10.989296600924776">
+        <link>
+            <predecessor contactPoint="start" elementId="26" elementType="road"/>
+            <successor contactPoint="end" elementId="1" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.5541661694368646" length="10.989296600924776" s="0.0" x="222.80425244316714" y="-117.15248878952336">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000039" bV="-8.881784197001252E-16" cU="-0.9053182987787869" cV="-16.76526268217489" dU="-4.547340850610559" dV="8.382631341087446"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="28" junction="2" length="10.98929660092484">
+        <link>
+            <predecessor contactPoint="end" elementId="1" elementType="road"/>
+            <successor contactPoint="start" elementId="26" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="1.5482561928905143" length="10.98929660092484" s="0.0" x="231.08226545169472" y="-121.88760416751172">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000085" bV="8.049116928532385E-16" cU="-0.9053182987786992" cV="16.765262682174825" dU="-4.5473408506107225" dV="-8.382631341087356"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="29" junction="2" length="19.414015054171905">
+        <link>
+            <predecessor contactPoint="start" elementId="26" elementType="road"/>
+            <successor contactPoint="end" elementId="21" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.5541661694368646" length="19.414015054171905" s="0.0" x="222.80425244316714" y="-117.15248878952336">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000039" bV="-8.881784197001252E-16" cU="27.404643873909446" cV="-9.852835714776965" dU="-18.7023219369547" dV="4.926417857388474"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="30" junction="2" length="19.414015054171838">
+        <link>
+            <predecessor contactPoint="end" elementId="21" elementType="road"/>
+            <successor contactPoint="start" elementId="26" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-3.1025493628335203" length="19.414015054171838" s="0.0" x="241.3000267804843" y="-111.49981062761336">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="9.999999999999945" bV="6.106226635438361E-16" cU="27.40464387390949" cV="9.852835714777045" dU="-18.70232193695469" dV="-4.92641785738851"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="31" junction="3" length="19.960875843960093">
+        <link>
+            <predecessor contactPoint="end" elementId="26" elementType="road"/>
+            <successor contactPoint="end" elementId="4" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-2.587426484152929" length="19.960875843960093" s="0.0" x="163.68338793769226" y="-153.73956290725397">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="10.000000000000071" bV="8.881784197001252E-16" cU="29.82421224087384" cV="2.645866404184453" dU="-19.91210612043693" dV="-1.3229332020922406"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="32" junction="3" length="19.960875843960046">
+        <link>
+            <predecessor contactPoint="end" elementId="4" elementType="road"/>
+            <successor contactPoint="end" elementId="26" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="0.6868484499178453" length="19.960875843960046" s="0.0" x="147.44751007200765" y="-165.34294139540617">
+                <paramPoly3 aU="0.0" aV="0.0" bU="10.000000000000018" bV="0.0" cU="29.824212240873894" cV="-2.6458664041844635" dU="-19.912106120436977" dV="1.3229332020922495"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="33" junction="3" length="12.069396651626134">
+        <link>
+            <predecessor contactPoint="end" elementId="26" elementType="road"/>
+            <successor contactPoint="start" elementId="7" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="-2.587426484152929" length="12.069396651626134" s="0.0" x="163.68338793769226" y="-153.73956290725397">
+                <paramPoly3 aU="-0.0" aV="0.0" bU="10.000000000000071" bV="8.881784197001252E-16" cU="1.7671099996052968" cV="18.226890086940386" dU="-5.883554999802644" dV="-9.113445043470184"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="-1"/>
+                            <successor id="-1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <road id="34" junction="3" length="12.06939665162609">
+        <link>
+            <predecessor contactPoint="start" elementId="7" elementType="road"/>
+            <successor contactPoint="end" elementId="26" elementType="road"/>
+        </link>
+        <planView>
+            <geometry hdg="2.5492203014191634" length="12.06939665162609" s="0.0" x="163.47617725347246" y="-164.5852147423628">
+                <paramPoly3 aU="0.0" aV="-0.0" bU="10.000000000000075" bV="-1.7763568394002505E-15" cU="1.7671099996053004" cV="-18.22689008694038" dU="-5.883554999802679" dV="9.11344504347023"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1">
+                        <link>
+                            <predecessor id="1"/>
+                            <successor id="1"/>
+                        </link>
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+    <junction id="0">
+        <connection connectingRoad="5" id="0" incomingRoad="4">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="6" id="1" incomingRoad="0">
+            <laneLink from="1" to="-1"/>
+        </connection>
+    </junction>
+    <junction id="1">
+        <connection connectingRoad="11" id="0" incomingRoad="1">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="20" id="1" incomingRoad="7">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="16" id="2" incomingRoad="1">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="13" id="3" incomingRoad="0">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="17" id="4" incomingRoad="14">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="2" id="5" incomingRoad="1">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="15" id="6" incomingRoad="14">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="3" id="7" incomingRoad="0">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="10" id="8" incomingRoad="7">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="19" id="9" incomingRoad="14">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="12" id="10" incomingRoad="7">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="18" id="11" incomingRoad="0">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+    </junction>
+    <junction id="2">
+        <connection connectingRoad="25" id="0" incomingRoad="1">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="30" id="1" incomingRoad="21">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="24" id="2" incomingRoad="21">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="28" id="3" incomingRoad="1">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="27" id="4" incomingRoad="26">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="29" id="5" incomingRoad="26">
+            <laneLink from="1" to="-1"/>
+        </connection>
+    </junction>
+    <junction id="3">
+        <connection connectingRoad="8" id="0" incomingRoad="7">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="9" id="1" incomingRoad="4">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="32" id="2" incomingRoad="4">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="31" id="3" incomingRoad="26">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+        <connection connectingRoad="34" id="4" incomingRoad="7">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="33" id="5" incomingRoad="26">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+    </junction>
+    <junction id="4">
+        <connection connectingRoad="22" id="0" incomingRoad="21">
+            <laneLink from="1" to="-1"/>
+        </connection>
+        <connection connectingRoad="23" id="1" incomingRoad="14">
+            <laneLink from="-1" to="-1"/>
+        </connection>
+    </junction>
+</OpenDRIVE>
