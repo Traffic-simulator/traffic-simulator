@@ -19,10 +19,7 @@ import imgui.ImGui
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.MyCameraController
-import ru.nsu.trafficsimulator.model.Intersection
-import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model.Road
-import ru.nsu.trafficsimulator.model.Vec3
+import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 
 class Editor {
@@ -35,10 +32,15 @@ class Editor {
         private val selectedIntersections = arrayOfNulls<Intersection>(2)
         private var selectedIntersectionCount = 0
         private val offsetDirectionSphere: Double = 25.0
+        private val roadIntersectionThreshold: Double = 5.0
+        private val curveCoeff: Double = 4.0
         private var draggingSphere: ModelInstance? = null
+        private var draggingDirectionSphere: ModelInstance? = null
+        private var draggingDirectionIsStart: Boolean? = null
 
         private var addRoadStatus = false
         private var editRoadStatus = false
+        private var editRoadSelected = false
         private var currentEditRoadId: Long? = null
         private var deleteRoadStatus = false
         private var editStatus = true
@@ -55,6 +57,9 @@ class Editor {
             }
             if (ImGui.button("Edit road")) {
                 editRoadStatus = !editRoadStatus
+                editRoadSelected = false
+                currentEditRoadId = null
+                draggingDirectionIsStart = null
                 selectedIntersectionCount = 0
             }
             if (ImGui.button("Delete road")) {
@@ -65,11 +70,14 @@ class Editor {
             if (ImGui.button("Edit mode")) {
                 editStatus = !editStatus
                 selectedIntersectionCount = 0
+                println(layout)
             }
             ImGui.end()
         }
 
         fun render(modelBatch: ModelBatch?) {
+            println("ROAD ID ${currentEditRoadId}")
+            println("INTERSECTION ${draggingDirectionIsStart}")
             if (editStatus) {
                 for ((_, sphere) in spheres) {
                     modelBatch?.render(sphere)
@@ -85,39 +93,48 @@ class Editor {
             return object : InputAdapter() {
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                     if (button == Input.Buttons.LEFT && editStatus) {
-                        if (!addRoadStatus && !deleteRoadStatus && !editRoadStatus) {
+                        if (editRoadSelected) {
                             val intersection = getIntersection(screenX, screenY)
                             if (intersection != null) {
-                                draggingSphere = findSphereAt(intersection)?.second
-                                if (draggingSphere != null) {
+                                draggingDirectionSphere = findDirectionSphere(intersection)
+                                if (draggingDirectionSphere != null) {
                                     camController.camaraEnabled = false
                                 }
                             }
-                        }
-                        if (addRoadStatus) {
-                            handleAddRoad(screenX, screenY)
-                        }
-                        if (deleteRoadStatus) {
-                            handleDeleteRoad(screenX, screenY)
-                        }
-                        if (editRoadStatus) {
-//                            handleEditRoad(screenX, screenY)
+                        } else {
+                            if (!addRoadStatus && !deleteRoadStatus && !editRoadStatus) {
+                                handleMoveIntersection(screenX, screenY, camController)
+                            }
+                            if (addRoadStatus) {
+                                handleAddRoad(screenX, screenY)
+                            }
+                            if (deleteRoadStatus) {
+                                handleDeleteRoad(screenX, screenY)
+                            }
+                            if (editRoadStatus) {
+                                handleEditRoad(screenX, screenY, camController)
+                            }
                         }
                     }
                     return false
                 }
 
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    if (button == Input.Buttons.LEFT && editStatus) {
-                        draggingSphere = null
-                        camController.camaraEnabled = true
-                        updateLayout()
+                    if (button == Input.Buttons.LEFT) {
+                        if (editStatus) {
+                            draggingSphere = null
+                            camController.camaraEnabled = true
+                            updateLayout()
+                            if (editRoadSelected) {
+                                draggingDirectionSphere = null
+                            }
+                        }
                     }
                     return false
                 }
 
                 override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
-                    if (draggingSphere != null && editStatus) {
+                    if (draggingSphere != null && editStatus && !editRoadStatus) {
                         val intersection = getIntersection(screenX, screenY)
                         if (intersection != null) {
                             var roadIntersection: Intersection? = null
@@ -128,11 +145,41 @@ class Editor {
                             }
                             if (roadIntersection != null) {
                                 layout.moveIntersection(
-                                    roadIntersection,
-                                    Vec3(intersection.x.toDouble(), intersection.y.toDouble(), intersection.z.toDouble())
+                                    roadIntersection, Vec3(
+                                        intersection.x.toDouble(), intersection.y.toDouble(), intersection.z.toDouble()
+                                    )
                                 )
+                                draggingSphere!!.transform.setToTranslation(intersection)
                             }
-                            draggingSphere!!.transform.setToTranslation(intersection)
+                        }
+                    }
+                    if (draggingDirectionSphere != null && editStatus && editRoadSelected) {
+                        val intersection = getIntersection(screenX, screenY)
+                        if (intersection != null) {
+                            draggingDirectionSphere!!.transform.setToTranslation(intersection)
+                            val editedRoad = layout.roads[currentEditRoadId]
+                            if (editedRoad != null) {
+                                val direction = Vector3()
+                                draggingDirectionSphere?.transform?.getTranslation(direction)
+                                val directionVec = Vec3(direction.x, direction.y, direction.z)
+                                if (draggingDirectionIsStart == true) {
+                                    val t = editedRoad.startIntersection?.position?.minus(directionVec)
+                                        ?.times(curveCoeff)
+                                    editedRoad.redirectRoad(
+                                        editedRoad.startIntersection!!,
+                                        editedRoad.startIntersection!!.position + t!!
+                                    )
+                                }
+                                if (draggingDirectionIsStart == false) {
+                                    val t = editedRoad.endIntersection?.position?.minus(directionVec)?.times(
+                                        curveCoeff
+                                    )
+                                    editedRoad.redirectRoad(
+                                        editedRoad.endIntersection!!,
+                                        editedRoad.endIntersection!!.position + t!!
+                                    )
+                                }
+                            }
                         }
                     }
                     return false
@@ -140,29 +187,35 @@ class Editor {
             }
         }
 
-        private fun handleDeleteRoad(screenX: Int, screenY: Int) {
-            val intersection = getIntersection(screenX, screenY) ?: return
-            val roadIntersection = findRoadIntersectionAt(intersection) ?: return
-            selectedIntersections[selectedIntersectionCount] = roadIntersection
-            selectedIntersectionCount += 1
-            if (selectedIntersectionCount != 2)
-                return
+        private fun handleMoveIntersection(screenX: Int, screenY: Int, camController: MyCameraController) {
+            val intersection = getIntersection(screenX, screenY)
+            if (intersection != null) {
+                draggingSphere = findSphereAt(intersection)?.second
+                if (draggingSphere != null) {
+                    camController.camaraEnabled = false
+                }
+            }
+        }
 
-            val road = findRoad(selectedIntersections[0]!!, selectedIntersections[1]!!)
-            if (road != null) {
-                layout.deleteRoad(road)
+        private fun handleEditRoad(screenX: Int, screenY: Int, camController: MyCameraController) {
+            val intersection = getIntersection(screenX, screenY) ?: return
+            val road = findRoad(intersection) ?: return
+            currentEditRoadId = road.id
+            editRoadSelected = true
+        }
+
+        private fun handleDeleteRoad(screenX: Int, screenY: Int) {
+            deleteRoadStatus = false
+            val intersection = getIntersection(screenX, screenY) ?: return
+            val road = findRoad(intersection) ?: return
+            layout.deleteRoad(road)
+            if (road.startIntersection!!.incomingRoads.size == 0) {
+                spheres.remove(road.startIntersection!!.id)
             }
-            val deleteStatus1 = selectedIntersections[0]!!.incomingRoads.size == 0
-            val deleteStatus2 = selectedIntersections[1]!!.incomingRoads.size == 0
-            if (deleteStatus1) {
-                spheres.remove(findSphereAt(selectedIntersections[0]!!.position.toGdxVec())!!.first)
-            }
-            if (deleteStatus2) {
-                spheres.remove(findSphereAt(selectedIntersections[1]!!.position.toGdxVec())!!.first)
+            if (road.endIntersection!!.incomingRoads.size == 0) {
+                spheres.remove(road.endIntersection!!.id)
             }
             updateLayout()
-            selectedIntersectionCount = 0
-            deleteRoadStatus = false
         }
 
         private fun handleAddRoad(screenX: Int, screenY: Int) {
@@ -179,12 +232,11 @@ class Editor {
             selectedIntersections[selectedIntersectionCount] = roadIntersection
 
             selectedIntersectionCount += 1
-            if (selectedIntersectionCount != 2)
-                return
+            if (selectedIntersectionCount != 2) return
             selectedIntersectionCount = 0
             addRoadStatus = false
-            if (selectedIntersections[0] == selectedIntersections[1])
-                return
+            if (selectedIntersections[0] == selectedIntersections[1]) return
+
 
             val startDirection = Vec3(
                 selectedIntersections[0]!!.position.x + offsetDirectionSphere,
@@ -199,32 +251,17 @@ class Editor {
             val spherePairModel = createDirectionPairSphere()
             val startInstance = ModelInstance(spherePairModel.first)
             val endInstance = ModelInstance(spherePairModel.second)
+
             startInstance.transform.setToTranslation(startDirection.toGdxVec())
             endInstance.transform.setToTranslation(endDirection.toGdxVec())
+
+
             val road = layout.addRoad(
-                selectedIntersections[0]!!,
-                startDirection,
-                selectedIntersections[1]!!,
-                endDirection
+                selectedIntersections[0]!!, startDirection, selectedIntersections[1]!!, endDirection
             )
             directionSpheres[road.id] = startInstance to endInstance
             updateLayout()
 
-        }
-
-        private fun handleEditRoad(screenX: Int, screenY: Int) {
-            val intersection = getIntersection(screenX, screenY) ?: return
-            val roadIntersection = findRoadIntersectionAt(intersection) ?: return
-            selectedIntersections[selectedIntersectionCount] = roadIntersection
-            selectedIntersectionCount += 1
-            if (selectedIntersectionCount != 2)
-                return
-
-            selectedIntersectionCount = 0
-            val road = findRoad(selectedIntersections[0]!!, selectedIntersections[1]!!)
-            if (road != null) {
-                currentEditRoadId = road.id
-            }
         }
 
         private fun updateLayout() {
@@ -235,25 +272,16 @@ class Editor {
             sceneManager?.addScene(layoutScene)
         }
 
-        private fun findRoad(intersection1: Intersection, intersection2: Intersection): Road? {
+        private fun findRoad(intersection: Vector3): Road? {
+            var minDistance = Double.MAX_VALUE
             for (road in layout.roads.values) {
-                if (road.startIntersection === intersection1 && road.endIntersection === intersection2) {
-                    return road
-                }
-                if (road.startIntersection === intersection2 && road.endIntersection === intersection1) {
-                    return road
-                }
-            }
-            return null
-        }
-
-        private fun findRoadId(intersection1: Intersection?, intersection2: Intersection?): Long? {
-            for (key in layout.roads.keys) {
-                if (layout.roads[key]?.startIntersection === intersection1 && layout.roads[key]?.endIntersection === intersection2) {
-                    return key
-                }
-                if (layout.roads[key]?.startIntersection === intersection2 && layout.roads[key]?.endIntersection === intersection1) {
-                    return key
+                val point = Vec2(intersection.x.toDouble(), intersection.z.toDouble())
+                val distance = road.geometry.closestPoint(point).distance(point)
+                if (distance < minDistance) {
+                    minDistance = distance
+                    if (minDistance < roadIntersectionThreshold) {
+                        return road
+                    }
                 }
             }
             return null
@@ -277,6 +305,23 @@ class Editor {
             return null
         }
 
+        private fun findDirectionSphere(intersection: Vector3): ModelInstance? {
+            if (directionSpheres[currentEditRoadId]!!.first.transform.getTranslation(Vector3())
+                    .dst(intersection) < 5.0f
+            ) {
+                draggingDirectionIsStart = true
+                return directionSpheres[currentEditRoadId]?.first
+            }
+            if (directionSpheres[currentEditRoadId]!!.second.transform.getTranslation(Vector3())
+                    .dst(intersection) < 5.0f
+            ) {
+                draggingDirectionIsStart = false
+                return directionSpheres[currentEditRoadId]?.second
+            }
+            draggingDirectionIsStart = null
+            return null
+        }
+
         private fun getIntersection(screenX: Int, screenY: Int): Vector3? {
             val ray = camera!!.getPickRay(screenX.toFloat(), screenY.toFloat())
             val intersection = Vector3()
@@ -292,13 +337,23 @@ class Editor {
 
             val startMaterial = Material(ColorAttribute.createDiffuse(Color.BLUE))
             val start = modelBuilder.createSphere(
-                5.0f, 5.0f, 5.0f, 10,
-                10, startMaterial, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+                5.0f,
+                5.0f,
+                5.0f,
+                10,
+                10,
+                startMaterial,
+                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
             )
             val endMaterial = Material(ColorAttribute.createDiffuse(Color.SKY))
             val end = modelBuilder.createSphere(
-                5.0f, 5.0f, 5.0f, 10,
-                10, endMaterial, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+                5.0f,
+                5.0f,
+                5.0f,
+                10,
+                10,
+                endMaterial,
+                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
             )
             return Pair(start, end)
         }
@@ -307,8 +362,13 @@ class Editor {
             val modelBuilder = ModelBuilder()
             val material = Material(ColorAttribute.createDiffuse(Color.RED))
             val sphere = modelBuilder.createSphere(
-                5.0f, 5.0f, 5.0f, 10,
-                10, material, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+                5.0f,
+                5.0f,
+                5.0f,
+                10,
+                10,
+                material,
+                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
             )
             return sphere
         }

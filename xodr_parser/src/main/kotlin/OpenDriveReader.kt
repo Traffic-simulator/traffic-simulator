@@ -12,6 +12,6 @@ class OpenDriveReader {
         val context: JAXBContext = JAXBContext.newInstance(OpenDRIVE::class.java)
 //        println(Paths.get("src/main/resources/$filename").toAbsolutePath())
         return context.createUnmarshaller()
-            .unmarshal(FileReader("../src/main/resources/$filename")) as OpenDRIVE
+            .unmarshal(FileReader("src/main/resources/$filename")) as OpenDRIVE
     }
 }
