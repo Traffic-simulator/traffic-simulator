@@ -23,15 +23,15 @@ class JunctionIntersectionFinder(
     fun findIntersection () : MutableList<Intersection> {
         val intersectionList : MutableList<Intersection> = ArrayList()
         var junctionId : String = "-1"
-        var junctionList : MutableList<String> = ArrayList()
+        var junctionList : MutableList<String>
         val finder : LanesIntersectionFinder = LanesIntersectionFinderImpl()
         for (pair in junctionMap) {
             junctionId = pair.key
             junctionList = pair.value
             var road1 : TRoad
             var road2 : TRoad
-            for (i in 0 until junctionList.size - 1) {
-                for (j in i + 1 until junctionList.size - 1) {
+            for (i in 0 until junctionList.size) {
+                for (j in i + 1 until junctionList.size) {
                     val road1Id = junctionList[i]
                     val road2Id = junctionList[j]
                     road1 = allTRoadsInJunctionsMap[road1Id]!!

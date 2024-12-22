@@ -9,7 +9,7 @@ class Lane (
     val id: Int
 ) {
     companion object {
-        val EPSILON = 0.01
+        val EPSILON = 0.1
         val OFFSET : Double = 4.0
         val NUMBER_OF_SECTIONS = 100
     }
