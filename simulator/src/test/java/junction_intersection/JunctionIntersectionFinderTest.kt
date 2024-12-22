@@ -14,10 +14,11 @@ class JunctionIntersectionFinderTest {
         val openDRIVE = odr.read("xodr_for_testing.xodr")
         var finder : JunctionIntersectionFinder = JunctionIntersectionFinder(openDRIVE)
         var intersectionList = finder.findIntersection()
+        println(intersectionList.size)
         for (intersect in intersectionList) {
             println("========")
-            print("road1:" + intersect.roadId1 + "||lane1:" + intersect.roadId1)
-            print("road2:" + intersect.roadId2 + "||lane2:" + intersect.roadId2)
+            print("road1:" + intersect.roadId1 + "||lane1:" + intersect.laneId1)
+            print("road2:" + intersect.roadId2 + "||lane2:" + intersect.laneId2)
             println()
         }
         val roadId1List = intersectionList.map { it.roadId1 }
@@ -30,8 +31,6 @@ class JunctionIntersectionFinderTest {
                 !roadId1List.contains(id) && !roadId2List.contains(id)
             }
         }
-
-
     }
 
     @Test
