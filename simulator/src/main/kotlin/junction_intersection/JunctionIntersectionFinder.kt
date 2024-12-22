@@ -30,8 +30,10 @@ class JunctionIntersectionFinder(
             junctionList = pair.value
             var road1 : TRoad
             var road2 : TRoad
-            for (road1Id in junctionList) {
-                for (road2Id in junctionList) {
+            for (i in 0 until junctionList.size - 1) {
+                for (j in i + 1 until junctionList.size - 1) {
+                    val road1Id = junctionList[i]
+                    val road2Id = junctionList[j]
                     road1 = allTRoadsInJunctionsMap[road1Id]!!
                     road2 = allTRoadsInJunctionsMap[road2Id]!!
                     if (road1 == road2) { //find intersection between road and itself has no sense
