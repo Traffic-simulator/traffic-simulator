@@ -37,6 +37,4 @@ class DeleteRoadTool : IEditingTool {
         this.camera = camera
         this.layout = layout
     }
-
-
 }

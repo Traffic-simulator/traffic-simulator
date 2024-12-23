@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
-import ru.nsu.trafficsimulator.editor.Editor.Companion
 import ru.nsu.trafficsimulator.model.*
 
 class InspectTool : IEditingTool {
@@ -21,37 +20,118 @@ class InspectTool : IEditingTool {
     private var camera: Camera? = null
     private val spheres = mutableMapOf<Long, ModelInstance>()
 
+    private var selectedRoad: Road? = null
+    private var draggingDirectionIsStart: Boolean? = null
+    private val directionSpheres = mutableListOf<ModelInstance>()
+    private var draggingDirectionSphere: ModelInstance? = null
+    private val curveCoeff: Double = 4.0
+
     override fun getButtonName(): String {
         return name
     }
 
     override fun handleDown(screenPos: Vec2, button: Int): Boolean {
         if (button != Input.Buttons.LEFT) return false
-
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return false
 
         draggingIntersection = findRoadIntersectionAt(intersection)
-        return draggingIntersection != null
+        if (draggingIntersection != null) {
+            draggingDirectionSphere = null
+            return true
+        }
+
+        if (selectedRoad != null) {
+            draggingDirectionSphere = findDirectionSphere(intersection)
+            if (draggingDirectionSphere != null) {
+                return true
+            }
+        }
+        selectedRoad = findRoad(layout!!, intersection)
+        if (selectedRoad != null) {
+            directionSpheres[0].transform.setToTranslation(
+                (selectedRoad!!.startIntersection!!.position - selectedRoad!!.getDirection(0.0) / curveCoeff).toGdxVec()
+            )
+            directionSpheres[1].transform.setToTranslation(
+                (selectedRoad!!.endIntersection!!.position + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
+            )
+        }
+        return true
+    }
+
+    private fun applyRoadDirections(): Boolean {
+        if (draggingDirectionSphere == null) return false
+
+        val editedRoad = selectedRoad ?: return false
+
+        val directionVec = Vec3(draggingDirectionSphere!!.transform.getTranslation(Vector3()))
+        if (draggingDirectionIsStart == true) {
+            val t = (selectedRoad!!.startIntersection!!.position - directionVec) * curveCoeff
+            editedRoad.redirectRoad(
+                editedRoad.startIntersection!!,
+                editedRoad.startIntersection!!.position + t
+            )
+        } else {
+            val t = (directionVec - editedRoad.endIntersection!!.position) * curveCoeff
+            editedRoad.redirectRoad(
+                editedRoad.endIntersection!!,
+                editedRoad.endIntersection!!.position + t
+            )
+        }
+        return true
+    }
+
+    private fun applyIntersectionPosition(): Boolean {
+        if (draggingIntersection == null) return false
+        layout!!.moveIntersection(draggingIntersection!!, Vec3(spheres[draggingIntersection!!.id]!!.transform.getTranslation(Vector3())))
+        if (selectedRoad != null) {
+            val startPos = selectedRoad!!.startIntersection!!.position
+            val endPos = selectedRoad!!.endIntersection!!.position
+            directionSpheres[0].transform.setToTranslation(
+                (startPos - selectedRoad!!.getDirection(0.0) / curveCoeff).toGdxVec()
+            )
+            directionSpheres[1].transform.setToTranslation(
+                (endPos + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
+            )
+        }
+        draggingIntersection = null
+        return true
     }
 
     override fun handleUp(screenPos: Vec2, button: Int): Boolean {
         if (button != Input.Buttons.LEFT) return false
-        val toChange = draggingIntersection != null
-        draggingIntersection = null
-        return toChange
+        if (applyRoadDirections()) return true
+        if (applyIntersectionPosition()) return true
+        return false
     }
 
     override fun handleDrag(screenPos: Vec2) {
+        if (draggingIntersection == null && draggingDirectionSphere == null) return
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return
-        if (draggingIntersection == null) return
 
-        layout!!.moveIntersection(draggingIntersection!!, Vec3(intersection))
-        spheres[draggingIntersection!!.id]?.transform?.setToTranslation(intersection)
+        if (draggingIntersection != null) {
+            spheres[draggingIntersection!!.id]?.transform?.setToTranslation(intersection)
+            if (selectedRoad != null) {
+                val startPos = if (selectedRoad!!.startIntersection!! == draggingIntersection) { Vec3(intersection) } else { selectedRoad!!.startIntersection!!.position }
+                val endPos = if (selectedRoad!!.endIntersection!! == draggingIntersection) { Vec3(intersection) } else { selectedRoad!!.endIntersection!!.position }
+                directionSpheres[0].transform.setToTranslation(
+                    (startPos - selectedRoad!!.getDirection(0.0) / curveCoeff).toGdxVec()
+                )
+                directionSpheres[1].transform.setToTranslation(
+                    (endPos + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
+                )
+            }
+        } else {
+            draggingDirectionSphere!!.transform.setToTranslation(intersection)
+        }
     }
 
     override fun render(modelBatch: ModelBatch?) {
         for ((_, sphere) in spheres) {
             modelBatch?.render(sphere)
+        }
+        if (selectedRoad != null) {
+            modelBatch?.render(directionSpheres[0])
+            modelBatch?.render(directionSpheres[1])
         }
     }
 
@@ -64,6 +144,13 @@ class InspectTool : IEditingTool {
             spheres[id] = ModelInstance(model)
             spheres[id]!!.transform.setToTranslation(intersection.position.toGdxVec())
         }
+
+        val (left, right) = createDirectionPairSphere()
+        directionSpheres.clear()
+        directionSpheres.add(ModelInstance(left))
+        directionSpheres.add(ModelInstance(right))
+        selectedRoad = null
+        draggingDirectionSphere = null
     }
 
     private fun findRoadIntersectionAt(point: Vector3): Intersection? {
@@ -88,5 +175,44 @@ class InspectTool : IEditingTool {
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
         return sphere
+    }
+
+    private fun findDirectionSphere(intersection: Vector3): ModelInstance? {
+        if (directionSpheres[0].transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
+            draggingDirectionIsStart = true
+            return directionSpheres[0]
+        }
+        if (directionSpheres[1].transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
+            draggingDirectionIsStart = false
+            return directionSpheres[1]
+        }
+        draggingDirectionIsStart = null
+        return null
+    }
+
+    private fun createDirectionPairSphere(): Pair<Model, Model> {
+        val modelBuilder = ModelBuilder()
+
+        val startMaterial = Material(ColorAttribute.createDiffuse(Color.BLUE))
+        val start = modelBuilder.createSphere(
+            5.0f,
+            5.0f,
+            5.0f,
+            10,
+            10,
+            startMaterial,
+            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+        )
+        val endMaterial = Material(ColorAttribute.createDiffuse(Color.SKY))
+        val end = modelBuilder.createSphere(
+            5.0f,
+            5.0f,
+            5.0f,
+            10,
+            10,
+            endMaterial,
+            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+        )
+        return Pair(start, end)
     }
 }

@@ -19,7 +19,7 @@ class Editor {
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
 
-        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool(), EditRoadTool())
+        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
         private var currentTool = tools[0]
 
         fun init(camera: Camera, sceneManager: SceneManager) {
