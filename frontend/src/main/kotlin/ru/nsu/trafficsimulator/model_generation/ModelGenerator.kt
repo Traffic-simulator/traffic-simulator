@@ -20,7 +20,7 @@ class ModelGenerator {
     companion object {
         private val roadHeight = 1.0
         public val laneWidth = 3.5
-        private val intersectionPadding = 0.0
+        private val intersectionPadding = 8.5
         private val splineRoadSegmentLen = 2.0f
         private val upVec = Vec3(0.0, roadHeight, 0.0)
 
@@ -56,11 +56,22 @@ class ModelGenerator {
             for (road in layout.roads.values) {
                 val node = modelBuilder.node()
                 node.translation.set(0.0f, 0.0f, 0.0f)
-                meshPartBuilder = modelBuilder.part("intersection${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+                meshPartBuilder = modelBuilder.part("road${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
 
-                val stepCount = floor((road.geometry.length - 2 * intersectionPadding )/ splineRoadSegmentLen).toInt()
-                var prevPos = road.geometry.getPoint(intersectionPadding).toVec3()
-                var prevDir = road.geometry.getDirection(intersectionPadding).toVec3().normalized()
+
+                val hasStart = road.startIntersection?.intersectionRoads?.size.let {
+                    it != null && it > 0
+                }
+                val hasEnd = road.endIntersection?.intersectionRoads?.size.let {
+                    it != null && it > 0
+                }
+                val length = road.geometry.length - intersectionPadding * if (hasStart) { 1 } else { 0 } - intersectionPadding * if (hasEnd) { 1 } else { 0 }
+
+                val start = if (hasStart) { intersectionPadding } else { 0.0 }
+
+                val stepCount = floor(length / splineRoadSegmentLen).toInt()
+                var prevPos = road.geometry.getPoint(start).toVec3()
+                var prevDir = road.geometry.getDirection(start).toVec3().normalized()
                 var prevRight = prevDir.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
                 var prevLeft = -prevDir.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
                 meshPartBuilder.rect(
@@ -71,8 +82,9 @@ class ModelGenerator {
                     -prevDir.toGdxVec()
                 )
 
+
                 for (i in 1..stepCount) {
-                    val t = intersectionPadding + i * splineRoadSegmentLen.toDouble()
+                    val t = start + i * splineRoadSegmentLen.toDouble()
                     val pos = road.geometry.getPoint(t).toVec3()
                     val direction = road.geometry.getDirection(t).toVec3().normalized()
                     val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
@@ -110,7 +122,7 @@ class ModelGenerator {
                     prevRight = right
                     prevDir = direction
                 }
-                val t = road.geometry.length - intersectionPadding
+                val t = road.geometry.length - if (hasEnd) { intersectionPadding } else { 0.0 }
                 val pos = road.geometry.getPoint(t).toVec3()
                 val direction = road.geometry.getDirection(t).toVec3().normalized()
                 val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
@@ -149,7 +161,7 @@ class ModelGenerator {
                 )
             }
 
-            val intersectionBoxSize = 25.0
+            val intersectionBoxSize = 30.0
             val samplePerSide = 40
             val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
             val upDir = Vec3(0.0, 1.0, 0.0)
