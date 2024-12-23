@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator
 import BackendAPI
 import ISimulation
 import OpenDriveReader
+import OpenDriveWriter
 import SpawnDetails
 import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
@@ -29,6 +30,7 @@ import vehicle.Direction
 import kotlin.math.*
 
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
+import opendrive.OpenDRIVE
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
@@ -155,7 +157,9 @@ class Main : ApplicationAdapter() {
 //        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
 
         val back = BackendAPI()
-        back.init(serializeLayout(layout), SpawnDetails(spawnDetails), 500)
+        val dto = serializeLayout(layout)
+        OpenDriveWriter().write(dto, "export.xodr")
+        back.init(dto, SpawnDetails(spawnDetails), 500)
         return back
     }
 

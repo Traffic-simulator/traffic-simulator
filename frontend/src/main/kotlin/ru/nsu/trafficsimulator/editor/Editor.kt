@@ -268,7 +268,6 @@ class Editor {
             )
             directionSpheres[road.id] = startInstance to endInstance
             updateLayout()
-
         }
 
         private fun updateLayout() {

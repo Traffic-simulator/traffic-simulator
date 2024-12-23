@@ -57,6 +57,10 @@ class Layout {
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
         for (road in intersection.incomingRoads) {
             road.moveRoad(intersection, newPosition)
+            if (road.startIntersection != null && road.startIntersection != intersection)
+                road.startIntersection!!.recalculateIntersectionRoads()
+            if (road.endIntersection != null && road.endIntersection != intersection)
+                road.endIntersection!!.recalculateIntersectionRoads()
         }
         intersection.position = newPosition
         intersection.recalculateIntersectionRoads()
