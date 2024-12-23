@@ -6,6 +6,7 @@ import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDING
 import kotlin.math.max
 
 class Deserializer {
@@ -145,6 +146,8 @@ class Deserializer {
                     }
                 }
                 intersection.position = pos / intersection.incomingRoads.size.toDouble()
+                println(intersection.position)
+                println(intersection.intersectionRoads.size)
             }
         }
 

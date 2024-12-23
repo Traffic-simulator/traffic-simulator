@@ -2,6 +2,7 @@ package ru.nsu.trafficsimulator
 
 import BackendAPI
 import ISimulation
+import OpenDriveReader
 import OpenDriveWriter
 import SpawnDetails
 import com.badlogic.gdx.*
@@ -91,7 +92,7 @@ class Main : ApplicationAdapter() {
         )
 
         sceneManager = SceneManager()
-        sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer.glb"))
+        sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer_big.glb"))
         carModel = sceneAsset1?.scene?.model
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
@@ -105,13 +106,6 @@ class Main : ApplicationAdapter() {
 
         modelInstance1 = ModelInstance(carModel)
         modelBatch = ModelBatch()
-
-//        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
-//        println(layout.roads)
-//        for (i in layout.roads) {
-//            println("${i.value.id} ${i.value.geometry}")
-//        }
-//        println(layout.intersectionRoads)
 
         // Add ground
         val modelBuilder = ModelBuilder()
@@ -144,7 +138,7 @@ class Main : ApplicationAdapter() {
         val spawnDetails = ArrayList<Triple<String, String, Direction>>()
 //        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("0", "1", Direction.FORWARD))
+        spawnDetails.add(Triple("0", "-1", Direction.FORWARD))
 //        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
@@ -154,8 +148,11 @@ class Main : ApplicationAdapter() {
 //        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
 
         val back = BackendAPI()
-        val dto = serializeLayout(layout)
-        OpenDriveWriter().write(dto, "export.xodr")
+//        val dto = serializeLayout(layout)
+//        OpenDriveWriter().write(dto, "export.xodr")
+        val dto = OpenDriveReader().read("Town01_processed.xodr")
+        Editor.layout = Deserializer.deserialize(dto)
+        Editor.updateLayout()
         back.init(dto, SpawnDetails(spawnDetails), 500)
         return back
     }
@@ -173,7 +170,7 @@ class Main : ApplicationAdapter() {
         imGuiGl3.newFrame()
         imGuiGlfw.newFrame()
         ImGui.newFrame()
-        if (ImGui.button("Change Application State")) {
+        if (ImGui.button("Run/Stop Simulation")) {
             state = when (state) {
                 ApplicationState.Editor -> ApplicationState.Simulator
                 ApplicationState.Simulator -> ApplicationState.Editor
@@ -183,7 +180,7 @@ class Main : ApplicationAdapter() {
             } else {
                 inputMultiplexer.removeProcessor(editorInputProcess)
             }
-            back = initializeSimulation(Editor.getLayout())
+            back = initializeSimulation(Editor.layout)
         }
         if (state == ApplicationState.Editor) {
             Editor.runImgui()

@@ -12,6 +12,8 @@ import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 
 class ModelGenerator {
     companion object {
@@ -134,7 +136,7 @@ class ModelGenerator {
             val samplePerSide = 40
             val upDir = Vec3(0.0, 1.0, 0.0)
             for (intersection in layout.intersections.values) {
-                val intersectionBoxSize = intersection.padding * 2.0 * 1.1
+                val intersectionBoxSize = max(intersection.padding * 2.0 * 1.1, 40.0)
                 val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
 
                 val node = modelBuilder.node()

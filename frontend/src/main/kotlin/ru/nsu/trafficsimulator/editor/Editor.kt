@@ -15,7 +15,7 @@ import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 
 class Editor {
     companion object {
-        private var layout: Layout = Layout()
+        var layout: Layout = Layout()
         private var layoutScene: Scene? = null
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
@@ -45,10 +45,6 @@ class Editor {
 
         }
 
-        fun getLayout(): Layout {
-            return layout
-        }
-
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
             return object : InputAdapter() {
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
@@ -74,7 +70,7 @@ class Editor {
             }
         }
 
-        private fun updateLayout() {
+         fun updateLayout() {
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
             }
