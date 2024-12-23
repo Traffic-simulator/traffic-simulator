@@ -21,6 +21,8 @@ class Editor {
 
         private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
         private var currentTool = tools[0]
+        private var changes = ArrayList<IStateChange>()
+        private var nextChange = 0
 
         fun init(camera: Camera, sceneManager: SceneManager) {
             this.camera = camera
@@ -34,6 +36,22 @@ class Editor {
                 if (ImGui.button(tool.getButtonName())) {
                     currentTool = tool
                     currentTool.init(layout, camera!!)
+                }
+            }
+            if (ImGui.button("Undo")) {
+                if (nextChange > 0) {
+                    nextChange--;
+                    changes[nextChange].revert(layout)
+                    currentTool.init(layout, camera!!)
+                    updateLayout()
+                }
+            }
+            if (ImGui.button("Redo")) {
+                if (nextChange < changes.size) {
+                    changes[nextChange].apply(layout)
+                    nextChange++
+                    currentTool.init(layout, camera!!)
+                    updateLayout()
                 }
             }
             ImGui.end()
@@ -58,6 +76,11 @@ class Editor {
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                     val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
                     if (change != null) {
+                        while (changes.size > nextChange) {
+                            changes.removeLast()
+                        }
+                        changes.add(change)
+                        nextChange++
                         change.apply(layout)
                         updateLayout()
                     }

@@ -20,7 +20,6 @@ class DeleteRoadTool : IEditingTool {
     override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return null
         val road = findRoad(layout!!, intersection) ?: return null
-
         return DeleteRoadStateChange(road)
     }
 

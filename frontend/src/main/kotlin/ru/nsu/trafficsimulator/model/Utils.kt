@@ -34,3 +34,12 @@ fun findRoad(layout: Layout, point: Vector3): Road? {
         return null
     }
 }
+
+fun findRoadIntersectionAt(layout: Layout, point: Vec3): Intersection? {
+    for ((_, intersection) in layout.intersections) {
+        if (intersection.position.distance(point) < 5.0f) {
+            return intersection
+        }
+    }
+    return null
+}

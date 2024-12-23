@@ -14,6 +14,10 @@ class DeleteRoadStateChange(private val road: Road) : IStateChange {
     }
 
     override fun revert(layout: Layout) {
+        if (!layout.intersections.contains(start.id))
+            layout.intersections[start.id] = start
+        if (!layout.intersections.contains(end.id))
+            layout.intersections[end.id] = end
         layout.addRoad(start, startDir, end, endDir)
     }
 }
