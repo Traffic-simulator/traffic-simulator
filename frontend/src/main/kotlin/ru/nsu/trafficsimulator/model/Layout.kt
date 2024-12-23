@@ -59,6 +59,7 @@ class Layout {
             road.moveRoad(intersection, newPosition)
         }
         intersection.position = newPosition
+        intersection.recalculateIntersectionRoads()
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
@@ -102,13 +103,13 @@ class Layout {
         val laneNumber =
             min(abs(incomingLaneNumber), abs(outgoingLaneNumber))
 
+        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position)
+        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position)
         val geometry = Spline(
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection(),
-            intersection.position.xzProjection(),
+            fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection() + fromRoad.getIntersectionDirection(intersection, true).xzProjection().setLength(dirLength1),
             toRoad.getIntersectionPoint(intersection, abs(outgoingLaneNumber) - laneNumber).xzProjection(),
-            toRoad.getIntersectionPoint(intersection, abs(outgoingLaneNumber) - laneNumber)
-                .xzProjection() * 2.0 - intersection.position.xzProjection()
-        )
+            toRoad.getIntersectionPoint(intersection, abs(outgoingLaneNumber) - laneNumber).xzProjection() + toRoad.getIntersectionDirection(intersection, false).xzProjection().setLength(dirLength2))
 
         val newIntersectionRoad = IntersectionRoad(
             id = roadIdCount++,

@@ -39,5 +39,19 @@ data class Intersection(
         }
     }
 
+    fun recalculateIntersectionRoads() {
+        for (intersectionRoad in intersectionRoads) {
+            intersectionRoad.recalculateGeometry()
+        }
+    }
+
+    fun recalculateIntersectionRoads(road : Road) {
+        for (intersectionRoad in intersectionRoads) {
+            if (intersectionRoad.fromRoad === road || intersectionRoad.toRoad === road) {
+                intersectionRoad.recalculateGeometry()
+            }
+        }
+    }
+
     fun getIncomingRoadsCount(): Int = incomingRoads.size
 }

@@ -51,6 +51,20 @@ class Road(
         }
     }
 
+    fun getIntersectionDirection(intersection: Intersection, inIntersection: Boolean): Vec3 {
+        return when (contact(intersection)) {
+            ContactPoint.START -> {
+                if (inIntersection) -getDirection(0.0) else getDirection(0.0)
+            }
+
+            ContactPoint.END -> {
+                if (inIntersection) getDirection(length) else -getDirection(length)
+            }
+
+            ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
+        }
+    }
+
     fun moveRoad(intersection: Intersection, newPosition: Vec3) {
         when (contact(intersection)) {
             ContactPoint.START -> {
@@ -83,6 +97,8 @@ class Road(
 
             ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
         }
+        startIntersection?.recalculateIntersectionRoads(this)
+        endIntersection?.recalculateIntersectionRoads(this)
     }
 
     fun getIncomingLaneNumber(intersection: Intersection): Int {

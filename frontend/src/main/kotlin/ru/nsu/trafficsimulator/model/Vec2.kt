@@ -29,6 +29,7 @@ data class Vec2(var x: Double, var y: Double) {
     fun length(): Double = sqrt(lengthSq())
     fun lengthSq(): Double = dot(this)
     fun normalized(): Vec2 = this / length()
+    fun setLength(length: Double) = this * (length / length())
     /**
     The angle in the polar coordinate system.
      */

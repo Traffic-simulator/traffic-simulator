@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.editor
 
+import OpenDriveWriter
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputProcessor
@@ -21,6 +22,7 @@ import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.MyCameraController
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
+import ru.nsu.trafficsimulator.serializer.serializeLayout
 
 class Editor {
     companion object {
@@ -71,13 +73,13 @@ class Editor {
                 editStatus = !editStatus
                 selectedIntersectionCount = 0
                 println(layout)
+                val writer = OpenDriveWriter()
+                writer.write(serializeLayout(layout),"testSerializer")
             }
             ImGui.end()
         }
 
         fun render(modelBatch: ModelBatch?) {
-            println("ROAD ID ${currentEditRoadId}")
-            println("INTERSECTION ${draggingDirectionIsStart}")
             if (editStatus) {
                 for ((_, sphere) in spheres) {
                     modelBatch?.render(sphere)

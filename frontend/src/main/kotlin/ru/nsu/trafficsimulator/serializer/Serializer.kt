@@ -26,9 +26,14 @@ fun serializeLayout(layout: Layout): OpenDRIVE {
 
 
 private fun serializeRoad(road: Road): TRoad {
+    var geo = road.geometry
+    if (road.startPadding != 0.0 || road.endPadding != 0.0) {
+        geo = road.geometry.copy(road.startPadding, road.endPadding)
+    }
+
     val tRoad = TRoad()
     tRoad.id = road.id.toString()
-    tRoad.length = road.length
+    tRoad.length = geo.length
     tRoad.junction = "-1"
 
     tRoad.link = TRoadLink().apply {
@@ -53,11 +58,7 @@ private fun serializeRoad(road: Road): TRoad {
         speed.unit = EUnitSpeed.KM_H
     })
 
-    tRoad.planView = generateRoadPlaneView(
-        road.geometry,
-        startPadding = road.startPadding,
-        endPadding = road.endPadding
-    )
+    tRoad.planView = generateRoadPlaneView(geo)
 
 
     tRoad.lanes = TRoadLanes()
@@ -198,14 +199,8 @@ private fun generateRoadPlaneView(
     endPadding: Double = 0.0
 ): TRoadPlanView {
     val tRoadPlanViewGeometry = TRoadPlanView()
-
-    var geo = geometry
-    if (startPadding != 0.0 || endPadding != 0.0) {
-        geo = geometry.copy(startPadding, endPadding)
-    }
-
-    println(geo)
-    for (roadGeometry in geo.splineParts) {
+    println(geometry)
+    for (roadGeometry in geometry.splineParts) {
         val (start, direction) = roadGeometry.getStartPoint()
         val rotAngle = -((direction - start).angle())
         val x: Poly3
