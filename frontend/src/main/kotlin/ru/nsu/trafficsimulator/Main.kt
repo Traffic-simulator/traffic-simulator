@@ -2,7 +2,6 @@ package ru.nsu.trafficsimulator
 
 import BackendAPI
 import ISimulation
-import OpenDriveReader
 import OpenDriveWriter
 import SpawnDetails
 import com.badlogic.gdx.*
@@ -30,14 +29,13 @@ import vehicle.Direction
 import kotlin.math.*
 
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
-import opendrive.OpenDRIVE
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.lang.Math.clamp
-import javax.management.InvalidApplicationException
 import kotlin.math.abs
 
 

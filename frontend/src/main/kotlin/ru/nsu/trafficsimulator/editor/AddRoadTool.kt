@@ -4,6 +4,9 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
 
 class AddRoadTool : IEditingTool {

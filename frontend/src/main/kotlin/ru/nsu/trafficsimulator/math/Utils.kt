@@ -1,9 +1,11 @@
-package ru.nsu.trafficsimulator.model
+package ru.nsu.trafficsimulator.math
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.Road
 
 private const val roadIntersectionThreshold: Double = 5.0
 

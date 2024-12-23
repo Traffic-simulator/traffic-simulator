@@ -1,6 +1,8 @@
 package ru.nsu.trafficsimulator.serializer
 
 import opendrive.*
+import ru.nsu.trafficsimulator.math.Poly3
+import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.model.*
 import kotlin.math.cos
 import kotlin.math.sin

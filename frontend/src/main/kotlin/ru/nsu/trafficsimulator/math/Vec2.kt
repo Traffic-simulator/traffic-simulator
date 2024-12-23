@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.model
+package ru.nsu.trafficsimulator.math
 
 import kotlin.math.atan2
 import kotlin.math.cos

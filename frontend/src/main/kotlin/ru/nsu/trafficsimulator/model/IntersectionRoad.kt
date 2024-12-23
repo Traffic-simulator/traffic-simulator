@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.math.Spline
 import kotlin.math.abs
 import kotlin.math.min
 

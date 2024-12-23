@@ -1,5 +1,8 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.math.Spline
+import ru.nsu.trafficsimulator.math.Vec3
+
 class Road(
     val id: Long,
     var startIntersection: Intersection?,

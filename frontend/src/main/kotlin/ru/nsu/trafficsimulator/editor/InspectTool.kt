@@ -11,6 +11,10 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.math.findRoad
+import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
 
 class InspectTool : IEditingTool {

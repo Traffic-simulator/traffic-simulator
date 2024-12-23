@@ -9,6 +9,7 @@ import imgui.ImGui
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.MyCameraController
+import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 

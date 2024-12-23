@@ -1,6 +1,10 @@
 package ru.nsu.trafficsimulator.serializer
 
 import opendrive.*
+import ru.nsu.trafficsimulator.math.Poly3
+import ru.nsu.trafficsimulator.math.Spline
+import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.*
 import kotlin.math.max
 

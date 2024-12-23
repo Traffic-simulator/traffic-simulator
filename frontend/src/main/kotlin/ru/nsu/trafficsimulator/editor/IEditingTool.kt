@@ -3,7 +3,7 @@ package ru.nsu.trafficsimulator.editor
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model.Vec2
+import ru.nsu.trafficsimulator.math.Vec2
 
 interface IEditingTool {
     fun getButtonName(): String

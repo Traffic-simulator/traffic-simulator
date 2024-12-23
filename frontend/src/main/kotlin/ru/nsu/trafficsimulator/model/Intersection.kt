@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.math.Vec3
 import java.util.*
 
 data class Intersection(
