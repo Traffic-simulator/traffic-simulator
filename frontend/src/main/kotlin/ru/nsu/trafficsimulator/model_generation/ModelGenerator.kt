@@ -20,34 +20,8 @@ class ModelGenerator {
     companion object {
         private val roadHeight = 1.0
         public val laneWidth = 3.5
-        private val intersectionPadding = 8.5
         private val splineRoadSegmentLen = 2.0f
         private val upVec = Vec3(0.0, roadHeight, 0.0)
-
-        fun buildStraightRoad(modelBuilder: ModelBuilder, road: Road) {
-            val node = modelBuilder.node()
-            val pos = (road.startIntersection!!.position + road.endIntersection!!.position) / 2.0
-            val dir = road.endIntersection!!.position - road.startIntersection!!.position
-            val halfLen = dir.length() / 2.0 - intersectionPadding
-            if (halfLen < 0)
-                return
-            val halfDir = dir.normalized() * halfLen
-            val right = halfDir.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-            val left = -halfDir.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
-            node.translation.set(pos.toGdxVec())
-            val meshPartBuilder = modelBuilder.part("road${road.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            BoxShapeBuilder.build(
-                meshPartBuilder,
-                Vector3((-halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + left.z).toFloat()),
-                Vector3((-halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (-halfDir.z + right.z).toFloat()),
-                Vector3((halfDir.x + left.x).toFloat(), roadHeight.toFloat(), (halfDir.z + left.z).toFloat()),
-                Vector3((halfDir.x + right.x).toFloat(), roadHeight.toFloat(), (halfDir.z + right.z).toFloat()),
-                Vector3((-halfDir.x + left.x).toFloat(), 0.0f, (-halfDir.z + left.z).toFloat()),
-                Vector3((-halfDir.x + right.x).toFloat(), 0.0f, (-halfDir.z + right.z).toFloat()),
-                Vector3((halfDir.x + left.x).toFloat(), 0.0f, (halfDir.z + left.z).toFloat()),
-                Vector3((halfDir.x + right.x).toFloat(), 0.0f, (halfDir.z + right.z).toFloat()),
-            )
-        }
 
         fun createLayoutModel(layout: Layout): Model {
             val modelBuilder = ModelBuilder()
@@ -65,9 +39,9 @@ class ModelGenerator {
                 val hasEnd = road.endIntersection?.intersectionRoads?.size.let {
                     it != null && it > 0
                 }
-                val length = road.geometry.length - intersectionPadding * if (hasStart) { 1 } else { 0 } - intersectionPadding * if (hasEnd) { 1 } else { 0 }
+                val length = road.geometry.length - if (hasStart) { road.startIntersection!!.padding } else { 0.0 } - if (hasEnd) { road.startIntersection!!.padding } else { 0.0 }
 
-                val start = if (hasStart) { intersectionPadding } else { 0.0 }
+                val start = if (hasStart) { road.startIntersection!!.padding } else { 0.0 }
 
                 val stepCount = floor(length / splineRoadSegmentLen).toInt()
                 var prevPos = road.geometry.getPoint(start).toVec3()
@@ -122,7 +96,7 @@ class ModelGenerator {
                     prevRight = right
                     prevDir = direction
                 }
-                val t = road.geometry.length - if (hasEnd) { intersectionPadding } else { 0.0 }
+                val t = road.geometry.length - if (hasEnd) { road.startIntersection!!.padding } else { 0.0 }
                 val pos = road.geometry.getPoint(t).toVec3()
                 val direction = road.geometry.getDirection(t).toVec3().normalized()
                 val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
