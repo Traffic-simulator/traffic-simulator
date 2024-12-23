@@ -139,8 +139,7 @@ class Main : ApplicationAdapter() {
                 Gdx.files.internal("skybox/back.png"),
             )
         )
-        Editor.sceneManager = sceneManager
-        Editor.camera = camera
+        Editor.init(camera!!, sceneManager!!)
     }
 
     fun initializeSimulation(layout: Layout): ISimulation {
