@@ -134,12 +134,12 @@ class ModelGenerator {
                     direction.toGdxVec()
                 )
             }
-
-            val intersectionBoxSize = 30.0
             val samplePerSide = 40
-            val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
             val upDir = Vec3(0.0, 1.0, 0.0)
             for (intersection in layout.intersections.values) {
+                val intersectionBoxSize = intersection.padding * 2.0 * 1.1
+                val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
+
                 val node = modelBuilder.node()
                 node.translation.set(intersection.position.toGdxVec())
                 meshPartBuilder = modelBuilder.part("intersection${intersection.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())

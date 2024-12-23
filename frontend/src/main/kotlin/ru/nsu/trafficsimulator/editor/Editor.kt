@@ -98,29 +98,18 @@ class Editor {
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
             return object : InputAdapter() {
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    println("click")
                     if (button == Input.Buttons.LEFT && editStatus) {
-                        if (editRoadSelected) {
-                            val intersection = getIntersection(screenX, screenY)
-                            if (intersection != null) {
-                                draggingDirectionSphere = findDirectionSphere(intersection)
-                                if (draggingDirectionSphere != null) {
-                                    camController.camaraEnabled = false
-                                }
-                            }
-                        } else {
-                            if (!addRoadStatus && !deleteRoadStatus && !editRoadStatus) {
-                                handleMoveIntersection(screenX, screenY, camController)
-                            }
-                            if (addRoadStatus) {
-                                handleAddRoad(screenX, screenY)
-                            }
-                            if (deleteRoadStatus) {
-                                handleDeleteRoad(screenX, screenY)
-                            }
-                            if (editRoadStatus) {
-                                handleEditRoad(screenX, screenY, camController)
-                            }
+                        if (!addRoadStatus && !deleteRoadStatus && !editRoadStatus) {
+                            handleMoveIntersection(screenX, screenY, camController)
+                        }
+                        if (addRoadStatus) {
+                            handleAddRoad(screenX, screenY)
+                        }
+                        if (deleteRoadStatus) {
+                            handleDeleteRoad(screenX, screenY)
+                        }
+                        if (editRoadStatus) {
+                            handleEditRoad(screenX, screenY, camController)
                         }
                     }
                     return false
@@ -205,10 +194,20 @@ class Editor {
         }
 
         private fun handleEditRoad(screenX: Int, screenY: Int, camController: MyCameraController) {
-            val intersection = getIntersection(screenX, screenY) ?: return
-            val road = findRoad(intersection) ?: return
-            currentEditRoadId = road.id
-            editRoadSelected = true
+            if (editRoadSelected) {
+                val intersection = getIntersection(screenX, screenY)
+                if (intersection != null) {
+                    draggingDirectionSphere = findDirectionSphere(intersection)
+                    if (draggingDirectionSphere != null) {
+                        camController.camaraEnabled = false
+                    }
+                }
+            } else {
+                val intersection = getIntersection(screenX, screenY) ?: return
+                val road = findRoad(intersection) ?: return
+                currentEditRoadId = road.id
+                editRoadSelected = true
+            }
         }
 
         private fun handleDeleteRoad(screenX: Int, screenY: Int) {
