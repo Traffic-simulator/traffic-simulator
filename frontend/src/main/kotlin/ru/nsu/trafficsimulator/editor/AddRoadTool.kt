@@ -58,6 +58,7 @@ class AddRoadTool : IEditingTool {
     override fun init(layout: Layout, camera: Camera) {
         this.layout = layout
         this.camera = camera
+        selectedIntersectionCount = 0
     }
 
     private fun findRoadIntersectionAt(point: Vector3): Intersection? {
