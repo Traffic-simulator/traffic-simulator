@@ -17,12 +17,11 @@ class DeleteRoadTool : IEditingTool {
         return true
     }
 
-    override fun handleUp(screenPos: Vec2, button: Int): Boolean {
-        val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return false
-        val road = findRoad(layout!!, intersection) ?: return false
-        layout!!.deleteRoad(road)
-        println(layout!!.intersections.size)
-        return true
+    override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
+        val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return null
+        val road = findRoad(layout!!, intersection) ?: return null
+
+        return DeleteRoadStateChange(road)
     }
 
     override fun handleDrag(screenPos: Vec2) {

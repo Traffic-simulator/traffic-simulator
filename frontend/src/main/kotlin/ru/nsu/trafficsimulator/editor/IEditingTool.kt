@@ -16,7 +16,7 @@ interface IEditingTool {
     /**
      * @return Whether to update layout model
      */
-    fun handleUp(screenPos: Vec2, button: Int): Boolean
+    fun handleUp(screenPos: Vec2, button: Int): IStateChange?
     fun handleDrag(screenPos: Vec2)
     fun render(modelBatch: ModelBatch?)
     fun init(layout: Layout, camera: Camera)

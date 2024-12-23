@@ -32,19 +32,16 @@ class AddRoadTool : IEditingTool {
         return true
     }
 
-    override fun handleUp(screenPos: Vec2, button: Int): Boolean {
-        if (selectedIntersectionCount != 2) return false
+    override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
+        if (selectedIntersectionCount != 2) return null
         selectedIntersectionCount = 0
-        if (selectedIntersections[0] == selectedIntersections[1]) return false
+        if (selectedIntersections[0] == selectedIntersections[1]) return null
 
         val dir = (selectedIntersections[1]!!.position - selectedIntersections[0]!!.position).normalized()
         val startDirection = selectedIntersections[0]!!.position + dir * startDirectionLength
         val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
 
-        layout!!.addRoad(
-            selectedIntersections[0]!!, startDirection, selectedIntersections[1]!!, endDirection
-        )
-        return true
+        return AddRoadStateChange(selectedIntersections[0]!!, startDirection, selectedIntersections[1]!!, endDirection)
     }
 
     override fun handleDrag(screenPos: Vec2) {

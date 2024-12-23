@@ -56,7 +56,9 @@ class Editor {
                 }
 
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    if (currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)) {
+                    val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
+                    if (change != null) {
+                        change.apply(layout)
                         updateLayout()
                     }
                     camController.camaraEnabled = (button == Input.Buttons.LEFT)

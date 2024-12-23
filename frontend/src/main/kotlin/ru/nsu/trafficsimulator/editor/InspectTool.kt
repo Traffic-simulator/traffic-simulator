@@ -58,31 +58,21 @@ class InspectTool : IEditingTool {
         return true
     }
 
-    private fun applyRoadDirections(): Boolean {
-        if (draggingDirectionSphere == null) return false
+    private fun applyRoadDirections(): IStateChange? {
+        if (draggingDirectionSphere == null) return null
 
-        val editedRoad = selectedRoad ?: return false
+        val editedRoad = selectedRoad ?: return null
 
-        val directionVec = Vec3(draggingDirectionSphere!!.transform.getTranslation(Vector3()))
-        if (draggingDirectionIsStart == true) {
-            val t = (selectedRoad!!.startIntersection!!.position - directionVec) * curveCoeff
-            editedRoad.redirectRoad(
-                editedRoad.startIntersection!!,
-                editedRoad.startIntersection!!.position + t
-            )
-        } else {
-            val t = (directionVec - editedRoad.endIntersection!!.position) * curveCoeff
-            editedRoad.redirectRoad(
-                editedRoad.endIntersection!!,
-                editedRoad.endIntersection!!.position + t
-            )
-        }
-        return true
+        val startOffset = Vec3(directionSpheres[0].transform.getTranslation(Vector3()))
+        val startDir = (selectedRoad!!.startIntersection!!.position - startOffset) * curveCoeff
+        val endOffset = Vec3(directionSpheres[1].transform.getTranslation(Vector3()))
+        val endDir = (endOffset - editedRoad.endIntersection!!.position) * curveCoeff
+        return RedirectRoadStateChange(editedRoad, editedRoad.startIntersection!!.position + startDir, editedRoad.endIntersection!!.position + endDir)
     }
 
-    private fun applyIntersectionPosition(): Boolean {
-        if (draggingIntersection == null) return false
-        layout!!.moveIntersection(draggingIntersection!!, Vec3(spheres[draggingIntersection!!.id]!!.transform.getTranslation(Vector3())))
+    private fun applyIntersectionPosition(): IStateChange? {
+        if (draggingIntersection == null) return null
+
         if (selectedRoad != null) {
             val startPos = selectedRoad!!.startIntersection!!.position
             val endPos = selectedRoad!!.endIntersection!!.position
@@ -93,15 +83,16 @@ class InspectTool : IEditingTool {
                 (endPos + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
             )
         }
+        val res = MoveIntersectionStateChange(draggingIntersection!!, Vec3(spheres[draggingIntersection!!.id]!!.transform.getTranslation(Vector3())))
         draggingIntersection = null
-        return true
+        return res
     }
 
-    override fun handleUp(screenPos: Vec2, button: Int): Boolean {
-        if (button != Input.Buttons.LEFT) return false
-        if (applyRoadDirections()) return true
-        if (applyIntersectionPosition()) return true
-        return false
+    override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
+        if (button != Input.Buttons.LEFT) return null
+        applyRoadDirections()?.let {return it}
+        applyIntersectionPosition()?.let {return it}
+        return null
     }
 
     override fun handleDrag(screenPos: Vec2) {
