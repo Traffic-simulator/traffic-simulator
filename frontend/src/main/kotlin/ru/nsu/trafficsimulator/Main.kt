@@ -1,6 +1,7 @@
 package ru.nsu.trafficsimulator
 
 import BackendAPI
+import ISimulation
 import OpenDriveReader
 import SpawnDetails
 import com.badlogic.gdx.*
@@ -32,11 +33,18 @@ import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 import ru.nsu.trafficsimulator.serializer.Deserializer
+import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.lang.Math.clamp
+import javax.management.InvalidApplicationException
 import kotlin.math.abs
 
 
 class Main : ApplicationAdapter() {
+    private enum class ApplicationState {
+        Editor,
+        Simulator,
+    }
+
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
     private var imGuiGl3: ImGuiImplGl3 = ImGuiImplGl3()
@@ -50,8 +58,11 @@ class Main : ApplicationAdapter() {
     private var modelInstance1: ModelInstance? = null
     private var modelBatch: ModelBatch? = null
 
-    private val back = BackendAPI()
+    private var back: ISimulation? = null
     private val carInstances = mutableMapOf<Int, Scene>()
+    private var state = ApplicationState.Editor
+    private var editorInputProcess: InputProcessor? = null
+    private val inputMultiplexer = InputMultiplexer()
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -85,31 +96,15 @@ class Main : ApplicationAdapter() {
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
-        val inputMultiplexer = InputMultiplexer()
         val camController = MyCameraController(camera!!)
 
-        inputMultiplexer.addProcessor(Editor.createSphereEditorProcessor(camController))
+        editorInputProcess = Editor.createSphereEditorProcessor(camController)
+        inputMultiplexer.addProcessor(editorInputProcess)
         inputMultiplexer.addProcessor(camController)
         Gdx.input.inputProcessor = inputMultiplexer
 
         modelInstance1 = ModelInstance(carModel)
         modelBatch = ModelBatch()
-
-        val odr = OpenDriveReader()
-        val openDRIVE = odr.read("Town01.xodr")
-        val spawnDetails = ArrayList<Triple<String, String, Direction>>()
-//        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
-//        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("6", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
-//        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
-//        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("15", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("12", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("6", "1", Direction.FORWARD))
-//        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
-
-        back.init(openDRIVE, SpawnDetails(spawnDetails), 500)
 
 //        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
 //        println(layout.roads)
@@ -117,13 +112,6 @@ class Main : ApplicationAdapter() {
 //            println("${i.value.id} ${i.value.geometry}")
 //        }
 //        println(layout.intersectionRoads)
-
-        /*val time = measureTime {
-            layoutModel = createLayoutModel(layout_2)
-        }
-        println("Road layout model generation took $time")
-        layoutScene = Scene(layoutModel)
-        sceneManager?.addScene(layoutScene)*/
 
         // Add ground
         val modelBuilder = ModelBuilder()
@@ -135,7 +123,7 @@ class Main : ApplicationAdapter() {
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(),
             groundMaterial
         )
-        BoxShapeBuilder.build(meshPartBuilder, 1000000.0f, 0.1f, 100000.0f)
+        BoxShapeBuilder.build(meshPartBuilder, 1000.0f, 0.1f, 1000.0f)
         val ground = modelBuilder.end()
         sceneManager?.addScene(Scene(ground))
 
@@ -153,7 +141,30 @@ class Main : ApplicationAdapter() {
         Editor.camera = camera
     }
 
+    fun initializeSimulation(layout: Layout): ISimulation {
+        val spawnDetails = ArrayList<Triple<String, String, Direction>>()
+//        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
+//        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
+        spawnDetails.add(Triple("0", "1", Direction.FORWARD))
+//        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
+//        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
+//        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("15", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("12", "-1", Direction.FORWARD))
+//        spawnDetails.add(Triple("6", "1", Direction.FORWARD))
+//        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
+
+        val back = BackendAPI()
+        back.init(serializeLayout(layout), SpawnDetails(spawnDetails), 500)
+        return back
+    }
+
     override fun render() {
+        if (state == ApplicationState.Simulator) {
+            val vehicleData = back!!.getNextFrame(0.01)
+            updateCars(vehicleData)
+        }
+
         if (tmpInputProcessor != null) {
             Gdx.input.inputProcessor = tmpInputProcessor
             tmpInputProcessor = null
@@ -161,18 +172,26 @@ class Main : ApplicationAdapter() {
         imGuiGl3.newFrame()
         imGuiGlfw.newFrame()
         ImGui.newFrame()
-        Editor.runImgui()
+        if (ImGui.button("Change Application State")) {
+            state = when (state) {
+                ApplicationState.Editor -> ApplicationState.Simulator
+                ApplicationState.Simulator -> ApplicationState.Editor
+            }
+            if (state == ApplicationState.Editor) {
+                inputMultiplexer.addProcessor(0, editorInputProcess)
+            } else {
+                inputMultiplexer.removeProcessor(editorInputProcess)
+            }
+            back = initializeSimulation(Editor.getLayout())
+        }
+        if (state == ApplicationState.Editor) {
+            Editor.runImgui()
+        }
         ImGui.render()
         if (ImGui.getIO().wantCaptureKeyboard or ImGui.getIO().wantCaptureMouse) {
             tmpInputProcessor = Gdx.input.inputProcessor
             Gdx.input.inputProcessor = null
         }
-
-        // Получаем данные о положении машинок
-//        val vehicleData = back.getNextFrame(0.01)
-
-        // Обновляем позиции машинок
-//        updateCars(vehicleData)
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
@@ -181,9 +200,11 @@ class Main : ApplicationAdapter() {
         sceneManager?.update(Gdx.graphics.deltaTime)
         sceneManager?.render()
 
-        modelBatch?.begin(camera)
-        Editor.render(modelBatch)
-        modelBatch?.end()
+        if (state == ApplicationState.Editor) {
+            modelBatch?.begin(camera)
+            Editor.render(modelBatch)
+            modelBatch?.end()
+        }
 
         imGuiGl3.renderDrawData(ImGui.getDrawData())
     }

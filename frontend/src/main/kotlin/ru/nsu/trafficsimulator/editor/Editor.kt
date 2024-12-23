@@ -91,9 +91,14 @@ class Editor {
             }
         }
 
+        fun getLayout(): Layout {
+            return layout
+        }
+
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
             return object : InputAdapter() {
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                    println("click")
                     if (button == Input.Buttons.LEFT && editStatus) {
                         if (editRoadSelected) {
                             val intersection = getIntersection(screenX, screenY)

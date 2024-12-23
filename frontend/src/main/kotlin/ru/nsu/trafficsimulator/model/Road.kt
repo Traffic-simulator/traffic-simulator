@@ -25,6 +25,7 @@ class Road(
     }
 
     fun getDirection(distance: Double): Vec3 {
+        println("$distance ? $length; ${geometry.length}; $startPadding; $endPadding = ${distance > length}")
         if (distance < 0 || distance > length) {
             throw IllegalArgumentException("distance must be between 0 and length")
         }
