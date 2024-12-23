@@ -39,7 +39,7 @@ class ModelGenerator {
                 val hasEnd = road.endIntersection?.intersectionRoads?.size.let {
                     it != null && it > 0
                 }
-                val length = road.geometry.length - if (hasStart) { road.startIntersection!!.padding } else { 0.0 } - if (hasEnd) { road.startIntersection!!.padding } else { 0.0 }
+                val length = road.geometry.length - if (hasStart) { road.startIntersection!!.padding } else { 0.0 } - if (hasEnd) { road.endIntersection!!.padding } else { 0.0 }
 
                 val start = if (hasStart) { road.startIntersection!!.padding } else { 0.0 }
 
@@ -96,7 +96,7 @@ class ModelGenerator {
                     prevRight = right
                     prevDir = direction
                 }
-                val t = road.geometry.length - if (hasEnd) { road.startIntersection!!.padding } else { 0.0 }
+                val t = road.geometry.length - if (hasEnd) { road.endIntersection!!.padding } else { 0.0 }
                 val pos = road.geometry.getPoint(t).toVec3()
                 val direction = road.geometry.getDirection(t).toVec3().normalized()
                 val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
