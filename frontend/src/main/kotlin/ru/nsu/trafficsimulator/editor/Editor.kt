@@ -33,7 +33,7 @@ class Editor {
         private val selectedIntersections = arrayOfNulls<Intersection>(2)
         private var selectedIntersectionCount = 0
         private val offsetDirectionSphere: Double = 25.0
-        private val roadIntersectionThreshold: Double = 5.0
+
         private val curveCoeff: Double = 4.0
 
         private var draggingDirectionSphere: ModelInstance? = null
@@ -44,7 +44,7 @@ class Editor {
         private var editRoadSelected = false
         private var currentEditRoadId: Long? = null
         private var deleteRoadStatus = false
-        private val tools = listOf(InspectTool(), AddRoadTool())
+        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
         private var currentTool = tools[0]
 
         private val directionSpheres = mutableMapOf<Long, Pair<ModelInstance, ModelInstance>>()
@@ -198,24 +198,6 @@ class Editor {
             sceneManager?.addScene(layoutScene)
         }
 
-        private fun findRoad(intersection: Vector3): Road? {
-            var minDistance = Double.MAX_VALUE
-            for (road in layout.roads.values) {
-                val point = Vec2(intersection.x.toDouble(), intersection.z.toDouble())
-                val distance = road.geometry.closestPoint(point).distance(point)
-                if (distance < minDistance) {
-                    minDistance = distance
-                    if (minDistance < roadIntersectionThreshold) {
-                        return road
-                    }
-                }
-            }
-            return null
-        }
-
-
-
-
         private fun findDirectionSphere(intersection: Vector3): ModelInstance? {
             if (directionSpheres[currentEditRoadId]!!.first.transform.getTranslation(Vector3())
                     .dst(intersection) < 5.0f
@@ -257,21 +239,6 @@ class Editor {
                 (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
             )
             return Pair(start, end)
-        }
-
-        private fun createSphere(): Model? {
-            val modelBuilder = ModelBuilder()
-            val material = Material(ColorAttribute.createDiffuse(Color.RED))
-            val sphere = modelBuilder.createSphere(
-                5.0f,
-                5.0f,
-                5.0f,
-                10,
-                10,
-                material,
-                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-            )
-            return sphere
         }
     }
 }

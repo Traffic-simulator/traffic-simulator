@@ -29,7 +29,6 @@ data class Intersection(
                 continue
             }
             if (intersectionRoad.fromRoad === road) {
-                incomingRoads.remove(road)
                 irToRemove.add(intersectionRoad)
             }
         }

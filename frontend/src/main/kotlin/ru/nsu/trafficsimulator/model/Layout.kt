@@ -82,7 +82,7 @@ class Layout {
                 deleteIntersection(it)
             }
         }
-        road.startIntersection?.let {
+        road.endIntersection?.let {
             it.removeRoad(road)
             if (it.getIncomingRoadsCount() == 0) {
                 deleteIntersection(it)
