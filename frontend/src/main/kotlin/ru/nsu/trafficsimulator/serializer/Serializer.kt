@@ -151,6 +151,7 @@ private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
         for (linkage in road.laneLinkage) {
             val rightLane = TRoadLanesLaneSectionRightLane()
             rightLane.id = (-linkage.second).toBigInteger()
+            rightLane.type = ELaneType.DRIVING
             rightLane.link = TRoadLanesLaneSectionLcrLaneLink()
             rightLane.link.predecessor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
                 id = linkage.first.toBigInteger()
