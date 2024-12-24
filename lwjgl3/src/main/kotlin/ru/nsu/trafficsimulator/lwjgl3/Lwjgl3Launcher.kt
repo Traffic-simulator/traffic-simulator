@@ -15,5 +15,6 @@ fun main() {
         setTitle("traffic-simulator")
         setWindowedMode(640, 480)
         setWindowIcon(*(arrayOf(128, 64, 32, 16).map { "libgdx$it.png" }.toTypedArray()))
+        setBackBufferConfig(8, 8, 8, 8, 16, 0, 2)
     })
 }

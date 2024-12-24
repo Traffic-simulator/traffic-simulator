@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.model
+package ru.nsu.trafficsimulator.math
 
 data class Poly3(val a: Double, val b: Double, val c: Double, val d: Double) { // x(t) = a + bt + ct^2 + dt^3
     fun value(x: Double): Double {
