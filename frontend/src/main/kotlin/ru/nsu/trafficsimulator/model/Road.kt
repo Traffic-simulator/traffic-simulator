@@ -1,5 +1,8 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.math.Spline
+import ru.nsu.trafficsimulator.math.Vec3
+
 class Road(
     val id: Long,
     var startIntersection: Intersection?,
@@ -25,6 +28,7 @@ class Road(
     }
 
     fun getDirection(distance: Double): Vec3 {
+        println("$distance ? $length; ${geometry.length}; $startPadding; $endPadding = ${distance > length}")
         if (distance < 0 || distance > length) {
             throw IllegalArgumentException("distance must be between 0 and length")
         }
@@ -45,6 +49,20 @@ class Road(
                 val dir = getDirection(length)
                 val normDir = Vec3(dir.x, 0.0, dir.z).normalized()
                 getPoint(length) + Vec3(-normDir.z, normDir.y, normDir.x) * (Layout.LANE_WIDTH * laneOffset)
+            }
+
+            ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
+        }
+    }
+
+    fun getIntersectionDirection(intersection: Intersection, inIntersection: Boolean): Vec3 {
+        return when (contact(intersection)) {
+            ContactPoint.START -> {
+                if (inIntersection) -getDirection(0.0) else getDirection(0.0)
+            }
+
+            ContactPoint.END -> {
+                if (inIntersection) getDirection(length) else -getDirection(length)
             }
 
             ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
@@ -83,34 +101,40 @@ class Road(
 
             ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
         }
+        startIntersection?.recalculateIntersectionRoads(this)
+        endIntersection?.recalculateIntersectionRoads(this)
     }
 
     fun getIncomingLaneNumber(intersection: Intersection): Int {
-        return when (contact(intersection)) {
-            ContactPoint.START -> leftLane
-            ContactPoint.END -> -rightLane
-            ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
+        return when (intersection) {
+            startIntersection -> leftLane
+            endIntersection -> -rightLane
+            else -> throw IllegalArgumentException("Invalid intersection")
         }
     }
 
     fun getOutgoingLaneNumber(intersection: Intersection): Int {
-        return when (contact(intersection)) {
-            ContactPoint.START -> -rightLane
-            ContactPoint.END -> leftLane
-            ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
+        return when (intersection) {
+            startIntersection -> -rightLane
+            endIntersection -> leftLane
+            else -> throw IllegalArgumentException("Invalid intersection")
         }
     }
 
-    private fun contact(intersection: Intersection): ContactPoint {
+    fun contact(intersection: Intersection): ContactPoint {
         if (intersection === startIntersection) return ContactPoint.START
         if (intersection === endIntersection) return ContactPoint.END
         return ContactPoint.NULL
     }
 
     companion object {
-        private enum class ContactPoint {
+        enum class ContactPoint {
             START, END, NULL
         }
+    }
+
+    override fun toString(): String {
+        return "Road(id=$id, start=${startIntersection?.id}, end=${endIntersection?.id})"
     }
 }
 

@@ -155,6 +155,7 @@ Thumbs.db
 *#*#
 /.kotlin/
 /assets/assets.txt
+/assets/imgui.ini
 
 ## Special cases:
 
