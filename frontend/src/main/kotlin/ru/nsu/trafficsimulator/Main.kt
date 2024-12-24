@@ -92,11 +92,12 @@ class Main : ApplicationAdapter() {
         modelBatch = ModelBatch()
 
         val odr = OpenDriveReader()
-        val openDRIVE = odr.read("Town01.xodr")
+        val openDRIVE = odr.read("ourTown01.xodr")
         val spawnDetails = ArrayList<Triple<String, String, Direction>>()
 //        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("6", "-1", Direction.FORWARD))
+        spawnDetails.add(Triple("15", "1", Direction.BACKWARD))
+        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
@@ -107,7 +108,7 @@ class Main : ApplicationAdapter() {
 
         back.init(openDRIVE, SpawnDetails(spawnDetails), 500)
 
-        layout = Deserializer.deserialize(OpenDriveReader().read("Town01.xodr"))
+        layout = Deserializer.deserialize(OpenDriveReader().read("ourTown01.xodr"))
 
         val time = measureTime {
             layoutModel = ModelGenerator.createLayoutModel(layout)
@@ -150,7 +151,7 @@ class Main : ApplicationAdapter() {
         }
 
         // Получаем данные о положении машинок
-        val vehicleData = back.getNextFrame(0.01)
+        val vehicleData = back.getNextFrame(0.02)
 //        println("Vehicle data: $vehicleData")
 
         // Обновляем позиции машинок

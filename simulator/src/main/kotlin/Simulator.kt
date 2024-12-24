@@ -1,3 +1,4 @@
+import junction_intersection.JunctionIntersectionFinder
 import network.Network
 import opendrive.OpenDRIVE
 import vehicle.Direction
@@ -8,7 +9,9 @@ import kotlin.math.abs
 
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long) {
 
-    val network: Network = Network(openDrive.road, openDrive.junction)
+    val finder = JunctionIntersectionFinder(openDrive)
+    val intersections = finder.findIntersection()
+    val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
 
     val vehicles: ArrayList<Vehicle> = ArrayList()
@@ -18,21 +21,23 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long
     // TODO: staged updates
     fun update(dt: Double): ArrayList<Vehicle> {
 
-        processNonmandatoryLaneChanges()
-
-        // Stage y:
-        vehicles.forEach { it ->
-            it.update(dt)
-        }
-
-        // despawn vehicles
-        vehicles.removeAll { it.despawned == true}
-
         spawnTimer += dt
         if (spawnTimer >= 2.0) {
             addVehicle()
             spawnTimer = 0.0
         }
+
+        processNonmandatoryLaneChanges()
+
+        val sortedVehicles = vehicles.sortedBy   { it.position }.reversed()
+
+        // Stage y:
+        sortedVehicles.forEach { it ->
+            it.update(dt)
+        }
+
+        // despawn vehicles
+        vehicles.removeAll { it.despawned == true}
 
         return vehicles
     }

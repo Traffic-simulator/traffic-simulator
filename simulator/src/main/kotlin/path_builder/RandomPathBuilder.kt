@@ -1,5 +1,7 @@
 package path_builder
 
+import SimulationConfig
+import Simulator
 import network.Lane
 import vehicle.Direction
 import vehicle.Vehicle
@@ -16,7 +18,7 @@ class RandomPathBuilder(seed: Long): IPathBuilder {
     val rnd = Random(seed)
 
     val vehiclesPaths = HashMap<Int, ArrayList<Pair<Lane, Boolean>>>()
-
+    val cycleInfo = HashMap<Int, Pair<Lane, Boolean>>()
 
     // In current usage will be called at first for every vehicle
     // !!! DON'T rely on that in prod realisation
@@ -44,6 +46,7 @@ class RandomPathBuilder(seed: Long): IPathBuilder {
 
                 // Path until cycle
                 if (!vehiclesPaths[vehicle.vehicleId]!!.filter({it.first == tmp_lane}).isEmpty()) {
+                    cycleInfo.put(vehicle.vehicleId, Pair(tmp_lane, tmp.get(nxtLaneIdx).second))
                     break
                 }
 
@@ -65,8 +68,15 @@ class RandomPathBuilder(seed: Long): IPathBuilder {
 
         for(i in 0 until vehiclesPaths[vehicle.vehicleId]!!.size) {
             if (vehiclesPaths[vehicle.vehicleId]!!.get(i).first == lane) {
-                if (i + 1 >= vehiclesPaths[vehicle.vehicleId]!!.size) return null
-                return vehiclesPaths[vehicle.vehicleId]?.get(i + 1)
+                if (i < vehiclesPaths[vehicle.vehicleId]!!.size - 1) {
+                    return vehiclesPaths[vehicle.vehicleId]?.get((i + 1))
+                }
+
+                if (cycleInfo.containsKey(vehicle.vehicleId)) {
+                    return cycleInfo[vehicle.vehicleId]
+                } else {
+                    return null
+                }
             }
         }
 
@@ -89,8 +99,19 @@ class RandomPathBuilder(seed: Long): IPathBuilder {
                     }
                 }
             }
+            if (closestVehicle != null) {
+                val distance = closestVehicle!!.position - closestVehicle!!.length - vehicle.position
+                if (distance > SimulationConfig.MAX_VALUABLE_DISTANCE) {
+                    return Pair(null, SimulationConfig.INF)
+                }
+                return Pair(closestVehicle, distance)
+            }
         } else {
             closestVehicle = lane.getMinPositionVehicle()
+        }
+
+        if (acc_distance > SimulationConfig.MAX_VALUABLE_DISTANCE) {
+            return Pair(null, SimulationConfig.INF)
         }
 
         if (closestVehicle == null) {

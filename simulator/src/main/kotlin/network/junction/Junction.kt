@@ -1,10 +1,11 @@
 package network.junction
 
+import junction_intersection.Intersection
 import opendrive.TJunction
 
 
 // TODO: need more smart logic in case of different reasons blocks.
-class Junction(val tjunction: TJunction) {
+class Junction(val tjunction: TJunction, val intersections: MutableList<Intersection>) {
 
     // HashMap by incoming roadId store connection
     val id: String = tjunction.id
@@ -37,14 +38,22 @@ class Junction(val tjunction: TJunction) {
 
         // Initializing TrajectoryBlockList
         for (con in tjunction.connection) {
-            trajBlockList[con.connectingRoad] = TrajectoryBlockList(con, tjunction.connection)
+            trajBlockList[con.connectingRoad] = TrajectoryBlockList(con, tjunction.connection, intersections)
             trajBlockingFactors[con.connectingRoad] = TrajectoryBlockingFactors()
         }
     }
 
     fun tryBlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int): Boolean {
         assert(trajBlockingFactors[connectingRoadId] != null)
+
         if (trajBlockingFactors[connectingRoadId]!!.blockingFactors.size != 0) {
+            var blockingFactorsString: String = ""
+            trajBlockingFactors[connectingRoadId]!!.blockingFactors.forEach {
+                assert(it.vehicleId != vehicleId)
+                blockingFactorsString = blockingFactorsString.plus(it.vehicleId.toString() + " ")
+            }
+
+            println("veh ${vehicleId} is blocked by ${blockingFactorsString}")
             return false
         }
 

@@ -1,5 +1,6 @@
 package network.junction
 
+import opendrive.EContactPoint
 import opendrive.TJunctionConnection
 
 class Connection(tConnection: TJunctionConnection) {
@@ -8,5 +9,5 @@ class Connection(tConnection: TJunctionConnection) {
     val linkedRoad = tConnection.linkedRoad // Probably deprecated or not used
     val id = tConnection.id
     val laneLink = tConnection.laneLink
-    val contactPoint = tConnection.contactPoint
+    val contactPoint = if (tConnection.contactPoint == null) EContactPoint.START else tConnection.contactPoint
 }
