@@ -59,7 +59,7 @@ class InspectTool : IEditingTool {
                 (selectedRoad!!.endIntersection!!.position + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
             )
         }
-        return true
+        return draggingDirectionSphere != null || draggingIntersection != null
     }
 
     private fun applyRoadDirections(): IStateChange? {

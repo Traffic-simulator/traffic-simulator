@@ -22,8 +22,8 @@ class AddRoadTool : IEditingTool {
     }
 
     override fun handleDown(screenPos: Vec2, button: Int): Boolean {
-        if (button != Input.Buttons.LEFT) return true
-        val intersectionPoint = getIntersectionWithGround(screenPos, camera!!) ?: return true
+        if (button != Input.Buttons.LEFT) return false
+        val intersectionPoint = getIntersectionWithGround(screenPos, camera!!) ?: return false
 
         var roadIntersection = findRoadIntersectionAt(intersectionPoint)
         if (roadIntersection == null) {

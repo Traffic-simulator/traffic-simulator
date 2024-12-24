@@ -2,22 +2,20 @@ package ru.nsu.trafficsimulator
 
 import BackendAPI
 import ISimulation
-import OpenDriveReader
 import OpenDriveWriter
 import SpawnDetails
-import com.badlogic.gdx.*
+import com.badlogic.gdx.ApplicationAdapter
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
-import com.badlogic.gdx.graphics.g3d.Environment
-import com.badlogic.gdx.graphics.g3d.Material
-import com.badlogic.gdx.graphics.g3d.Model
-import com.badlogic.gdx.graphics.g3d.ModelBatch
-import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
+import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -26,18 +24,18 @@ import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import vehicle.Direction
-import kotlin.math.*
-
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.math.Vec3
-import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
+import vehicle.Direction
 import java.lang.Math.clamp
 import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.sign
 
 
 class Main : ApplicationAdapter() {
@@ -98,6 +96,10 @@ class Main : ApplicationAdapter() {
         sceneManager?.environment = environment
 
         val camController = MyCameraController(camera!!)
+        camController.scrollFactor = -0.5f
+        camController.rotateAngle = 180f
+        camController.translateUnits = 130f
+        camController.target = camera!!.position
 
         editorInputProcess = Editor.createSphereEditorProcessor(camController)
         inputMultiplexer.addProcessor(editorInputProcess)
