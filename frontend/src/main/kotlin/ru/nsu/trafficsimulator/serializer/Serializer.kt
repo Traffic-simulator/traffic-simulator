@@ -182,7 +182,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
             id = (connectorId++).toString()
             incomingRoad = intersectionRoad.fromRoad.id.toString()
             connectingRoad = intersectionRoad.id.toString()
-
+            contactPoint = EContactPoint.START
             for (linkage in intersectionRoad.laneLinkage) {
                 laneLink.add(TJunctionConnectionLaneLink().apply {
                     from = linkage.first.toBigInteger()
@@ -195,11 +195,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
     return tJunction
 }
 
-private fun generateRoadPlaneView(
-    geometry: Spline,
-    startPadding: Double = 0.0,
-    endPadding: Double = 0.0
-): TRoadPlanView {
+private fun generateRoadPlaneView(geometry: Spline): TRoadPlanView {
     val tRoadPlanViewGeometry = TRoadPlanView()
     println(geometry)
     for (roadGeometry in geometry.splineParts) {
