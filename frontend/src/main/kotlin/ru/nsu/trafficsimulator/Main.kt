@@ -148,9 +148,9 @@ class Main : ApplicationAdapter() {
 //        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
 
         val back = BackendAPI()
-//        val dto = serializeLayout(layout)
-//        OpenDriveWriter().write(dto, "export.xodr")
-        val dto = OpenDriveReader().read("Town01_processed.xodr")
+        val dto = serializeLayout(layout)
+        OpenDriveWriter().write(dto, "export.xodr")
+//        val dto = OpenDriveReader().read("Town01_processed.xodr")
         Editor.layout = Deserializer.deserialize(dto)
         Editor.updateLayout()
         back.init(dto, SpawnDetails(spawnDetails), 500)
