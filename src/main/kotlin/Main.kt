@@ -14,7 +14,7 @@ fun main() {
     println("Hello World!")
 
     val odr = OpenDriveReader()
-    val simulator = initTown01Simulator(odr)
+    val simulator = initTrafficLightsSimulator(odr)
 
     MovingRectangle.jfxStart(simulator)
 }
@@ -58,6 +58,16 @@ fun initTown01Simulator(odr: OpenDriveReader): Simulator {
     //spawnDetails.add(Triple("57", "2", Direction.BACKWARD))
     // spawnDetails.add(Triple("21", "-1", Direction.FORWARD))
     // spawnDetails.add(Triple("21", "-2", Direction.FORWARD))
+
+    val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), SEED);
+    return simulator
+    }
+
+fun initTrafficLightsSimulator(odr: OpenDriveReader): Simulator {
+    val openDRIVE = odr.read("simple/UC_Simple-X-Junction-TrafficLights.xodr")
+    println(openDRIVE.road.size)
+
+    val spawnDetails = ArrayList<Triple<String, String, Direction>>()
 
     val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), SEED);
     return simulator

@@ -1,3 +1,4 @@
+import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import network.Network
 import opendrive.OpenDRIVE
@@ -5,12 +6,14 @@ import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.model.MOBIL
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.abs
 
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long) {
 
     val finder = JunctionIntersectionFinder(openDrive)
-    val intersections = finder.findIntersection()
+//    val intersections = finder.findIntersection()
+    val intersections: MutableList<Intersection> = ArrayList();
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
 

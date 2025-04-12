@@ -1,8 +1,7 @@
 package network
 
-import opendrive.ELaneType
-import opendrive.TRoad
-import opendrive.TRoadLinkPredecessorSuccessor
+import network.signals.Signal
+import opendrive.*
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
@@ -15,6 +14,7 @@ class Road(val troad: TRoad) {
     val junction: String = troad.junction
     var predecessor: TRoadLinkPredecessorSuccessor? = troad.link.predecessor
     var successor: TRoadLinkPredecessorSuccessor? = troad.link.successor
+    var signals: TRoadSignals? = troad.signals
 
     init {
 
@@ -61,6 +61,24 @@ class Road(val troad: TRoad) {
             }
         }
         numLanes = lanes.size
+
+        if (signals != null) {
+            for (signal in signals!!.signal.filter { it.dynamic == TYesNo.YES }) {
+                val newSignal = Signal(signal)
+
+                // привязываем к тем лэйнам, с которыми совпадает orientation
+                // TODO понять, всегда ли right полосы с "-"
+                if (newSignal.orientation == "-") {
+                    for (lane in lanes.filter { it.laneId < 0 }) {
+                        lane.signal = newSignal
+                    }
+                } else {
+                    for (lane in lanes.filter { it.laneId > 0 }) {
+                        lane.signal = newSignal
+                    }
+                }
+            }
+        }
     }
 
     companion object {

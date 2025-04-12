@@ -227,6 +227,13 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
                             }
                 }
             )
+
+            println("Signals:")
+            println(
+                road.lanes.map {
+                    "\n currentLane ${it.laneId} signal: id=${it.signal?.id} cycle=${it.signal?.cycle}"
+                }
+            )
         }
     }
 
