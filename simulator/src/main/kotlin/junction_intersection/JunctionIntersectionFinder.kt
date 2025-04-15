@@ -39,12 +39,20 @@ class JunctionIntersectionFinder(
                     if (road1 == road2) { //find intersection between road and itself has no sense
                         continue
                     }
-                    var spline1 : Spline = Spline(road1.planView.geometry[0])
-                    var spline2 : Spline = Spline(road2.planView.geometry[0])
-                    //TODO add normal implementation of this part
-                    var lanes1 : Lanes = Lanes(road1.id, spline1, listOf(1), listOf(-1))
-                    var lanes2 : Lanes = Lanes(road2.id, spline2, listOf(1), listOf(-1))
-                    intersectionList.addAll(finder.findIntersections(lanes1, lanes2));
+                    for (geometryOfRoad1 in road1.planView.geometry) {
+                        for (geometryOfRoad2 in road2.planView.geometry) {
+                            var spline1 : Spline = Spline(geometryOfRoad1)
+                            var spline2 : Spline = Spline(geometryOfRoad2)
+                            var lanes1 : Lanes = Lanes(road1.id, spline1, listOf(1), listOf(-1))
+                            var lanes2 : Lanes = Lanes(road2.id, spline2, listOf(1), listOf(-1))
+                            intersectionList.addAll(finder.findIntersections(lanes1, lanes2))
+                        }
+                    }
+                    //var spline1 : Spline = Spline(road1.planView.geometry[0])
+                    //var spline2 : Spline = Spline(road2.planView.geometry[0])
+//                    //TODO add normal implementation of this part
+//
+                    //intersectionList.addAll(finder.findIntersections(lanes1, lanes2));
                 }
             }
         }
