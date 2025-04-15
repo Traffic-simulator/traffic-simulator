@@ -2,6 +2,7 @@ package ru.nsu.trafficsimulator
 
 import BackendAPI
 import ISimulation
+import OpenDriveReader
 import OpenDriveWriter
 import SpawnDetails
 import com.badlogic.gdx.ApplicationAdapter
@@ -134,14 +135,17 @@ class Main : ApplicationAdapter() {
             )
         )
         Editor.init(camera!!, sceneManager!!)
+//        val dto = OpenDriveReader().read("ourTown01.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
+//        Editor.updateLayout()
     }
 
     fun initializeSimulation(layout: Layout): ISimulation {
         val spawnDetails = ArrayList<Triple<String, String, Direction>>()
 //        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
-        spawnDetails.add(Triple("15", "1", Direction.BACKWARD))
+        spawnDetails.add(Triple("0", "1", Direction.BACKWARD))
+//        spawnDetails.add(Triple("15", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
@@ -151,11 +155,8 @@ class Main : ApplicationAdapter() {
 //        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
 
         val back = BackendAPI()
-        //val dto = serializeLayout(layout)
-        //OpenDriveWriter().write(dto, "export.xodr")
-        val dto = OpenDriveReader().read("ourTown01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
-        Editor.updateLayout()
+        val dto = serializeLayout(layout)
+        OpenDriveWriter().write(dto, "export.xodr")
         back.init(dto, SpawnDetails(spawnDetails), 500)
         return back
     }

@@ -71,6 +71,7 @@ class InspectTool : IEditingTool {
         val startDir = (selectedRoad!!.startIntersection!!.position - startOffset) * curveCoeff
         val endOffset = Vec3(directionSpheres[1].transform.getTranslation(Vector3()))
         val endDir = (endOffset - editedRoad.endIntersection!!.position) * curveCoeff
+        draggingDirectionSphere = null
         return RedirectRoadStateChange(editedRoad, editedRoad.startIntersection!!.position + startDir, editedRoad.endIntersection!!.position + endDir)
     }
 
