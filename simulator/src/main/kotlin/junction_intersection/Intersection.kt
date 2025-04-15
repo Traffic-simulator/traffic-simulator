@@ -2,9 +2,9 @@ package junction_intersection
 
 class Intersection (
     var roadId1: String,
-    var laneId1: Int,
+    var laneId1: Long,
     var roadId2: String,
-    var laneId2: Int,
+    var laneId2: Long,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

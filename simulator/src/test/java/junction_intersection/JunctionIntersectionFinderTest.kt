@@ -1,9 +1,6 @@
 package junction_intersection
 
-
 import OpenDriveReader
-import jakarta.validation.constraints.Null
-import opendrive.TRoad
 import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
@@ -143,8 +140,5 @@ class JunctionIntersectionFinderTest {
 
         }
     }
-
-
-
 
 }
