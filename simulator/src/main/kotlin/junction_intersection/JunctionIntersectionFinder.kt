@@ -3,10 +3,10 @@ package junction_intersection
 import opendrive.OpenDRIVE
 import opendrive.TRoad
 
-
 class JunctionIntersectionFinder(
     private val openDrive: OpenDRIVE
 ) {
+    private val tRoadsList : List<TRoad> = openDrive.road
     //TRoad's id list by junction id
     val junctionMap : MutableMap<String, MutableList<String>> = HashMap()
     //TRoad by TRoad's id (only TRoads in junction)
@@ -18,15 +18,11 @@ class JunctionIntersectionFinder(
         initAllTRoadsMap()
     }
 
-
-
     fun findIntersection () : MutableList<Intersection> {
         val intersectionList : MutableList<Intersection> = ArrayList()
-        var junctionId : String = "-1"
         var junctionList : MutableList<String>
         val finder : LanesIntersectionFinder = LanesIntersectionFinderImpl()
         for (pair in junctionMap) {
-            junctionId = pair.key
             junctionList = pair.value
             var road1 : TRoad
             var road2 : TRoad
@@ -59,39 +55,27 @@ class JunctionIntersectionFinder(
         return intersectionList
     }
 
-
-
-
     private fun initJunctionMap() {
-        val allRoads : MutableList<TRoad> = openDrive.road
-        var junctionId : String = "-1"
-        for (road : TRoad in allRoads) {
+        var junctionId : String
+        for (road : TRoad in tRoadsList) {
             junctionId = road.junction
+
+            //if id == -1 -> TRoad not belongs to junction
             if (junctionId != "-1") {
-                if (junctionMap.contains(junctionId)) {
-                    val tRoadList : MutableList<String>? = junctionMap[junctionId]
-                    if (tRoadList == null) {
-                        throw NullPointerException("List is null")
-                    }
-                    tRoadList.add(road.id)
-                    junctionMap[junctionId] = tRoadList
-                } else {
-                    val tRoadList : MutableList<String> = mutableListOf()
-                    tRoadList.add(road.id)
-                    junctionMap[junctionId] = tRoadList
-                }
+                val tRoadList : MutableList<String> = junctionMap.getOrDefault(junctionId, mutableListOf())
+                tRoadList.add(road.id)
+                junctionMap[junctionId] = tRoadList;
             }
         }
     }
 
     private fun initAllTRoadsMap() {
-        var junctionId : String = "-1"
-        for (road : TRoad in openDrive.road) {
-            junctionId = road.id
-            if (junctionId != "-1") {
-                allTRoadsInJunctionsMap[junctionId] = road
+        var tRoadId : String
+        for (road : TRoad in tRoadsList) {
+            tRoadId = road.id
+            if (tRoadId != "-1") {
+                allTRoadsInJunctionsMap[tRoadId] = road
             }
         }
     }
-
 }
