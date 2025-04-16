@@ -35,7 +35,6 @@
     <road id="1" junction="-1" length="8.293954836177603">
         <link>
             <predecessor elementId="1" elementType="junction"/>
-            <successor elementId="2" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -99,7 +98,6 @@
     <road id="10" junction="-1" length="9.998332432167329">
         <link>
             <predecessor elementId="5" elementType="junction"/>
-            <successor elementId="6" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -259,7 +257,6 @@
     <road id="31" junction="-1" length="16.887759189625253">
         <link>
             <predecessor elementId="18" elementType="junction"/>
-            <successor elementId="19" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -387,7 +384,6 @@
     <road id="58" junction="-1" length="9.412722246708006">
         <link>
             <predecessor elementId="20" elementType="junction"/>
-            <successor elementId="27" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -1638,7 +1634,6 @@
             <laneLink from="1" to="-1"/>
         </connection>
     </junction>
-    <junction id="2"/>
     <junction id="5">
         <connection connectingRoad="16" contactPoint="start" id="0" incomingRoad="13">
             <laneLink from="1" to="-1"/>
@@ -1659,7 +1654,6 @@
             <laneLink from="-1" to="-1"/>
         </connection>
     </junction>
-    <junction id="6"/>
     <junction id="7">
         <connection connectingRoad="19" contactPoint="start" id="0" incomingRoad="18">
             <laneLink from="1" to="-1"/>
@@ -1716,7 +1710,6 @@
             <laneLink from="-1" to="-1"/>
         </connection>
     </junction>
-    <junction id="19"/>
     <junction id="20">
         <connection connectingRoad="59" contactPoint="start" id="0" incomingRoad="58">
             <laneLink from="1" to="-1"/>
@@ -1737,5 +1730,4 @@
             <laneLink from="-1" to="-1"/>
         </connection>
     </junction>
-    <junction id="27"/>
 </OpenDRIVE>
