@@ -1,14 +1,18 @@
 package vehicle
 
 import SimulationConfig
+import Waypoint
 import network.Lane
 import network.Network
 import path_builder.IPathBuilder
 import path_builder.RandomPathBuilder
+import path_builder.ShortestPathBuilder
 import vehicle.model.IDM
 
-class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var direction: Direction, val pathBuilder: IPathBuilder, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
+class Vehicle(val vehicleId: Int, val network: Network, val source: Waypoint, val destination: Waypoint, val pathBuilder: IPathBuilder, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
 
+    var lane = network.getLaneById(source.roadId, source.laneId)
+    var direction = source.direction
     val width = 1.7
     val length = 4.5
     val comfortDeceleration = 1.67
@@ -146,15 +150,16 @@ class Vehicle(val vehicleId: Int, val network: Network, var lane: Lane, var dire
 
     companion object {
         var counter: Int =  0
-        val randomPathBuilder: IPathBuilder = RandomPathBuilder(12)
+        val pathBuilder: IPathBuilder = ShortestPathBuilder()
 
-        fun NewVehicle(network: Network, lane: Lane, direction: Direction, maxSpeed: Double, maxAcc: Double): Vehicle {
-            return Vehicle(counter++, network, lane, direction, randomPathBuilder, maxSpeed, maxAcc)
+        fun NewVehicle(network: Network, source: Waypoint, destination: Waypoint, maxSpeed: Double, maxAcc: Double): Vehicle {
+            return Vehicle(counter++, network, source, destination, pathBuilder, maxSpeed, maxAcc)
         }
 
         // Some non standard default parameters
-        fun NewVehicle(network: Network, lane: Lane,  direction: Direction): Vehicle {
-            return Vehicle(counter++, network, lane, direction, randomPathBuilder)
+        fun NewVehicle(network: Network, source: Waypoint, destination: Waypoint): Vehicle {
+            val lane = network.getLaneById(source.roadId, source.laneId)
+            return Vehicle(counter++, network, source, destination, pathBuilder)
         }
     }
 

@@ -10,6 +10,7 @@ package vehicle
 enum class Direction {
     FORWARD,
     BACKWARD;
+    // TODO: add AUTO for deriving destination direction automatically?
 
     fun opposite(dir: Direction): Direction {
         if (dir == FORWARD) {
