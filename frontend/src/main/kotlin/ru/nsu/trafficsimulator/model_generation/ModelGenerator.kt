@@ -17,9 +17,9 @@ import kotlin.math.min
 
 class ModelGenerator {
     companion object {
-        private const val roadHeight = 1.0
-        public const val laneWidth = 3.5
-        private const val splineRoadSegmentLen = 2.0f
+        private val roadHeight = 1.0
+        public val laneWidth = 3.5
+        private val splineRoadSegmentLen = 2.0f
         private val upVec = Vec3(0.0, roadHeight, 0.0)
 
         fun createLayoutModel(layout: Layout): Model {
