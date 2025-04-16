@@ -20,6 +20,7 @@ import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
+import imgui.type.ImString
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
@@ -156,7 +157,6 @@ class Main : ApplicationAdapter() {
 
         val back = BackendAPI()
         val dto = serializeLayout(layout)
-        OpenDriveWriter().write(dto, "export.xodr")
         back.init(dto, SpawnDetails(spawnDetails), 500)
         return back
     }
