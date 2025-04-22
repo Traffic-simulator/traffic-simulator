@@ -19,6 +19,8 @@ class Editor {
         private var layoutScene: Scene? = null
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
+        private var changes = ArrayList<IStateChange>()
+        private var nextChange = 0
 
         private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
         private var currentTool = tools[0]
@@ -38,6 +40,24 @@ class Editor {
                 }
             }
             ImGui.end()
+            if (ImGui.button("Undo")) {
+                if (nextChange > 0) {
+                    nextChange--;
+                    changes[nextChange].revert(layout)
+                    layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
+                    currentTool.init(layout, camera!!)
+                    updateLayout()
+                }
+            }
+            if (ImGui.button("Redo")) {
+                if (nextChange < changes.size) {
+                    changes[nextChange].apply(layout)
+                    nextChange++
+                    layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
+                    currentTool.init(layout, camera!!)
+                    updateLayout()
+                }
+            }
         }
 
         fun render(modelBatch: ModelBatch?) {
@@ -48,13 +68,21 @@ class Editor {
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
             return object : InputAdapter() {
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    camController.camaraEnabled = !currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
+                    camController.camaraEnabled =
+                        !currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
                     return false
                 }
 
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                     val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
                     if (change != null) {
+//                        change.apply(layout)
+//                        updateLayout()
+                        while (changes.size > nextChange) {
+                            changes.removeLast()
+                        }
+                        changes.add(change)
+                        nextChange++
                         change.apply(layout)
                         updateLayout()
                     }
@@ -70,7 +98,8 @@ class Editor {
             }
         }
 
-         fun updateLayout() {
+        fun updateLayout() {
+            println("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
             }
