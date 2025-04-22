@@ -56,6 +56,14 @@ class Layout {
         return newRoad
     }
 
+    fun addBuilding(
+        intersection: Intersection, intersectionDirection: Vec3,
+        buildingPosition: Vec3, buildingDirection: Vec3
+    ): Road {
+        val building = addIntersection(buildingPosition, true)
+        return addRoad(intersection, intersectionDirection, building, buildingDirection)
+    }
+
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
         for (road in intersection.incomingRoads) {
             road.moveRoad(intersection, newPosition)
@@ -93,9 +101,9 @@ class Layout {
         roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3): Intersection {
+    fun addIntersection(position: Vec3, isBuilding: Boolean = false): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING)
+        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING, isBuilding)
         if (!intersections.containsValue(newIntersection)) {
             intersectionsList.add(newIntersection)
         }

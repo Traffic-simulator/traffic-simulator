@@ -7,7 +7,7 @@ data class Intersection(
     val id: Long,
     var position: Vec3,
     var padding: Double = 0.0,
-    var buildingId: Int? = null
+    var isBuilding: Boolean = false
 ) {
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
@@ -17,10 +17,17 @@ data class Intersection(
     }
 
     fun addRoad(road: Road) {
+        if (isBuilding && incomingRoads.size > 0) {
+            throw IllegalArgumentException("Building cannot have more than one road")
+        }
         incomingRoads.add(road)
     }
 
     fun removeRoad(road: Road) {
+        if (isBuilding) {
+            throw IllegalArgumentException("Cannot remove road from building")
+        }
+
         incomingRoads.remove(road)
 
         val irToRemove = LinkedList<IntersectionRoad>()

@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.serializer
 
+import OpenDriveWriter
 import opendrive.*
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
@@ -191,6 +192,10 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
                 })
             }
         })
+    }
+
+    if (intersection.isBuilding) {
+        tJunction.gAdditionalData.add("Building")
     }
 
     return tJunction
