@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.model
+package ru.nsu.trafficsimulator.math
 
 import java.util.*
 import kotlin.math.*

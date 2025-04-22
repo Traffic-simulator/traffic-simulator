@@ -1,5 +1,6 @@
 package network
 
+import junction_intersection.Intersection
 import network.junction.Connection
 import network.junction.Junction
 import opendrive.EContactPoint
@@ -8,12 +9,12 @@ import opendrive.TJunction
 import opendrive.TRoad
 
 // TODO: Interface for this class, because it's too big for reading
-class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
+class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val intersections: MutableList<Intersection>) {
 
     // DONE store predecessors and successors id for roads
     // DONE store predecessor and successor for lanes
     val roads: List<Road> = troads.map{ Road(it) }
-    val junctions: List<Junction> = tjunctions.map { Junction(it) }
+    val junctions: List<Junction> = tjunctions.map { Junction(it, intersections) }
 
     // Junctions that have Road in key as an incomingRoad
     val incidentJunctions: HashMap<Road, List<Junction>> = HashMap()
@@ -23,6 +24,9 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
     }
 
     init {
+
+        val tmp = intersections.filter { it.roadId1 == "8" || it.roadId2 == "8" }
+
 
         println("incidentRoads")
         for (road in roads) {
@@ -57,7 +61,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                             prevLane -> prevLane.id
                         }?.contains(candidate.laneId.toBigInteger()) ?: false
                     }?.map {
-                        resLane -> if (road.predecessor?.contactPoint == EContactPoint.START) {
+                        resLane -> if (road.predecessor?.contactPoint == null || road.predecessor?.contactPoint == EContactPoint.START) {
                             // We're connected to the start of the predecessor, change direction
                             Pair(resLane, true)
                         } else {
@@ -73,7 +77,9 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                 val connections = junc.connections[road.id]!!
 
                 for (lane in road.lanes) {
-                    lane.predecessor = ArrayList()
+                    if (lane.predecessor == null) {
+                        lane.predecessor = ArrayList()
+                    }
                     for (con in connections) {
                         lane.predecessor!!.addAll(getLanesFromConnection(lane, con, true))
                     }
@@ -95,7 +101,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                             nextLane -> nextLane.id
                         }?.contains(candidate.laneId.toBigInteger()) ?: false
                     }?.map {
-                        resLane -> if (road.successor?.contactPoint == EContactPoint.START) {
+                        resLane -> if (road.successor?.contactPoint == null || road.successor?.contactPoint == EContactPoint.START) {
                             // We're connected to the start of the successor, don't change direction
                             Pair(resLane, false)
                         } else {
@@ -110,7 +116,9 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
                 val connections = junc.connections[road.id]!!
 
                 for (lane in road.lanes) {
-                    lane.successor = ArrayList()
+                    if (lane.successor == null) {
+                        lane.successor = ArrayList()
+                    }
                     for (con in connections) {
                         lane.successor!!.addAll(getLanesFromConnection(lane, con, false))
                     }
@@ -157,7 +165,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>) {
             )
         }
 
-        if (con.contactPoint == EContactPoint.START) {
+        if (con.contactPoint == null || con.contactPoint == EContactPoint.START) {
             return resLaneList.map {
                 resLane -> if (processingPredecessor) {
                     // Road is a predecessor and contactPoint is START, so changing direction

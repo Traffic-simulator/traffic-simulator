@@ -11,6 +11,10 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.math.findRoad
+import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
 
 class InspectTool : IEditingTool {
@@ -55,7 +59,7 @@ class InspectTool : IEditingTool {
                 (selectedRoad!!.endIntersection!!.position + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
             )
         }
-        return true
+        return draggingDirectionSphere != null || draggingIntersection != null
     }
 
     private fun applyRoadDirections(): IStateChange? {
@@ -67,6 +71,7 @@ class InspectTool : IEditingTool {
         val startDir = (selectedRoad!!.startIntersection!!.position - startOffset) * curveCoeff
         val endOffset = Vec3(directionSpheres[1].transform.getTranslation(Vector3()))
         val endDir = (endOffset - editedRoad.endIntersection!!.position) * curveCoeff
+        draggingDirectionSphere = null
         return RedirectRoadStateChange(editedRoad, editedRoad.startIntersection!!.position + startDir, editedRoad.endIntersection!!.position + endDir)
     }
 

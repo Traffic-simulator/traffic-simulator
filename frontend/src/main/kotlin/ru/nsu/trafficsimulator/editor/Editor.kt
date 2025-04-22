@@ -9,12 +9,13 @@ import imgui.ImGui
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.MyCameraController
+import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 
 class Editor {
     companion object {
-        private var layout: Layout = Layout()
+        var layout: Layout = Layout()
         private var layoutScene: Scene? = null
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
@@ -62,10 +63,6 @@ class Editor {
 
         }
 
-        fun getLayout(): Layout {
-            return layout
-        }
-
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
             return object : InputAdapter() {
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
@@ -96,7 +93,7 @@ class Editor {
             }
         }
 
-        private fun updateLayout() {
+         fun updateLayout() {
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
             }

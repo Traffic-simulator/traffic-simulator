@@ -5,19 +5,18 @@ import ISimulation
 import OpenDriveReader
 import OpenDriveWriter
 import SpawnDetails
-import com.badlogic.gdx.*
+import com.badlogic.gdx.ApplicationAdapter
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
-import com.badlogic.gdx.graphics.g3d.Environment
-import com.badlogic.gdx.graphics.g3d.Material
-import com.badlogic.gdx.graphics.g3d.Model
-import com.badlogic.gdx.graphics.g3d.ModelBatch
-import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
+import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -26,19 +25,18 @@ import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import vehicle.Direction
-import kotlin.math.*
-
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
-import opendrive.OpenDRIVE
 import ru.nsu.trafficsimulator.editor.Editor
-import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
+import vehicle.Direction
 import java.lang.Math.clamp
-import javax.management.InvalidApplicationException
 import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.sign
 
 
 class Main : ApplicationAdapter() {
@@ -93,12 +91,16 @@ class Main : ApplicationAdapter() {
         )
 
         sceneManager = SceneManager()
-        sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer.glb"))
+        sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer_big.glb"))
         carModel = sceneAsset1?.scene?.model
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
         val camController = MyCameraController(camera!!)
+        camController.scrollFactor = -0.5f
+        camController.rotateAngle = 180f
+        camController.translateUnits = 130f
+        camController.target = camera!!.position
 
         editorInputProcess = Editor.createSphereEditorProcessor(camController)
         inputMultiplexer.addProcessor(editorInputProcess)
@@ -107,13 +109,6 @@ class Main : ApplicationAdapter() {
 
         modelInstance1 = ModelInstance(carModel)
         modelBatch = ModelBatch()
-
-//        layout = Deserializer().deserialize(OpenDriveReader().read("Town01.xodr"))
-//        println(layout.roads)
-//        for (i in layout.roads) {
-//            println("${i.value.id} ${i.value.geometry}")
-//        }
-//        println(layout.intersectionRoads)
 
         // Add ground
         val modelBuilder = ModelBuilder()
@@ -140,13 +135,17 @@ class Main : ApplicationAdapter() {
             )
         )
         Editor.init(camera!!, sceneManager!!)
+//        val dto = OpenDriveReader().read("ourTown01.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
+//        Editor.updateLayout()
     }
 
     fun initializeSimulation(layout: Layout): ISimulation {
         val spawnDetails = ArrayList<Triple<String, String, Direction>>()
 //        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("0", "1", Direction.FORWARD))
+        spawnDetails.add(Triple("0", "1", Direction.BACKWARD))
+//        spawnDetails.add(Triple("15", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
@@ -175,7 +174,7 @@ class Main : ApplicationAdapter() {
         imGuiGl3.newFrame()
         imGuiGlfw.newFrame()
         ImGui.newFrame()
-        if (ImGui.button("Change Application State")) {
+        if (ImGui.button("Run/Stop Simulation")) {
             state = when (state) {
                 ApplicationState.Editor -> ApplicationState.Simulator
                 ApplicationState.Simulator -> ApplicationState.Editor
@@ -185,7 +184,7 @@ class Main : ApplicationAdapter() {
             } else {
                 inputMultiplexer.removeProcessor(editorInputProcess)
             }
-            back = initializeSimulation(Editor.getLayout())
+            back = initializeSimulation(Editor.layout)
         }
         if (state == ApplicationState.Editor) {
             Editor.runImgui()

@@ -1,5 +1,7 @@
 package ru.nsu.trafficsimulator.editor
 
+import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
 import ru.nsu.trafficsimulator.model.*
 
 class AddRoadStateChange(layout: Layout, private val startPos: Vec3, private val startDir: Vec3, private val endPos: Vec3, private val endDir: Vec3) : IStateChange {

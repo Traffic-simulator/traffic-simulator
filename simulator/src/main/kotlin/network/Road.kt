@@ -19,14 +19,14 @@ class Road(val troad: TRoad) {
     init {
 
         if (troad.lanes.laneSection[0].left != null) {
-            lanes.addAll(troad.lanes.laneSection[0].left.lane.filter { usingRoadTypes.contains(it.type) }.map{ it -> Lane(it, this, it.id.toInt())})
+            lanes.addAll(troad.lanes.laneSection[0].left.lane.filter { /* usingRoadTypes.contains(it.type) */ true }.map{ it -> Lane(it, this, it.id.toInt())})
         }
         // TODO: Is it any cases when we need center lane?
 //        if (troad.lanes.laneSection[0].center != null) {
 //            lanes.addAll(troad.lanes.laneSection[0].center.lane.map{ it -> Lane(it, this, it.id.toInt())})
 //        }
         if (troad.lanes.laneSection[0].right != null) {
-            lanes.addAll(troad.lanes.laneSection[0].right.lane.filter { usingRoadTypes.contains(it.type) }.map{ it -> Lane(it, this, it.id.toInt())})
+            lanes.addAll(troad.lanes.laneSection[0].right.lane.filter { /* usingRoadTypes.contains(it.type) */ true  }.map{ it -> Lane(it, this, it.id.toInt())})
         }
 
         val laneSectionSize = troad.lanes.laneSection.size
@@ -34,7 +34,7 @@ class Road(val troad: TRoad) {
             val lastLaneSection = troad.lanes.laneSection[laneSectionSize - 1]
             // left
             if (lastLaneSection.left != null) {
-                for (lane in lastLaneSection.left.lane.filter { usingRoadTypes.contains(it.type) }) {
+                for (lane in lastLaneSection.left.lane.filter { /*usingRoadTypes.contains(it.type)*/ true }) {
                     val laneid = lane.id
                     val laneSucc = lane.link.successor
                     val targetLaneIndex= lanes.indexOfFirst { it.laneId.toBigInteger() == laneid }
@@ -48,7 +48,7 @@ class Road(val troad: TRoad) {
 
             // right
             if (lastLaneSection.right != null) {
-                for (lane in lastLaneSection.right.lane.filter { usingRoadTypes.contains(it.type) }) {
+                for (lane in lastLaneSection.right.lane.filter { /* usingRoadTypes.contains(it.type) */ true }) {
                     var laneid = lane.id
                     var laneSucc = lane.link.successor
                     var targetLaneIndex= lanes.indexOfFirst { it.laneId.toBigInteger() == laneid }

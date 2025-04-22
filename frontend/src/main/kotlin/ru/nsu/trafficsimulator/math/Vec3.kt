@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.model
+package ru.nsu.trafficsimulator.math
 
 import com.badlogic.gdx.math.Vector3
 import kotlin.math.sqrt

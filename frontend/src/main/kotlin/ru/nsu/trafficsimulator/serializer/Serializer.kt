@@ -1,6 +1,8 @@
 package ru.nsu.trafficsimulator.serializer
 
 import opendrive.*
+import ru.nsu.trafficsimulator.math.Poly3
+import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.model.*
 import kotlin.math.cos
 import kotlin.math.sin
@@ -149,6 +151,7 @@ private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
         for (linkage in road.laneLinkage) {
             val rightLane = TRoadLanesLaneSectionRightLane()
             rightLane.id = (-linkage.second).toBigInteger()
+            rightLane.type = ELaneType.DRIVING
             rightLane.link = TRoadLanesLaneSectionLcrLaneLink()
             rightLane.link.predecessor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
                 id = linkage.first.toBigInteger()
@@ -181,7 +184,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
             contactPoint = EContactPoint.START
             incomingRoad = intersectionRoad.fromRoad.id.toString()
             connectingRoad = intersectionRoad.id.toString()
-
+            contactPoint = EContactPoint.START
             for (linkage in intersectionRoad.laneLinkage) {
                 laneLink.add(TJunctionConnectionLaneLink().apply {
                     from = linkage.first.toBigInteger()

@@ -1,5 +1,9 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.math.Spline
+import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDING
+
 class Road(
     val id: Long,
     var startIntersection: Intersection?,
@@ -25,7 +29,6 @@ class Road(
     }
 
     fun getDirection(distance: Double): Vec3 {
-        println("$distance ? $length; ${geometry.length}; $startPadding; $endPadding = ${distance > length}")
         if (distance < 0 || distance > length) {
             throw IllegalArgumentException("distance must be between 0 and length")
         }
@@ -72,12 +75,14 @@ class Road(
                 val (point, dir) = geometry.splineParts.first().getStartPoint()
                 val tangent = dir - point
                 geometry.moveStart(newPosition.xzProjection(), newPosition.xzProjection() + tangent)
+                startIntersection!!.padding = DEFAULT_INTERSECTION_PADDING
             }
 
             ContactPoint.END -> {
                 val (point, dir) = geometry.splineParts.last().getEndPoint()
                 val tangent = dir - point
                 geometry.moveEnd(newPosition.xzProjection(), newPosition.xzProjection() + tangent)
+                endIntersection!!.padding = DEFAULT_INTERSECTION_PADDING
             }
 
             ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
