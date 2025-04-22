@@ -5,11 +5,20 @@ import Waypoint
 import network.Lane
 import network.Network
 import path_builder.IPathBuilder
-import path_builder.RandomPathBuilder
 import path_builder.ShortestPathBuilder
+import route_generator.RouteGeneratorDespawnListener
 import vehicle.model.IDM
 
-class Vehicle(val vehicleId: Int, val network: Network, val source: Waypoint, val destination: Waypoint, val pathBuilder: IPathBuilder, val maxSpeed: Double = 33.0, val maxAcc:Double = 0.73) {
+class Vehicle(
+    val vehicleId: Int,
+    val network: Network,
+    val source: Waypoint,
+    val destination: Waypoint,
+    val pathBuilder: IPathBuilder,
+    val despawnCallback: RouteGeneratorDespawnListener,
+    val maxSpeed: Double = 33.0,
+    val maxAcc: Double = 0.73
+) {
 
     var lane = network.getLaneById(source.roadId, source.laneId)
     var direction = source.direction
@@ -56,7 +65,8 @@ class Vehicle(val vehicleId: Int, val network: Network, val source: Waypoint, va
         }
 
         // TODO: Not lane, have to use PathBuilder
-        val nextVeh = pathBuilder.getNextVehicle(this, this.lane, this.direction, this.lane.road.troad.length - this.position)
+        val nextVeh =
+            pathBuilder.getNextVehicle(this, this.lane, this.direction, this.lane.road.troad.length - this.position)
         acc = Math.min(junctionAcc, IDM.getAcceleration(this, nextVeh.first, nextVeh.second))
 
         speed += acc
@@ -99,8 +109,8 @@ class Vehicle(val vehicleId: Int, val network: Network, val source: Waypoint, va
         val newPosition = position - lane.road.troad.length
 
         val nextLane = pathBuilder.getNextPathLane(this)
-        if (nextLane != null ) {
-           // println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
+        if (nextLane != null) {
+            // println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
 
             // If was blockingJunction have to unlock
             // TODO: If connection is junc to junc?... By idea have to detect it before and block before...
@@ -120,6 +130,7 @@ class Vehicle(val vehicleId: Int, val network: Network, val source: Waypoint, va
 
             lane.removeVehicle(this)
             despawned = true
+            despawnCallback.onDespawn(vehicleId)
             return false
         }
         return true
@@ -149,17 +160,26 @@ class Vehicle(val vehicleId: Int, val network: Network, val source: Waypoint, va
     }
 
     companion object {
-        var counter: Int =  0
+        var counter: Int = 0
         val pathBuilder: IPathBuilder = ShortestPathBuilder()
 
-        fun NewVehicle(network: Network, source: Waypoint, destination: Waypoint, maxSpeed: Double, maxAcc: Double): Vehicle {
-            return Vehicle(counter++, network, source, destination, pathBuilder, maxSpeed, maxAcc)
+        fun NewVehicle(
+            network: Network,
+            source: Waypoint,
+            destination: Waypoint,
+            despawnCallback: RouteGeneratorDespawnListener,
+            maxSpeed: Double, maxAcc: Double
+        ): Vehicle {
+            return Vehicle(counter++, network, source, destination, pathBuilder, despawnCallback, maxSpeed, maxAcc)
         }
 
-        // Some non standard default parameters
-        fun NewVehicle(network: Network, source: Waypoint, destination: Waypoint): Vehicle {
-            val lane = network.getLaneById(source.roadId, source.laneId)
-            return Vehicle(counter++, network, source, destination, pathBuilder)
+        fun NewVehicle(
+            network: Network,
+            source: Waypoint,
+            destination: Waypoint,
+            despawnCallback: RouteGeneratorDespawnListener
+        ): Vehicle {
+            return Vehicle(counter++, network, source, destination, pathBuilder, despawnCallback)
         }
     }
 
