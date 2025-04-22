@@ -83,6 +83,65 @@ class Spline {
         }
     }
 
+    fun addSpiral(start: Vec2, startAngle: Double, startCurvature: Double, endCurvature: Double, length: Double) {
+        val maxPart = PI / 2.0
+        val integralPartCount = 100
+        val curvatureK = (endCurvature - startCurvature) / length
+        val getPartLength = { startPartAngle: Double, endPartAngle: Double, startPartCurv: Double ->
+            val D = sqrt(startPartCurv * startPartCurv - 2 * curvatureK * (endPartAngle - startPartAngle))
+            val root1 = (-startPartCurv - D) / curvatureK
+            val root2 = (-startPartCurv + D) / curvatureK
+            min(max(root1, 0.0), max(root2, 0.0))
+        }
+        val deltaAngle = ((startCurvature + endCurvature) / 2) * length
+        val parts = ceil(abs(deltaAngle) / maxPart).toInt()
+        val step = deltaAngle / parts
+        var curPoint = start
+        var curAngle = startAngle
+        var curCurvature = startCurvature
+        for (i in 0 until parts) {
+            val endAngle = curAngle + step
+
+            var leftCurvature = curCurvature
+            var leftAngle = curAngle
+            var endPoint = curPoint
+            for (j in 0 until integralPartCount) {
+                val rightAngle = leftAngle + step / integralPartCount
+
+                val partLength = getPartLength(leftAngle, rightAngle, leftCurvature)
+
+                if (partLength < 1e-3) {
+                    throw Exception("This part is too small?")
+                }
+                val rightCurvature = curCurvature + curvatureK * partLength
+                val avgCurvature = (leftCurvature + rightCurvature) / 2
+
+                if (avgCurvature < 1e-3) {
+                    throw Exception("Curvature is too small?")
+                }
+
+                val r = 1 / avgCurvature
+
+                endPoint -= Vec2(
+                    sin(curAngle) - sin(endAngle),
+                    -cos(curAngle) + cos(endAngle)
+                ) * r
+
+                leftAngle = rightAngle
+                leftCurvature = rightCurvature
+            }
+
+            val partLength = getPartLength(curAngle, endAngle, curCurvature)
+            addSplinePart(
+                curPoint to curPoint + Vec2(cos(curAngle), sin(curAngle)) * partLength,
+                endPoint to endPoint + Vec2(cos(endAngle), sin(endAngle)) * partLength
+            )
+
+            curPoint = endPoint
+            curAngle = endAngle
+        }
+    }
+
     fun getPoint(distance: Double): Vec2 {
         if (distance < 0 || distance > length) {
             throw IllegalArgumentException("Offset must be between 0 and length")

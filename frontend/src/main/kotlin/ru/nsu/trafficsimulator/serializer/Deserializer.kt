@@ -123,6 +123,8 @@ class Deserializer {
                         val normalized = (pRange == EParamPoly3PRange.NORMALIZED)
                         spline.addParamPoly(startPoint, hdg, length, x, y, normalized)
                     }
+                } else if (geometry.spiral != null) {
+                    spline.addSpiral(startPoint, hdg, geometry.spiral.curvStart, geometry.spiral.curvEnd, length)
                 } else {
                     throw NotImplementedError("Unsupported geometry: $geometry")
                 }
