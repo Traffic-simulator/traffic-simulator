@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import imgui.ImGui
+import imgui.type.ImInt
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.MyCameraController
@@ -20,7 +21,12 @@ class Editor {
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
 
-        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
+        private val currentLeftLines = ImInt(1)
+        private val currentRightLines = ImInt(1)
+        private const val MIN_LINE = 1
+        private const val MAX_LINE = 10
+
+        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool(), EditRoadTool())
         private var currentTool = tools[0]
 
         fun init(camera: Camera, sceneManager: SceneManager) {
@@ -35,20 +41,38 @@ class Editor {
                 if (ImGui.button(tool.getButtonName())) {
                     currentTool = tool
                     currentTool.init(layout, camera!!)
+                    if (tool is EditRoadTool) {
+                        tool.setLines(currentLeftLines, currentRightLines)
+                    }
                 }
             }
+            editRoadUI()
+            ImGui.end()
+        }
+
+        private fun editRoadUI() {
+            ImGui.begin("Road settings")
+            ImGui.text("Enter left lines count")
+            if (ImGui.inputInt("##left", currentLeftLines)) {
+                currentLeftLines.set(currentLeftLines.get().coerceIn(MIN_LINE, MAX_LINE))
+            }
+            ImGui.text("Enter right lines count")
+            if (ImGui.inputInt("##right", currentRightLines)) {
+                currentRightLines.set(currentRightLines.get().coerceIn(MIN_LINE, MAX_LINE))
+            }
+            ImGui.textDisabled("Acceptable range: $MIN_LINE..$MAX_LINE")
             ImGui.end()
         }
 
         fun render(modelBatch: ModelBatch?) {
             currentTool.render(modelBatch)
-
         }
 
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
             return object : InputAdapter() {
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    camController.camaraEnabled = !currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
+                    camController.camaraEnabled =
+                        !currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
                     return false
                 }
 
@@ -70,7 +94,7 @@ class Editor {
             }
         }
 
-         fun updateLayout() {
+        fun updateLayout() {
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
             }
