@@ -57,29 +57,20 @@ class Spline {
     }
 
     fun addArc(start: Vec2, startAngle: Double, curvature: Double, length: Double) {
-        addSpiral(start, startAngle, curvature, curvature, length)
-    }
-
-    fun addSpiral(start: Vec2, startAngle: Double, curvatureStart: Double, curvatureEnd: Double, length: Double) {
         val maxPart = PI / 2.0
-        val deltaAngle = ((curvatureStart + curvatureEnd) / 2) * length
+        val deltaAngle = curvature * length
         val parts = ceil(abs(deltaAngle) / maxPart).toInt()
-        val angleStep = deltaAngle / parts
-        val curvatureStep = (curvatureEnd - curvatureStart) / parts
-
+        val step = deltaAngle / parts
+        val r = 1 / curvature
         var curPoint = start
         var curAngle = startAngle
-        var curvature = curvatureStart
         for (i in 0 until parts) {
-            val endAngle = curAngle + angleStep
-            curvature += curvatureStep
-
-            val rEnd = 1 / curvature
+            val endAngle = curAngle + step
 
             val endPoint = curPoint - Vec2(
                 sin(curAngle) - sin(endAngle),
                 -cos(curAngle) + cos(endAngle)
-            ) * rEnd
+            ) * r
 
             addSplinePart(
                 curPoint to curPoint + Vec2(cos(curAngle), sin(curAngle)) * (length / parts),
@@ -88,6 +79,7 @@ class Spline {
 
             curPoint = endPoint
             curAngle = endAngle
+
         }
     }
 

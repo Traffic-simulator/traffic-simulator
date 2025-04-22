@@ -157,6 +157,7 @@ class Main : ApplicationAdapter() {
 
         val back = BackendAPI()
         val dto = serializeLayout(layout)
+        OpenDriveWriter().write(dto, "export.xodr")
         back.init(dto, SpawnDetails(spawnDetails), 500)
         return back
     }
