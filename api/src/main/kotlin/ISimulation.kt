@@ -37,7 +37,7 @@ interface ISimulation {
      * TODO: specify userData layout
      * @param layout Layout to initialize simulation
      */
-    fun init(layout: opendrive.OpenDRIVE, spawnDetails: SpawnDetails, seed: Long): Error?
+    fun init(layout: opendrive.OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error?
 
     /**
      * Calculate next vehicle positions after a set amount of time

@@ -6,7 +6,7 @@ import kotlin.math.absoluteValue
 
 class Lane (
     val referenceLine: Spline,
-    val id: Int
+    val id: Long
 ) {
     companion object {
         val EPSILON = 0.1

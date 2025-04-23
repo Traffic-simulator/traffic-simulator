@@ -7,8 +7,9 @@ class BackendAPI : ISimulation{
 
     var simulator: Simulator? = null
 
-    override fun init(layout: OpenDRIVE, spawnDetails: SpawnDetails, seed: Long): Error? {
-        simulator = Simulator(layout, spawnDetails, seed)
+    // spawnDetails will be deprecated, as all spawn info have to be in OpenDRIVE layout or some extra info file.
+    override fun init(layout: OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error? {
+        simulator = Simulator(layout, spawnDetails, despawnDetails, seed)
         return null
     }
 

@@ -38,6 +38,7 @@ class ModelGenerator {
                 val hasEnd = road.endIntersection?.intersectionRoads?.size.let {
                     it != null && it > 0
                 }
+//                println("${road.startIntersection!!.padding} ${road.endIntersection!!.padding}")
                 val length = road.geometry.length - if (hasStart) { road.startIntersection!!.padding } else { 0.0 } - if (hasEnd) { road.endIntersection!!.padding } else { 0.0 }
 
                 val start = if (hasStart) { road.startIntersection!!.padding } else { 0.0 }
@@ -135,6 +136,7 @@ class ModelGenerator {
             }
             val samplePerSide = 40
             val upDir = Vec3(0.0, 1.0, 0.0)
+            println(layout.intersections.size)
             for (intersection in layout.intersections.values) {
                 val intersectionBoxSize = max(intersection.padding * 2.0 * 1.1, 40.0)
                 val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()

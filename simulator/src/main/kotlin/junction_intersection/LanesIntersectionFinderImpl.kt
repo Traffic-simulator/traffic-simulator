@@ -3,6 +3,8 @@ package junction_intersection
 class LanesIntersectionFinderImpl : LanesIntersectionFinder {
     override fun findIntersections(lanes1: Lanes, lanes2: Lanes): MutableList<Intersection> {
         var intersections = mutableListOf<Intersection>()
+        //in junctions roads have only negativeLanes
+        //in other classes i don't use this fact but if something changes, i need to change only this part of code
         for (lane1 in lanes1.negativeLanes) {
             val lane1left = lane1.leftPoints
             val lane1right = lane1.rightPoints
