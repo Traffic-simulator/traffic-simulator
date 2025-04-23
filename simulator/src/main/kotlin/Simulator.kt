@@ -1,14 +1,13 @@
 import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import network.Network
-import network.signals.Signal
 import opendrive.OpenDRIVE
 import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.model.MOBIL
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.abs
+import kotlin.random.Random
 
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: SpawnDetails, seed: Long) {
 
