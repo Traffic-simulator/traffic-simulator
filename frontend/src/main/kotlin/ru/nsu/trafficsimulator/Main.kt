@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator
 import BackendAPI
 import ISimulation
 import OpenDriveReader
+import OpenDriveWriter
 import Waypoint
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
@@ -142,24 +143,27 @@ class Main : ApplicationAdapter() {
     fun initializeSimulation(layout: Layout): ISimulation {
         val spawnDetails = ArrayList<Waypoint>()
         val despawnDetails = ArrayList<Waypoint>()
-        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
+//
+//        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
 
-        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
+        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
 
         val back = BackendAPI()
-//        val dto = serializeLayout(layout)
-//        OpenDriveWriter().write(dto, "export.xodr")
-        val dto = OpenDriveReader().read("tmp.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
-        Editor.updateLayout()
+        val dto = serializeLayout(layout)
+        OpenDriveWriter().write(dto, "export.xodr")
+//        val dto = OpenDriveReader().read("tmp.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
+//        Editor.updateLayout()
         back.init(dto, spawnDetails, despawnDetails, 500)
         return back
     }
