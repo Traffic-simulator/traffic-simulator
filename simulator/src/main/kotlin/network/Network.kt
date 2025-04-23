@@ -252,7 +252,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
         for (road in roads) {
             for (lane in road.lanes) {
                 if (lane.signal != null) {
-                    // TODO update signal
+                    lane.signal!!.updateState(deltaTime)
                     signals.add(lane.signal!!)
                 }
             }
