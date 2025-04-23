@@ -64,17 +64,15 @@ class Road(val troad: TRoad) {
 
         if (signals != null) {
             for (signal in signals!!.signal.filter { it.dynamic == TYesNo.YES }) {
-                val newSignal = Signal(signal)
-
                 // привязываем к тем лэйнам, с которыми совпадает orientation
                 // TODO понять, всегда ли right полосы с "-"
-                if (newSignal.orientation == "-") {
+                if (signal.orientation == "-") {
                     for (lane in lanes.filter { it.laneId < 0 }) {
-                        lane.signal = newSignal
+                        lane.signal = Signal(signal, troad, lane.laneId)
                     }
                 } else {
                     for (lane in lanes.filter { it.laneId > 0 }) {
-                        lane.signal = newSignal
+                        lane.signal = Signal(signal, troad, lane.laneId)
                     }
                 }
             }

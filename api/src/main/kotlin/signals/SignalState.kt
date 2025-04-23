@@ -1,4 +1,4 @@
-package network.signals
+package signals
 
 enum class SignalState {
     RED,

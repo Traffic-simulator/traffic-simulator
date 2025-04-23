@@ -1,6 +1,7 @@
 import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import network.Network
+import network.signals.Signal
 import opendrive.OpenDRIVE
 import vehicle.Direction
 import vehicle.Vehicle
