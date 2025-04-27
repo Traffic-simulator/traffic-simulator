@@ -1,4 +1,4 @@
-package route_generator.discrete_function
+package route_generator_old.discrete_function
 
 /**
  * Дискретная функция, описывающая приоритет сущности в текущий момент.
