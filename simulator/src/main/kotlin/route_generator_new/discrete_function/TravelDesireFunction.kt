@@ -29,7 +29,7 @@ class TravelDesireFunction {
         // TODO подумать над валидацей, того что интеграл должен быть не больше 1.
     }
 
-    private fun getIthNumber(i: Int) : Double {
+    public fun getIthNumber(i: Int) : Double {
         require(i in 0 .. NUMBER_OF_SECTIONS)
         return function[i]
     }
