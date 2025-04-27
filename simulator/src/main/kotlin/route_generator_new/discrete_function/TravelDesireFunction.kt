@@ -5,23 +5,22 @@ import jakarta.validation.constraints.NotNull
 /*
     Класс для функции описывающей желание человека куда-нибудь поехать в течении дня.
     Описывается 24-мя значениями, каждое значение для каждого часа.
-    Значения функции имеет тип Long - это 1/5184000.
-    Если функция константно равна 1, то её интеграл от 0 до 24 будет равен 1 при таких значениях.
+    Значения функции имеет тип Double - ориентировочное значение 1/24.
+    Если функция константно равна 1/24, то её интеграл от 0 до 24 будет равен 1 при таких значениях.
  */
 class TravelDesireFunction {
 
-    private val function: MutableList<Long>;
+    private val function: MutableList<Double>;
     companion object {
         const val NUMBER_OF_SECTIONS: Int = 24
-        const val NUMBER_OF_FRAMES_IN_DAY = 5184000//24 часа * 60 минут * 60 секунд * 60 кадров
     }
 
-    constructor(function: @NotNull MutableList<Long>) {
+    constructor(function: @NotNull MutableList<Double>) {
         validateFunction(function)
         this.function = function
     }
 
-    private fun validateFunction(function: MutableList<Long>) {
+    private fun validateFunction(function: MutableList<Double>) {
         require(function.isNotEmpty()) { "Function function cannot be empty." }
         require(function.size == NUMBER_OF_SECTIONS) { "Function size must be is $NUMBER_OF_SECTIONS" }
         for (y in function) {
@@ -30,5 +29,9 @@ class TravelDesireFunction {
         // TODO подумать над валидацей, того что интеграл должен быть не больше 1.
     }
 
+    private fun getIthNumber(i: Int) : Double {
+        require(i in 0 .. NUMBER_OF_SECTIONS)
+        return function[i]
+    }
 
 }
