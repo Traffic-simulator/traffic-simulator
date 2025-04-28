@@ -85,13 +85,19 @@ class Spline {
 
     fun addSpiral(start: Vec2, startAngle: Double, startCurvature: Double, endCurvature: Double, length: Double) {
         val maxPart = PI / 2.0
-        val integralPartCount = 100
+        val integralPartCount = 1000
         val curvatureK = (endCurvature - startCurvature) / length
         val getPartLength = { startPartAngle: Double, endPartAngle: Double, startPartCurv: Double ->
-            val D = sqrt(startPartCurv * startPartCurv - 2 * curvatureK * (endPartAngle - startPartAngle))
+            val D = sqrt(startPartCurv * startPartCurv + 2 * curvatureK * (endPartAngle - startPartAngle))
             val root1 = (-startPartCurv - D) / curvatureK
             val root2 = (-startPartCurv + D) / curvatureK
-            min(max(root1, 0.0), max(root2, 0.0))
+            if (root1 > 0.0 && (root2 < 0.0 || root1 < root2)) {
+                root1
+            } else if (root2 > 0.0 && (root1 < 0.0 || root2 < root1)) {
+                root2
+            } else {
+                0.0
+            }
         }
         val deltaAngle = ((startCurvature + endCurvature) / 2) * length
         val parts = ceil(abs(deltaAngle) / maxPart).toInt()
@@ -110,21 +116,21 @@ class Spline {
 
                 val partLength = getPartLength(leftAngle, rightAngle, leftCurvature)
 
-                if (partLength < 1e-3) {
+                if (partLength < 1e-6) {
                     throw Exception("This part is too small?")
                 }
-                val rightCurvature = curCurvature + curvatureK * partLength
+                val rightCurvature = leftCurvature + curvatureK * partLength
                 val avgCurvature = (leftCurvature + rightCurvature) / 2
 
-                if (avgCurvature < 1e-3) {
+                if (avgCurvature < 1e-6) {
                     throw Exception("Curvature is too small?")
                 }
 
                 val r = 1 / avgCurvature
 
                 endPoint -= Vec2(
-                    sin(curAngle) - sin(endAngle),
-                    -cos(curAngle) + cos(endAngle)
+                    sin(leftAngle) - sin(rightAngle),
+                    -cos(leftAngle) + cos(rightAngle)
                 ) * r
 
                 leftAngle = rightAngle
@@ -139,6 +145,7 @@ class Spline {
 
             curPoint = endPoint
             curAngle = endAngle
+            curCurvature += curvatureK * partLength
         }
     }
 
@@ -148,7 +155,6 @@ class Spline {
         }
 
         val sp = splineParts.last { it.offset <= distance }
-//        println("Current spline part = ${sp}")
         return sp.getPoint(distance - sp.offset)
     }
 
@@ -375,14 +381,15 @@ class Spline {
 }
 
 fun main() {
-    val spline = Spline(Vec2(0.0, 0.0), Vec2(0.0, 1.0), Vec2(1.0, 1.0), Vec2(2.0, 1.0))
+    val spline = Spline()
+    spline.addSpiral(Vec2(0.0, 0.0), 0.0, 0.1, 2.0, 5.0)
     println(spline)
     println(spline.getPoint(spline.length / 2.0))
     println(spline.getDirection(spline.length / 2.0))
 
-    val spline2 = spline.copy(spline.length / 2.0)
+//    val spline2 = spline.copy(spline.length / 2.0)
 
-    println("dir= ${spline.getDirection(spline.length)}")
-    println("dir= ${spline2.getDirection(spline2.length)}")
-    println(spline2)
+//    println("dir= ${spline.getDirection(spline.length)}")
+//    println("dir= ${spline2.getDirection(spline2.length)}")
+//    println(spline2)
 }
