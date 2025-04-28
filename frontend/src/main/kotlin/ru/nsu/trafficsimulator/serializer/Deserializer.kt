@@ -130,6 +130,12 @@ class Deserializer {
                 }
             }
 
+            if (spline.splineParts.size > 1) {
+                val red = "\u001b[31m"
+                val reset = "\u001b[0m"
+                println("${red}WARNING: Full editing of loaded layout is not supported. Beware.${reset}")
+            }
+
             return spline
         }
 

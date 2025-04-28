@@ -145,7 +145,7 @@ class Main : ApplicationAdapter() {
         val spawnDetails = ArrayList<Triple<String, String, Direction>>()
 //        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
 //        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("0", "1", Direction.BACKWARD))
+        spawnDetails.add(Triple("0", "-1", Direction.FORWARD))
 //        spawnDetails.add(Triple("15", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
 //        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
@@ -225,7 +225,7 @@ class Main : ApplicationAdapter() {
     }
 
     private fun updateCars(vehicleData: List<ISimulation.VehicleDTO>) {
-
+        println("$vehicleData")
         for (vehicle in vehicleData) {
             val vehicleId = vehicle.id
             val carRoad = vehicle.road
@@ -243,7 +243,7 @@ class Main : ApplicationAdapter() {
             val dir = spline.getDirection(pointOnSpline).normalized() * if (vehicle.direction == Direction.BACKWARD) { -1.0 } else { 1.0 }
             val right = Vec3(dir.x, 0.0, dir.y).cross(Vec3(0.0, 1.0, 0.0)).normalized()
             val angle = - acos(dir.x) * sign(dir.y)
-            val laneOffset = (abs(vehicle.laneId) - 0.5)
+            val laneOffset = if (vehicle.laneId > 0.0) { vehicle.laneId - 0.5 } else { vehicle.laneId + 0.5 }
             carInstance
                 .modelInstance
                 .transform

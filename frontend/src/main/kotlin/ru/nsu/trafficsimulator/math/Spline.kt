@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.math
 
+import java.lang.Math.pow
 import java.util.*
 import kotlin.math.*
 
@@ -84,13 +85,15 @@ class Spline {
     }
 
     fun addSpiral(start: Vec2, startAngle: Double, startCurvature: Double, endCurvature: Double, length: Double) {
+        println()
         val maxPart = PI / 2.0
-        val integralPartCount = 1000
+        val integralPartCount = 100
         val curvatureK = (endCurvature - startCurvature) / length
         val getPartLength = { startPartAngle: Double, endPartAngle: Double, startPartCurv: Double ->
-            val D = sqrt(startPartCurv * startPartCurv + 2 * curvatureK * (endPartAngle - startPartAngle))
-            val root1 = (-startPartCurv - D) / curvatureK
-            val root2 = (-startPartCurv + D) / curvatureK
+            val D = (startPartCurv / curvatureK).pow(2.0) + (endPartAngle - startPartAngle) / curvatureK
+            val root1 = (-startPartCurv / curvatureK - sqrt(D))
+            val root2 = (-startPartCurv / curvatureK + sqrt(D))
+            println("$root1; $root2; $curvatureK; ${D};")
             if (root1 > 0.0 && (root2 < 0.0 || root1 < root2)) {
                 root1
             } else if (root2 > 0.0 && (root1 < 0.0 || root2 < root1)) {
@@ -116,14 +119,20 @@ class Spline {
 
                 val partLength = getPartLength(leftAngle, rightAngle, leftCurvature)
 
-                if (partLength < 1e-6) {
-                    throw Exception("This part is too small?")
+                println("$leftAngle; $rightAngle; $partLength")
+                println("$parts $startCurvature $curCurvature $leftCurvature $endCurvature $length")
+                if (partLength < 1e-6 && j != integralPartCount - 1) {
+//                    println("$parts $startCurvature $curCurvature $leftCurvature $endCurvature $length")
+                    throw Exception("Part #$j is too small? $partLength $leftAngle $rightAngle $leftCurvature $curvatureK")
                 }
                 val rightCurvature = leftCurvature + curvatureK * partLength
+                if (abs((rightCurvature + leftCurvature) / 2 * partLength + leftAngle - rightAngle) < 1e-6) {
+                    throw Exception("Double-check did not pass")
+                }
                 val avgCurvature = (leftCurvature + rightCurvature) / 2
 
-                if (avgCurvature < 1e-6) {
-                    throw Exception("Curvature is too small?")
+                if (abs(avgCurvature) < 1e-6) {
+                    throw Exception("Curvature is too small? $avgCurvature")
                 }
 
                 val r = 1 / avgCurvature
