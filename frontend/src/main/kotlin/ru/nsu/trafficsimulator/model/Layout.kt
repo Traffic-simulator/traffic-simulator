@@ -3,8 +3,6 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
 import kotlin.math.abs
-import kotlin.math.min
-import kotlin.math.sign
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
@@ -69,6 +67,8 @@ class Layout {
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
+        disconnectRoadFromIntersection(road, intersection)
+
         val incomingRoads = intersection.incomingRoads
         for (incomingRoad in incomingRoads) {
             addIntersectionRoad(intersection, road, incomingRoad)
@@ -106,40 +106,64 @@ class Layout {
     private fun addIntersectionRoad(intersection: Intersection, fromRoad: Road, toRoad: Road) {
         val incomingLaneNumber = fromRoad.getIncomingLaneNumber(intersection)
         val outgoingLaneNumber = toRoad.getOutgoingLaneNumber(intersection)
-        val laneNumber =
-            min(abs(incomingLaneNumber), abs(outgoingLaneNumber))
+
+        val incomingSign = if (incomingLaneNumber > 0) 1 else -1
+        val outgoingSign = if (outgoingLaneNumber > 0) 1 else -1
 
         val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position)
         val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position)
-        val geometry = Spline(
-            fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection(),
-            fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection() + fromRoad.getIntersectionDirection(intersection, true).xzProjection().setLength(dirLength1),
-            toRoad.getIntersectionPoint(intersection, abs(outgoingLaneNumber) - laneNumber).xzProjection(),
-            toRoad.getIntersectionPoint(intersection, abs(outgoingLaneNumber) - laneNumber).xzProjection() + toRoad.getIntersectionDirection(intersection, false).xzProjection().setLength(dirLength2))
 
-        val newIntersectionRoad = IntersectionRoad(
-            id = roadIdCount++,
-            intersection = intersection,
-            fromRoad = fromRoad,
-            toRoad = toRoad,
-            lane = laneNumber,
-            geometry = geometry
-        )
-        intersection.intersectionRoads.add(newIntersectionRoad)
-        intersectionRoads[newIntersectionRoad.id] = newIntersectionRoad
+        for (incomingLane in 0..<abs(incomingLaneNumber)) {
+            for (outgoingLane in 0..<abs(outgoingLaneNumber)) {
+                val il = incomingLane * incomingSign
+                val ol = outgoingLane * outgoingSign
 
-        val inSg = incomingLaneNumber.sign
-        val outSg = outgoingLaneNumber.sign
-        for (lane in 1..laneNumber) {
-            newIntersectionRoad.laneLinkage.add(
-                Triple(
-                    incomingLaneNumber - inSg * (lane - 1),
-                    lane,
-                    outgoingLaneNumber - outSg * (lane - 1)
+                val geometry = Spline(
+                    fromRoad.getIntersectionPoint(intersection, -abs(il)).xzProjection(),
+                    fromRoad.getIntersectionPoint(intersection, -abs(il)).xzProjection()
+                        + fromRoad.getIntersectionDirection(intersection, true).xzProjection()
+                        .setLength(dirLength1),
+                    toRoad.getIntersectionPoint(intersection, abs(ol)).xzProjection(),
+                    toRoad.getIntersectionPoint(intersection, abs(ol)).xzProjection()
+                        + toRoad.getIntersectionDirection(intersection, false).xzProjection()
+                        .setLength(dirLength2)
                 )
-            )
-        }
 
+                val newIntersectionRoad = IntersectionRoad(
+                    id = roadIdCount++,
+                    intersection = intersection,
+                    fromRoad = fromRoad,
+                    toRoad = toRoad,
+                    geometry = geometry,
+                    laneLinkage = (incomingLane + 1) * incomingSign to (outgoingLane + 1) * outgoingSign
+                )
+
+                intersection.intersectionRoads.add(newIntersectionRoad)
+                intersectionRoads[newIntersectionRoad.id] = newIntersectionRoad
+            }
+        }
+    }
+
+    fun roadSetLaneNumber(road: Road, leftLane: Int = road.leftLane, rightLane: Int = road.rightLane) {
+        road.leftLane = leftLane
+        road.rightLane = rightLane
+
+        road.startIntersection?.let {
+            connectRoadToIntersection(road, it)
+        }
+        road.endIntersection?.let {
+            connectRoadToIntersection(road, it)
+        }
+    }
+
+    private fun disconnectRoadFromIntersection(road: Road, intersection: Intersection) {
+        val roadsToRemove = intersection.intersectionRoads
+            .filter { it.toRoad === road || it.fromRoad === road }
+
+        for (roadToRemove in roadsToRemove) {
+            intersection.intersectionRoads.remove(roadToRemove)
+            intersectionRoads.remove(roadToRemove.id)
+        }
     }
 
     override fun toString(): String {
@@ -159,7 +183,7 @@ class Layout {
     }
 
     companion object {
-        const val DEFAULT_INTERSECTION_PADDING = 10.0
+        const val DEFAULT_INTERSECTION_PADDING = 20.0
         const val LANE_WIDTH = 4.0
     }
 }

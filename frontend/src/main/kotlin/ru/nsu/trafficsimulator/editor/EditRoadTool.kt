@@ -27,7 +27,7 @@ class EditRoadTool() : IEditingTool {
     override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return null
         val road = findRoad(layout!!, intersection) ?: return null
-        return EditRoadStateChange(road, currentLeftLines, currentRightLines)
+        return EditRoadStateChange(layout!!, road, currentLeftLines, currentRightLines)
     }
 
     override fun handleDrag(screenPos: Vec2) {

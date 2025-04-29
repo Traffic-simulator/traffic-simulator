@@ -5,6 +5,7 @@ import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
 
 class EditRoadStateChange(
+    private val layout: Layout,
     private val road: Road,
     private var currentLeftLines: ImInt?,
     private var currentRightLines: ImInt?
@@ -12,9 +13,11 @@ class EditRoadStateChange(
     IStateChange {
 
     override fun apply(layout: Layout) {
-        road.leftLane = currentLeftLines?.get() ?: 1
-        road.rightLane = currentRightLines?.get() ?: 1
-
+        layout.roadSetLaneNumber(
+            road,
+            leftLane = currentLeftLines?.get() ?: 1,
+            rightLane = currentRightLines?.get() ?: 1
+        )
         println("road: ${road.id}, left: ${road.leftLane}, right: ${road.rightLane}")
     }
 

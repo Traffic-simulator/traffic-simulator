@@ -9,10 +9,10 @@ data class IntersectionRoad(
     val intersection: Intersection,
     val fromRoad: Road,
     val toRoad: Road,
-    val lane: Int = 1,
-    var geometry: Spline
+    var geometry: Spline,
+    val laneLinkage: Pair<Int, Int>
 ) {
-    val laneLinkage: MutableList<Triple<Int, Int, Int>> = mutableListOf()
+    val lane get() = 1
 
     override fun toString(): String {
         return "Road(id=$id, geometry=$geometry), laneLinkage=$laneLinkage"
