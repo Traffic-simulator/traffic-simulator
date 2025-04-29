@@ -67,7 +67,7 @@ class Layout {
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
-        disconnectRoadFromIntersection(road, intersection)
+        intersection.removeRoad(road)
 
         val incomingRoads = intersection.incomingRoads
         for (incomingRoad in incomingRoads) {
@@ -153,16 +153,6 @@ class Layout {
         }
         road.endIntersection?.let {
             connectRoadToIntersection(road, it)
-        }
-    }
-
-    private fun disconnectRoadFromIntersection(road: Road, intersection: Intersection) {
-        val roadsToRemove = intersection.intersectionRoads
-            .filter { it.toRoad === road || it.fromRoad === road }
-
-        for (roadToRemove in roadsToRemove) {
-            intersection.intersectionRoads.remove(roadToRemove)
-            intersectionRoads.remove(roadToRemove.id)
         }
     }
 

@@ -1,7 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
 import ru.nsu.trafficsimulator.math.Vec3
-import java.util.*
 
 data class Intersection(
     val id: Long,
@@ -22,21 +21,7 @@ data class Intersection(
 
     fun removeRoad(road: Road) {
         incomingRoads.remove(road)
-
-        val irToRemove = LinkedList<IntersectionRoad>()
-        for (intersectionRoad in intersectionRoads) {
-            if (intersectionRoad.toRoad === road) {
-                irToRemove.add(intersectionRoad)
-                continue
-            }
-            if (intersectionRoad.fromRoad === road) {
-                irToRemove.add(intersectionRoad)
-            }
-        }
-
-        for (intersectionRoad in irToRemove) {
-            intersectionRoads.remove(intersectionRoad)
-        }
+        intersectionRoads.removeIf { it.toRoad === road || it.fromRoad === road }
     }
 
     fun recalculateIntersectionRoads() {
