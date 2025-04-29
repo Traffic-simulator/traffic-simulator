@@ -1,10 +1,12 @@
 package ru.nsu.trafficsimulator.serializer
 
-import OpenDriveWriter
 import opendrive.*
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
-import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.Intersection
+import ru.nsu.trafficsimulator.model.IntersectionRoad
+import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.Road
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -194,8 +196,10 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
         })
     }
 
-    if (intersection.isBuilding) {
-        tJunction.gAdditionalData.add("Building")
+    intersection.building?.let {
+        tJunction.gAdditionalData.add(createUserData("buildingType", it.type.toString()))
+        tJunction.gAdditionalData.add(createUserData("buildingCapacity", it.capacity.toString()))
+        tJunction.gAdditionalData.add(createUserData("buildingFullness", it.fullness.toString()))
     }
 
     return tJunction
@@ -238,4 +242,9 @@ private fun generateRoadPlaneView(geometry: Spline): TRoadPlanView {
         })
     }
     return tRoadPlanViewGeometry
+}
+
+fun createUserData(key: String, value: String) = TUserData().apply {
+    this.code = key
+    this.value = value
 }

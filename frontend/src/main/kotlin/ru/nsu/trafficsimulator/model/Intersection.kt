@@ -7,10 +7,11 @@ data class Intersection(
     val id: Long,
     var position: Vec3,
     var padding: Double = 0.0,
-    var isBuilding: Boolean = false
+    var building: Building? = null,
 ) {
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
+    val isBuilding: Boolean get() = building != null
 
     override fun toString(): String {
         return "Intersection(id=$id, position=$position)"
