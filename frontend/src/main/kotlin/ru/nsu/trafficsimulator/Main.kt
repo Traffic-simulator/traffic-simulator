@@ -165,8 +165,8 @@ class Main : ApplicationAdapter() {
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
         //val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
-        Editor.updateLayout()
+        //Editor.layout = Deserializer.deserialize(dto)
+        //Editor.updateLayout()
         back.init(dto, spawnDetails, despawnDetails, 500)
         return back
     }
