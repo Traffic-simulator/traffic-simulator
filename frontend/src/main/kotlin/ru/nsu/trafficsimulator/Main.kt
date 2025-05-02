@@ -177,11 +177,7 @@ class Main : ApplicationAdapter() {
     override fun render() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator) {
-            // For now asking backend for multiple steps of simulation
-            for(i in 0 until SPEEDUP - 1) {
-                back!!.getNextFrame(FRAMETIME)
-            }
-            updateCars(back!!.getNextFrame(FRAMETIME))
+            updateCars(back!!.getNextFrame(FRAMETIME * SPEEDUP))
         }
 
         if (tmpInputProcessor != null) {
