@@ -20,6 +20,7 @@ import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
+import mu.KotlinLogging
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
@@ -63,6 +64,8 @@ class Main : ApplicationAdapter() {
     private var state = ApplicationState.Editor
     private var editorInputProcess: InputProcessor? = null
     private val inputMultiplexer = InputMultiplexer()
+
+    private val logger = KotlinLogging.logger("FRONTEND")
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -161,17 +164,20 @@ class Main : ApplicationAdapter() {
         val back = BackendAPI()
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
-//        val dto = OpenDriveReader().read("tmp.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
-//        Editor.updateLayout()
+        //val dto = OpenDriveReader().read("self_made_town_01.xodr")
+        //Editor.layout = Deserializer.deserialize(dto)
+        //Editor.updateLayout()
         back.init(dto, spawnDetails, despawnDetails, 500)
         return back
     }
 
+    val FRAMETIME = 0.010 // It's 1 / FPS, duration of one frame in seconds
+    val SPEEDUP: Long = 3
+
     override fun render() {
+        val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator) {
-            val vehicleData = back!!.getNextFrame(0.01)
-            updateCars(vehicleData)
+            updateCars(back!!.getNextFrame(FRAMETIME * SPEEDUP))
         }
 
         if (tmpInputProcessor != null) {
@@ -216,6 +222,14 @@ class Main : ApplicationAdapter() {
         }
 
         imGuiGl3.renderDrawData(ImGui.getDrawData())
+
+        val currentTime = System.nanoTime()
+        val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
+        logger.debug("Render iteration took ${iterationsMillis} ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+
+        // Spinning for the rest of frame time
+        while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
+        }
     }
 
     override fun dispose() {
