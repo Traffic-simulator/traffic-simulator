@@ -24,6 +24,10 @@ import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 class Editor {
     companion object {
         var layout: Layout = Layout()
+            set(value) {
+                field = value
+                onLayoutChange()
+            }
         private var layoutScene: Scene? = null
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
