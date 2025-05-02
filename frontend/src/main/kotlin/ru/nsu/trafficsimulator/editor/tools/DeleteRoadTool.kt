@@ -1,7 +1,9 @@
-package ru.nsu.trafficsimulator.editor
+package ru.nsu.trafficsimulator.editor.tools
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
+import ru.nsu.trafficsimulator.editor.changes.DeleteRoadStateChange
+import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
