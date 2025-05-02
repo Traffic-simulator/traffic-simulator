@@ -4,7 +4,9 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
+import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
@@ -32,10 +34,12 @@ class Editor {
         private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
         private var currentTool = tools[0]
 
+        private val spheres = mutableMapOf<Long, ModelInstance>()
+
         fun init(camera: Camera, sceneManager: SceneManager) {
             this.camera = camera
             this.sceneManager = sceneManager
-            currentTool.init(layout, camera)
+            onLayoutChange()
         }
 
         fun runImgui() {
@@ -43,25 +47,23 @@ class Editor {
             for (action in actions) {
                 if (action.runImgui()) {
                     if (action.runAction(layout)) {
-                        updateLayout()
-                        currentTool.init(layout, camera!!)
+                        onLayoutChange()
                     }
                 }
             }
             for (tool in tools) {
                 if (ImGui.button(tool.getButtonName())) {
                     currentTool = tool
-                    currentTool.init(layout, camera!!)
+                    onLayoutChange()
                 }
             }
-            ImGui.end()
+
             if (ImGui.button("Undo")) {
                 if (nextChange > 0) {
                     nextChange--;
                     changes[nextChange].revert(layout)
                     layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    currentTool.init(layout, camera!!)
-                    updateLayout()
+                    onLayoutChange()
                 }
             }
             if (ImGui.button("Redo")) {
@@ -69,14 +71,18 @@ class Editor {
                     changes[nextChange].apply(layout)
                     nextChange++
                     layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    currentTool.init(layout, camera!!)
-                    updateLayout()
+                    onLayoutChange()
                 }
             }
+            ImGui.end()
         }
 
         fun render(modelBatch: ModelBatch?) {
             currentTool.render(modelBatch)
+
+            for ((_, sphere) in spheres) {
+                modelBatch?.render(sphere)
+            }
         }
 
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
@@ -90,15 +96,13 @@ class Editor {
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                     val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
                     if (change != null) {
-//                        change.apply(layout)
-//                        updateLayout()
                         while (changes.size > nextChange) {
                             changes.removeLast()
                         }
                         changes.add(change)
                         nextChange++
                         change.apply(layout)
-                        updateLayout()
+                        onLayoutChange()
                     }
                     camController.camaraEnabled = (button == Input.Buttons.LEFT)
                     return false
@@ -106,13 +110,24 @@ class Editor {
 
                 override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
                     currentTool.handleDrag(Vec2(screenX.toDouble(), screenY.toDouble()))
-
                     return false
                 }
             }
         }
 
-        fun updateLayout() {
+        private fun onLayoutChange() {
+            updateLayout()
+            currentTool.init(layout, camera!!)
+
+            this.spheres.clear()
+            val model = createSphere(Color.RED)
+            for ((id, intersection) in layout.intersections) {
+                spheres[id] = ModelInstance(model)
+                spheres[id]!!.transform.setToTranslation(intersection.position.toGdxVec())
+            }
+        }
+
+        private fun updateLayout() {
             println("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
