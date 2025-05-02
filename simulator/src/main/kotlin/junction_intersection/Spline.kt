@@ -33,13 +33,10 @@ class Spline (
         pRange = geometry.paramPoly3.pRange
     )
 
-
     fun valueOfGlobal(p: Double): Pair<Double, Double> {
         val relativeCoords : Pair<Double, Double> = valueOf(p)
         return addRelativeCoords(relativeCoords)
     }
-
-
 
     //relative x y
     //(x, y) - return
@@ -97,6 +94,5 @@ class Spline (
             Pair(0.0, 0.0)
         }
     }
-
 
 }

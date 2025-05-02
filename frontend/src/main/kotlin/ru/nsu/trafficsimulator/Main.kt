@@ -4,7 +4,7 @@ import BackendAPI
 import ISimulation
 import OpenDriveReader
 import OpenDriveWriter
-import SpawnDetails
+import Waypoint
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -20,7 +20,6 @@ import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
-import imgui.type.ImString
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
@@ -142,23 +141,30 @@ class Main : ApplicationAdapter() {
     }
 
     fun initializeSimulation(layout: Layout): ISimulation {
-        val spawnDetails = ArrayList<Triple<String, String, Direction>>()
-//        spawnDetails.add(Triple("20", "1", Direction.FORWARD))
-//        spawnDetails.add(Triple("11", "1", Direction.FORWARD))
-        spawnDetails.add(Triple("0", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("15", "1", Direction.BACKWARD))
-//        spawnDetails.add(Triple("1", "1", Direction.BACKWARD))
-//        spawnDetails.add(Triple("4", "1", Direction.BACKWARD))
-//        spawnDetails.add(Triple("4", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("15", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("12", "-1", Direction.FORWARD))
-//        spawnDetails.add(Triple("6", "1", Direction.FORWARD))
-//        spawnDetails.add(Triple("13", "1", Direction.BACKWARD))
+        val spawnDetails = ArrayList<Waypoint>()
+        val despawnDetails = ArrayList<Waypoint>()
+//        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
+//
+//        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+
+        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
+        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
 
         val back = BackendAPI()
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
-        back.init(dto, SpawnDetails(spawnDetails), 500)
+//        val dto = OpenDriveReader().read("tmp.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
+//        Editor.updateLayout()
+        back.init(dto, spawnDetails, despawnDetails, 500)
         return back
     }
 
@@ -225,7 +231,7 @@ class Main : ApplicationAdapter() {
     }
 
     private fun updateCars(vehicleData: List<ISimulation.VehicleDTO>) {
-        println("$vehicleData")
+
         for (vehicle in vehicleData) {
             val vehicleId = vehicle.id
             val carRoad = vehicle.road
