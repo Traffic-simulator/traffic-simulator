@@ -164,24 +164,20 @@ class Main : ApplicationAdapter() {
         val back = BackendAPI()
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
-        //val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
-        Editor.updateLayout()
+        // val dto = OpenDriveReader().read("self_made_town_01.xodr")
+        // Editor.layout = Deserializer.deserialize(dto)
+        // Editor.updateLayout()
         back.init(dto, spawnDetails, despawnDetails, 500)
         return back
     }
 
-    val FRAMETIME = 0.010 // It's 1 / FPS, duration of one frame in seconds
-    val SPEEDUP: Long = 3
+    val FRAMETIME = 0.02 // It's 1 / FPS, duration of one frame in seconds
+    val SPEEDUP: Long = 2
 
     override fun render() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator) {
-            // For now asking backend for multiple steps of simulation
-            for(i in 0..SPEEDUP - 1) {
-                back!!.getNextFrame(FRAMETIME)
-            }
-            updateCars(back!!.getNextFrame(FRAMETIME))
+            updateCars(back!!.getNextFrame(FRAMETIME * SPEEDUP))
         }
 
         if (tmpInputProcessor != null) {

@@ -74,16 +74,18 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
             } else if (road.predecessor?.elementType == ERoadLinkElementType.JUNCTION) {
                 val junc = junctions.firstOrNull { it.id == road.predecessor!!.elementId }!!  // that junction
                 // get connections by incomingId, even for predecessor junction
-                val connections = junc.connections[road.id]!!
-
-                for (lane in road.lanes) {
-                    if (lane.predecessor == null) {
-                        lane.predecessor = ArrayList()
-                    }
-                    for (con in connections) {
-                        lane.predecessor!!.addAll(getLanesFromConnection(lane, con, true))
+                junc.connections[road.id]?.let { connections ->
+                    for (lane in road.lanes) {
+                        if (lane.predecessor == null) {
+                            lane.predecessor = ArrayList()
+                        }
+                        for (con in connections) {
+                            lane.predecessor!!.addAll(getLanesFromConnection(lane, con, true))
+                        }
                     }
                 }
+
+
             }
 
             // Road <-> Road
@@ -113,14 +115,14 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
             } else if (road.successor?.elementType == ERoadLinkElementType.JUNCTION) {
                 val junc = junctions.firstOrNull { it.id == road.successor!!.elementId }!!  // that junction
                 // get connections by incomingId, even for successor junction
-                val connections = junc.connections[road.id]!!
-
-                for (lane in road.lanes) {
-                    if (lane.successor == null) {
-                        lane.successor = ArrayList()
-                    }
-                    for (con in connections) {
-                        lane.successor!!.addAll(getLanesFromConnection(lane, con, false))
+                junc.connections[road.id]?.let { connections ->
+                    for (lane in road.lanes) {
+                        if (lane.successor == null) {
+                            lane.successor = ArrayList()
+                        }
+                        for (con in connections) {
+                            lane.successor!!.addAll(getLanesFromConnection(lane, con, false))
+                        }
                     }
                 }
             }
