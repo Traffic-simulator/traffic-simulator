@@ -1,6 +1,5 @@
 package ru.nsu.trafficsimulator.serializer
 
-import OpenDriveReader
 import opendrive.*
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
