@@ -54,7 +54,6 @@ class Editor {
                     currentTool.init(layout, camera!!)
                 }
             }
-            ImGui.end()
             if (ImGui.button("Undo")) {
                 if (nextChange > 0) {
                     nextChange--;
@@ -73,6 +72,7 @@ class Editor {
                     updateLayout()
                 }
             }
+            ImGui.end()
         }
 
         fun render(modelBatch: ModelBatch?) {
