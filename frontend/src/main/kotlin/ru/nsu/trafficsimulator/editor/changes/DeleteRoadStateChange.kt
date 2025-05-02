@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.editor
+package ru.nsu.trafficsimulator.editor.changes
 
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.IntersectionRoad

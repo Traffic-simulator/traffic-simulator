@@ -9,6 +9,12 @@ import imgui.ImGui
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.MyCameraController
+import ru.nsu.trafficsimulator.editor.actions.LoadAction
+import ru.nsu.trafficsimulator.editor.actions.SaveAction
+import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.editor.tools.AddRoadTool
+import ru.nsu.trafficsimulator.editor.tools.DeleteRoadTool
+import ru.nsu.trafficsimulator.editor.tools.InspectTool
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
@@ -22,6 +28,7 @@ class Editor {
         private var changes = ArrayList<IStateChange>()
         private var nextChange = 0
 
+        private val actions = listOf(LoadAction(), SaveAction())
         private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
         private var currentTool = tools[0]
 
@@ -33,6 +40,14 @@ class Editor {
 
         fun runImgui() {
             ImGui.begin("Editor")
+            for (action in actions) {
+                if (action.runImgui()) {
+                    if (action.runAction(layout)) {
+                        updateLayout()
+                        currentTool.init(layout, camera!!)
+                    }
+                }
+            }
             for (tool in tools) {
                 if (ImGui.button(tool.getButtonName())) {
                     currentTool = tool
@@ -62,7 +77,6 @@ class Editor {
 
         fun render(modelBatch: ModelBatch?) {
             currentTool.render(modelBatch)
-
         }
 
         fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {

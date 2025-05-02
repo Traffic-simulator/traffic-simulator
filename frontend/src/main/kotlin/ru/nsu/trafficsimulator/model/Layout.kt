@@ -15,6 +15,26 @@ class Layout {
     var roadIdCount: Long = 0
     var intersectionIdCount: Long = 0
 
+    fun copy(other: Layout) {
+        roads.clear()
+        for ((key, value) in other.roads) {
+            roads[key] = value
+        }
+        intersections.clear()
+        for ((key, value) in other.intersections) {
+            intersections[key] = value
+        }
+        intersectionRoads.clear()
+        for ((key, value) in other.intersectionRoads) {
+            intersectionRoads[key] = value
+        }
+        intersectionsList.clear()
+        intersectionsList.addAll(other.intersectionsList)
+
+        roadIdCount = other.roadIdCount
+        intersectionIdCount = other.intersectionIdCount
+    }
+
     fun addRoad(startPosition: Vec3, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
         val startIntersection = addIntersection(startPosition)
         val endIntersection = addIntersection(endPosition)

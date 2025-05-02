@@ -123,9 +123,17 @@ class Deserializer {
                         val normalized = (pRange == EParamPoly3PRange.NORMALIZED)
                         spline.addParamPoly(startPoint, hdg, length, x, y, normalized)
                     }
+                } else if (geometry.spiral != null) {
+                    spline.addSpiral(startPoint, hdg, geometry.spiral.curvStart, geometry.spiral.curvEnd, length)
                 } else {
                     throw NotImplementedError("Unsupported geometry: $geometry")
                 }
+            }
+
+            if (spline.splineParts.size > 1) {
+                val red = "\u001b[31m"
+                val reset = "\u001b[0m"
+                println("${red}WARNING: Full editing of loaded layout is not supported. Beware.${reset}")
             }
 
             return spline
