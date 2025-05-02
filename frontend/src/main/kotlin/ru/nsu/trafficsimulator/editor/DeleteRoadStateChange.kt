@@ -7,9 +7,9 @@ import ru.nsu.trafficsimulator.model.Road
 
 class DeleteRoadStateChange(private val road: Road) : IStateChange {
     private val start = road.startIntersection!!
-    private val startDir = start.position + road.getDirection(0.0)
+    private val startDir = start.position.toVec3() + road.getDirection(0.0)
     private val end = road.endIntersection!!
-    private val endDir = end.position + road.getDirection(road.length)
+    private val endDir = end.position.toVec3() + road.getDirection(road.length)
 
     // Сохраняем только соединения, относящиеся к этой дороге
     private val roadConnections = mutableListOf<Pair<Intersection, IntersectionRoad>>()

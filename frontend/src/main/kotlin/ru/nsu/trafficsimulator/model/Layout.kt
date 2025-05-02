@@ -37,9 +37,9 @@ class Layout {
         endIntersection: Intersection,
         endDirection: Vec3
     ): Road {
-        val startPoint = startIntersection.position.xzProjection()
+        val startPoint = startIntersection.position
         val startDir = startDirection.xzProjection()
-        val endPoint = endIntersection.position.xzProjection()
+        val endPoint = endIntersection.position
         val endDir = endDirection.xzProjection()
 
         val newRoad = Road(
@@ -64,7 +64,7 @@ class Layout {
             if (road.endIntersection != null && road.endIntersection != intersection)
                 road.endIntersection!!.recalculateIntersectionRoads()
         }
-        intersection.position = newPosition
+        intersection.position = newPosition.xzProjection()
         intersection.recalculateIntersectionRoads()
     }
 
@@ -95,7 +95,7 @@ class Layout {
 
     fun addIntersection(position: Vec3): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING)
+        val newIntersection = Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING)
         if (!intersections.containsValue(newIntersection)) {
             intersectionsList.add(newIntersection)
         }
@@ -109,8 +109,8 @@ class Layout {
         val laneNumber =
             min(abs(incomingLaneNumber), abs(outgoingLaneNumber))
 
-        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position)
-        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position)
+        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
+        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
         val geometry = Spline(
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection(),
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection() + fromRoad.getIntersectionDirection(intersection, true).xzProjection().setLength(dirLength1),

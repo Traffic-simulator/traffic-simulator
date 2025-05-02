@@ -29,6 +29,7 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
@@ -135,9 +136,9 @@ class Main : ApplicationAdapter() {
             )
         )
         Editor.init(camera!!, sceneManager!!)
-//        val dto = OpenDriveReader().read("ourTown01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
-//        Editor.updateLayout()
+        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+        Editor.layout = Deserializer.deserialize(dto)
+        Editor.updateLayout()
     }
 
     fun initializeSimulation(layout: Layout): ISimulation {
@@ -247,14 +248,15 @@ class Main : ApplicationAdapter() {
             val pointOnSpline = clamp(if (vehicle.direction == Direction.BACKWARD) { spline.length - vehicle.distance } else { vehicle.distance }, 0.0, spline.length)
             val pos = spline.getPoint(pointOnSpline)
             val dir = spline.getDirection(pointOnSpline).normalized() * if (vehicle.direction == Direction.BACKWARD) { -1.0 } else { 1.0 }
-            val right = Vec3(dir.x, 0.0, dir.y).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-            val angle = - acos(dir.x) * sign(dir.y)
+            val right = dir.toVec3().cross(Vec3.UP).normalized()
+            val angle = acos(dir.x) * sign(dir.y)
             val laneOffset = (abs(vehicle.laneId) - 0.5)
+            val finalTranslation = pos.toVec3() + right * laneOffset * LANE_WIDTH + Vec3.UP
             carInstance
                 .modelInstance
                 .transform
-                .setToRotationRad(Vector3(0.0f, 1.0f, 0.0f), angle.toFloat())
-                .setTranslation((pos.x + laneOffset * right.x * ModelGenerator.laneWidth).toFloat(), 1.0f, (pos.y + laneOffset * right.z * ModelGenerator.laneWidth).toFloat())
+                .setToRotationRad(Vec3.UP.toGdxVec(), angle.toFloat())
+                .setTranslation(finalTranslation.toGdxVec())
         }
 
         // Удаление машин, которых больше нет в vehicleData

@@ -10,6 +10,7 @@ import ktx.math.unaryMinus
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
@@ -18,9 +19,8 @@ import kotlin.math.min
 class ModelGenerator {
     companion object {
         private val roadHeight = 1.0
-        public val laneWidth = 3.5
         private val splineRoadSegmentLen = 2.0f
-        private val upVec = Vec3(0.0, roadHeight, 0.0)
+        private val upVec = Vec3.UP * roadHeight
 
         fun createLayoutModel(layout: Layout): Model {
             val modelBuilder = ModelBuilder()
@@ -38,7 +38,6 @@ class ModelGenerator {
                 val hasEnd = road.endIntersection?.intersectionRoads?.size.let {
                     it != null && it > 0
                 }
-//                println("${road.startIntersection!!.padding} ${road.endIntersection!!.padding}")
                 val length = road.geometry.length - if (hasStart) { road.startIntersection!!.padding } else { 0.0 } - if (hasEnd) { road.endIntersection!!.padding } else { 0.0 }
 
                 val start = if (hasStart) { road.startIntersection!!.padding } else { 0.0 }
@@ -46,8 +45,8 @@ class ModelGenerator {
                 val stepCount = floor(length / splineRoadSegmentLen).toInt()
                 var prevPos = road.geometry.getPoint(start).toVec3()
                 var prevDir = road.geometry.getDirection(start).toVec3().normalized()
-                var prevRight = prevDir.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-                var prevLeft = -prevDir.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
+                var prevRight = prevDir.cross(Vec3.UP).normalized() * LANE_WIDTH * road.rightLane.toDouble()
+                var prevLeft = -prevDir.cross(Vec3.UP).normalized() * LANE_WIDTH * road.leftLane.toDouble()
                 meshPartBuilder.rect(
                     (prevPos + prevLeft).toGdxVec(),
                     (prevPos + prevRight).toGdxVec(),
@@ -61,8 +60,8 @@ class ModelGenerator {
                     val t = start + i * splineRoadSegmentLen.toDouble()
                     val pos = road.geometry.getPoint(t).toVec3()
                     val direction = road.geometry.getDirection(t).toVec3().normalized()
-                    val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-                    val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
+                    val right = direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.rightLane.toDouble()
+                    val left = -direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.leftLane.toDouble()
                     if (direction.dot(prevDir) < 0.0) {
                         prevLeft = prevRight.also { prevRight = prevLeft }
                     }
@@ -99,8 +98,8 @@ class ModelGenerator {
                 val t = road.geometry.length - if (hasEnd) { road.endIntersection!!.padding } else { 0.0 }
                 val pos = road.geometry.getPoint(t).toVec3()
                 val direction = road.geometry.getDirection(t).toVec3().normalized()
-                val right = direction.cross(Vec3.UP).normalized() * laneWidth * road.rightLane.toDouble()
-                val left = -direction.cross(Vec3.UP).normalized() * laneWidth * road.leftLane.toDouble()
+                val right = direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.rightLane.toDouble()
+                val left = -direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.leftLane.toDouble()
                 meshPartBuilder.rect(
                     (prevPos + prevRight + upVec).toGdxVec(),
                     (pos + right + upVec).toGdxVec(),
@@ -135,35 +134,33 @@ class ModelGenerator {
                 )
             }
             val samplePerSide = 40
-            val upDir = Vec3(0.0, 1.0, 0.0)
             println(layout.intersections.size)
             for (intersection in layout.intersections.values) {
                 val intersectionBoxSize = max(intersection.padding * 2.0 * 1.1, 40.0)
                 val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
 
                 val node = modelBuilder.node()
-                node.translation.set(intersection.position.toGdxVec())
+                node.translation.set(intersection.position.toVec3().toGdxVec())
                 meshPartBuilder = modelBuilder.part("intersection${intersection.id}", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-                val intersectionSdf = { local: Vec3 ->
+                val intersectionSdf = { local: Vec2 ->
                     val point = intersection.position + local
                     var minDist = intersectionBoxSize * intersectionBoxSize
                     var laneCount = 1
                     for (road in intersection.intersectionRoads) {
-                        val proj = Vec2(point.x, point.z)
-                        val dist = (road.geometry.closestPoint(proj) - proj).length()
+                        val dist = (road.geometry.closestPoint(point) - point).length()
                         if (abs(dist) < abs(minDist)) {
                             minDist = dist
                             laneCount = 1
                         }
                     }
-                    minDist - laneWidth * laneCount
+                    minDist - LANE_WIDTH * laneCount
                 }
                 val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
                     meshPartBuilder.rect(
-                        a.toGdxVec(),
                         (a + upVec).toGdxVec(),
-                        (b + upVec).toGdxVec(),
+                        a.toGdxVec(),
                         b.toGdxVec(),
+                        (b + upVec).toGdxVec(),
                         normal.toGdxVec()
                     )
                 }
@@ -189,7 +186,7 @@ class ModelGenerator {
                         ),
                     )
                 }
-                val getRefinedGuess = { a: Vec3, b: Vec3 ->
+                val getRefinedGuess = { a: Vec2, b: Vec2 ->
                     val iterationCount = 5
                     var guess = (a + b) / 2.0
                     var left = a
@@ -210,68 +207,68 @@ class ModelGenerator {
                     }
                     guess
                 }
-                val leftBottomCorner = Vec3(-intersectionBoxSize / 2.0, 0.0, -intersectionBoxSize / 2.0)
+                val leftBottomCorner = Vec2(-intersectionBoxSize / 2.0, -intersectionBoxSize / 2.0)
                 val patterns = arrayOf(
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and !bType and !cType and !dType}
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val abPoint = getRefinedGuess(a, b)
-                        val acPoint = getRefinedGuess(a, c)
-                        val normal = (abPoint - acPoint).cross(Vec3(0.0, -1.0, 0.0)).normalized()
+                        to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
+                        val abPoint = getRefinedGuess(a, b).toVec3()
+                        val acPoint = getRefinedGuess(a, c).toVec3()
+                        val normal = (abPoint - acPoint).cross(Vec3.UP).normalized()
                         insertRect(acPoint, abPoint, normal)
-                        insertTriangle(d + upVec, b + upVec, abPoint + upVec, upDir)
-                        insertTriangle(d + upVec, abPoint + upVec, acPoint + upVec, upDir)
-                        insertTriangle(d + upVec, acPoint + upVec, c + upVec, upDir)
+                        insertTriangle(d.toVec3() + upVec, abPoint + upVec, b.toVec3() + upVec, Vec3.UP)
+                        insertTriangle(d.toVec3() + upVec, acPoint + upVec, abPoint + upVec, Vec3.UP)
+                        insertTriangle(d.toVec3() + upVec, c.toVec3() + upVec, acPoint + upVec, Vec3.UP)
                     },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType}
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val bdPoint = getRefinedGuess(b, d)
-                        val acPoint = getRefinedGuess(a, c)
-                        val normal = -(bdPoint - acPoint).cross(upDir).normalized()
+                        to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
+                        val bdPoint = getRefinedGuess(b, d).toVec3()
+                        val acPoint = getRefinedGuess(a, c).toVec3()
+                        val normal = (bdPoint - acPoint).cross(Vec3.UP).normalized()
                         insertRect(acPoint, bdPoint, normal)
                         meshPartBuilder.rect(
+                            (c.toVec3() + upVec).toGdxVec(),
                             (acPoint + upVec).toGdxVec(),
-                            (c + upVec).toGdxVec(),
-                            (d + upVec).toGdxVec(),
                             (bdPoint + upVec).toGdxVec(),
-                            upDir.toGdxVec()
+                            (d.toVec3() + upVec).toGdxVec(),
+                            Vec3.UP.toGdxVec()
                         )
                     },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val abPoint = getRefinedGuess(a, b)
-                        val acPoint = getRefinedGuess(a, c)
-                        val bdPoint = getRefinedGuess(b, d)
-                        val cdPoint = getRefinedGuess(c, d)
-                        var normal = (abPoint - cdPoint).cross(upDir).normalized()
+                        to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
+                        val abPoint = getRefinedGuess(a, b).toVec3()
+                        val acPoint = getRefinedGuess(a, c).toVec3()
+                        val bdPoint = getRefinedGuess(b, d).toVec3()
+                        val cdPoint = getRefinedGuess(c, d).toVec3()
+                        var normal = (cdPoint - abPoint).cross(Vec3.UP).normalized()
                         insertRect(abPoint, bdPoint, normal)
-                        normal = (cdPoint - abPoint).cross(upDir).normalized()
+                        normal = (abPoint - cdPoint).cross(Vec3.UP).normalized()
                         insertRect(cdPoint, acPoint, normal)
                     },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
-                        val abPoint = getRefinedGuess(a, b)
-                        val acPoint = getRefinedGuess(a, c)
-                        val normal = (abPoint - acPoint).cross(upDir).normalized()
+                        to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
+                        val abPoint = getRefinedGuess(a, b).toVec3()
+                        val acPoint = getRefinedGuess(a, c).toVec3()
+                        val normal = (acPoint - abPoint).cross(Vec3.UP).normalized()
                         insertRect(abPoint, acPoint, normal)
-                        insertTriangle(acPoint + upVec, abPoint + upVec, a + upVec, upDir)
+                        insertTriangle(acPoint + upVec, a.toVec3() + upVec, abPoint + upVec, Vec3.UP)
                     },
                     {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and !bType and !cType and !dType}
-                        to { a: Vec3, b: Vec3, c: Vec3, d: Vec3 ->
+                        to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
                         meshPartBuilder.rect(
-                            (a + upVec).toGdxVec(),
-                            (c + upVec).toGdxVec(),
-                            (d + upVec).toGdxVec(),
-                            (b + upVec).toGdxVec(),
-                            upDir.toGdxVec()
+                            (a.toVec3() + upVec).toGdxVec(),
+                            (b.toVec3() + upVec).toGdxVec(),
+                            (d.toVec3() + upVec).toGdxVec(),
+                            (c.toVec3() + upVec).toGdxVec(),
+                            Vec3.UP.toGdxVec()
                         )
                     },
                 )
                 for (i in 0..<(samplePerSide - 1)) {
                     for (j in 0..<(samplePerSide - 1)) {
-                        val a = leftBottomCorner + Vec3(i * cellSize, 0.0, j * cellSize)
-                        val b = leftBottomCorner + Vec3((i + 1) * cellSize, 0.0, j * cellSize)
-                        val c = leftBottomCorner + Vec3(i * cellSize, 0.0, (j + 1) * cellSize)
-                        val d = leftBottomCorner + Vec3((i + 1) * cellSize, 0.0, (j + 1) * cellSize)
+                        val a = leftBottomCorner + Vec2(i, j) * cellSize
+                        val b = leftBottomCorner + Vec2(i + 1, j) * cellSize
+                        val c = leftBottomCorner + Vec2(i, j + 1) * cellSize
+                        val d = leftBottomCorner + Vec2(i + 1, j + 1) * cellSize
                         val aSample = intersectionSdf(a)
                         val bSample = intersectionSdf(b)
                         val cSample = intersectionSdf(c)

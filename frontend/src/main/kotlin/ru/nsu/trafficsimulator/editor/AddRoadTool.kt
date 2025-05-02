@@ -44,7 +44,7 @@ class AddRoadTool : IEditingTool {
         val startDirection = selectedIntersections[0]!!.position + dir * startDirectionLength
         val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
 
-        return AddRoadStateChange(selectedIntersections[0]!!, startDirection, selectedIntersections[1]!!, endDirection)
+        return AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
     }
 
     override fun handleDrag(screenPos: Vec2) {
@@ -63,7 +63,7 @@ class AddRoadTool : IEditingTool {
 
     private fun findRoadIntersectionAt(point: Vector3): Intersection? {
         for ((_, intersection) in layout!!.intersections) {
-            if (intersection.position.distance(Vec3(point)) < 5.0f) {
+            if (intersection.position.distance(Vec3(point).xzProjection()) < 5.0f) {
                 return intersection
             }
         }

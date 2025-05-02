@@ -100,7 +100,7 @@ class Deserializer {
         }
 
         private fun deserializeIntersection(junction: TJunction): Intersection {
-            val intersection = Intersection(junction.id.toLong(), Vec3(0.0, 0.0, 0.0))
+            val intersection = Intersection(junction.id.toLong(), Vec2(0.0, 0.0))
             return intersection
         }
 
@@ -133,16 +133,12 @@ class Deserializer {
 
         private fun recalculateIntersectionPosition(layout: Layout) {
             for (intersection in layout.intersections.values) {
-                var pos = Vec3(0.0, 0.0, 0.0)
+                var pos = Vec2(0.0, 0.0)
                 for (road in intersection.incomingRoads) {
                     if (road.startIntersection == intersection) {
-                        road.geometry.getPoint(0.0).let {
-                            pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
-                        }
+                        pos += road.geometry.getPoint(0.0)
                     } else {
-                        road.geometry.getPoint(road.geometry.length).let {
-                            pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
-                        }
+                        pos += road.geometry.getPoint(road.geometry.length)
                     }
                 }
                 intersection.position = pos / intersection.incomingRoads.size.toDouble()
