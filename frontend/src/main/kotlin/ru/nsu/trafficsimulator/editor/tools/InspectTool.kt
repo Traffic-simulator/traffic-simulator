@@ -112,15 +112,15 @@ class InspectTool : IEditingTool {
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return
 
         if (draggingIntersection != null) {
-            spheres[draggingIntersection!!.id]?.transform?.setToTranslation(intersection)
+            spheres[draggingIntersection!!.id]?.transform?.setToTranslation(intersection.toGdxVec())
             if (selectedRoad != null) {
                 val startPos = if (selectedRoad!!.startIntersection!! == draggingIntersection) {
-                    Vec3(intersection)
+                    intersection
                 } else {
                     selectedRoad!!.startIntersection!!.position.toVec3()
                 }
                 val endPos = if (selectedRoad!!.endIntersection!! == draggingIntersection) {
-                    Vec3(intersection)
+                    intersection
                 } else {
                     selectedRoad!!.endIntersection!!.position.toVec3()
                 }
@@ -132,7 +132,7 @@ class InspectTool : IEditingTool {
                 )
             }
         } else {
-            draggingDirectionSphere!!.transform.setToTranslation(intersection)
+            draggingDirectionSphere!!.transform.setToTranslation(intersection.toGdxVec())
         }
     }
 
@@ -164,9 +164,9 @@ class InspectTool : IEditingTool {
         draggingDirectionSphere = null
     }
 
-    private fun findRoadIntersectionAt(point: Vector3): Intersection? {
+    private fun findRoadIntersectionAt(point: Vec3): Intersection? {
         for ((_, intersection) in layout!!.intersections) {
-            if (intersection.position.distance(Vec3(point).xzProjection()) < 5.0f) {
+            if (intersection.position.distance(point.xzProjection()) < 5.0f) {
                 return intersection
             }
         }
@@ -188,12 +188,12 @@ class InspectTool : IEditingTool {
         return sphere
     }
 
-    private fun findDirectionSphere(intersection: Vector3): ModelInstance? {
-        if (directionSpheres[0].transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
+    private fun findDirectionSphere(intersection: Vec3): ModelInstance? {
+        if (directionSpheres[0].transform.getTranslation(Vector3()).dst(intersection.toGdxVec()) < 5.0f) {
             draggingDirectionIsStart = true
             return directionSpheres[0]
         }
-        if (directionSpheres[1].transform.getTranslation(Vector3()).dst(intersection) < 5.0f) {
+        if (directionSpheres[1].transform.getTranslation(Vector3()).dst(intersection.toGdxVec()) < 5.0f) {
             draggingDirectionIsStart = false
             return directionSpheres[1]
         }

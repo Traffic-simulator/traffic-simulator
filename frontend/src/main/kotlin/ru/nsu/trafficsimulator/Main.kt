@@ -136,9 +136,9 @@ class Main : ApplicationAdapter() {
             )
         )
         Editor.init(camera!!, sceneManager!!)
-//        val dto = OpenDriveReader().read("ourTown01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
-//        Editor.updateLayout()
+        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+        Editor.layout = Deserializer.deserialize(dto)
+        Editor.updateLayout()
     }
 
     fun initializeSimulation(layout: Layout): ISimulation {
