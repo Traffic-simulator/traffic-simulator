@@ -194,16 +194,3 @@ class Deserializer {
         }
     }
 }
-
-fun main() {
-    val reader = OpenDriveReader()
-    val openDrive = reader.read("export.xodr")
-
-    openDrive.junction.forEach {
-        it.gAdditionalData.forEach { data ->
-            val userData = data as TUserData
-            println("${userData.code}=${userData.value}")
-        }
-    }
-
-}

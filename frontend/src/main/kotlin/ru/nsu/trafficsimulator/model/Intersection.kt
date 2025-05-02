@@ -7,7 +7,7 @@ data class Intersection(
     val id: Long,
     var position: Vec3,
     var padding: Double = 0.0,
-    var building: Building? = null,
+    var building: Building? = null
 ) {
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
