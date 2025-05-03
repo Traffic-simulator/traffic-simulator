@@ -19,13 +19,14 @@ import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.editor.*
 
 class InspectTool : IEditingTool {
-    private val name = "Inspect"
+    private val name = "Edit"
     private var draggingIntersection: Intersection? = null
+    private val sphereForDraggingIntersection = ModelInstance(createSphere(Color.RED))
     private var layout: Layout? = null
     private var camera: Camera? = null
-    private val spheres = mutableMapOf<Long, ModelInstance>()
 
     private var selectedRoad: Road? = null
     private var draggingDirectionIsStart: Boolean? = null
@@ -91,7 +92,7 @@ class InspectTool : IEditingTool {
                 (endPos + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
             )
         }
-        val res = MoveIntersectionStateChange(draggingIntersection!!, Vec3(spheres[draggingIntersection!!.id]!!.transform.getTranslation(Vector3())))
+        val res = MoveIntersectionStateChange(draggingIntersection!!, Vec3(sphereForDraggingIntersection.transform.getTranslation(Vector3())))
         draggingIntersection = null
         return res
     }
@@ -108,7 +109,7 @@ class InspectTool : IEditingTool {
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return
 
         if (draggingIntersection != null) {
-            spheres[draggingIntersection!!.id]?.transform?.setToTranslation(intersection)
+            sphereForDraggingIntersection.transform?.setToTranslation(intersection)
             if (selectedRoad != null) {
                 val startPos = if (selectedRoad!!.startIntersection!! == draggingIntersection) { Vec3(intersection) } else { selectedRoad!!.startIntersection!!.position }
                 val endPos = if (selectedRoad!!.endIntersection!! == draggingIntersection) { Vec3(intersection) } else { selectedRoad!!.endIntersection!!.position }
@@ -125,31 +126,28 @@ class InspectTool : IEditingTool {
     }
 
     override fun render(modelBatch: ModelBatch?) {
-        for ((_, sphere) in spheres) {
-            modelBatch?.render(sphere)
+        if (draggingIntersection != null) {
+            modelBatch?.render(sphereForDraggingIntersection)
         }
+
         if (selectedRoad != null) {
             modelBatch?.render(directionSpheres[0])
             modelBatch?.render(directionSpheres[1])
         }
     }
 
-    override fun init(layout: Layout, camera: Camera) {
+    override fun init(layout: Layout, camera: Camera, reset: Boolean) {
         this.layout = layout
         this.camera = camera
-        this.spheres.clear()
-        val model = createSphere()
-        for ((id, intersection) in layout.intersections) {
-            spheres[id] = ModelInstance(model)
-            spheres[id]!!.transform.setToTranslation(intersection.position.toGdxVec())
-        }
 
-        val (left, right) = createDirectionPairSphere()
-        directionSpheres.clear()
-        directionSpheres.add(ModelInstance(left))
-        directionSpheres.add(ModelInstance(right))
-        selectedRoad = null
-        draggingDirectionSphere = null
+        if (reset) {
+            val (left, right) = createDirectionPairSphere()
+            directionSpheres.clear()
+            directionSpheres.add(ModelInstance(left))
+            directionSpheres.add(ModelInstance(right))
+            selectedRoad = null
+            draggingDirectionSphere = null
+        }
     }
 
     private fun findRoadIntersectionAt(point: Vector3): Intersection? {
@@ -159,21 +157,6 @@ class InspectTool : IEditingTool {
             }
         }
         return null
-    }
-
-    private fun createSphere(): Model? {
-        val modelBuilder = ModelBuilder()
-        val material = Material(ColorAttribute.createDiffuse(Color.RED))
-        val sphere = modelBuilder.createSphere(
-            5.0f,
-            5.0f,
-            5.0f,
-            10,
-            10,
-            material,
-            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        )
-        return sphere
     }
 
     private fun findDirectionSphere(intersection: Vector3): ModelInstance? {
@@ -190,28 +173,6 @@ class InspectTool : IEditingTool {
     }
 
     private fun createDirectionPairSphere(): Pair<Model, Model> {
-        val modelBuilder = ModelBuilder()
-
-        val startMaterial = Material(ColorAttribute.createDiffuse(Color.BLUE))
-        val start = modelBuilder.createSphere(
-            5.0f,
-            5.0f,
-            5.0f,
-            10,
-            10,
-            startMaterial,
-            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        )
-        val endMaterial = Material(ColorAttribute.createDiffuse(Color.SKY))
-        val end = modelBuilder.createSphere(
-            5.0f,
-            5.0f,
-            5.0f,
-            10,
-            10,
-            endMaterial,
-            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        )
-        return Pair(start, end)
+        return Pair(createSphere(Color.BLUE), createSphere(Color.SKY))
     }
 }
