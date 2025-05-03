@@ -9,7 +9,7 @@ import kotlin.random.Random
 
 class RandomRouteGenerator(val rnd: Random, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>):
     IRouteGenerator {
-    val timer = 1.1
+    val timer = 0.1
     var spawnTimer = timer
 
     override fun update(dt: Double, creator: VehicleCreationListener, waypointChecker: WaypointSpawnAbilityChecker) {

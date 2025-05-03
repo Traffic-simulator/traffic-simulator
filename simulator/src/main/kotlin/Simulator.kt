@@ -1,3 +1,4 @@
+import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import network.Network
 import opendrive.OpenDRIVE
@@ -17,22 +18,27 @@ import kotlin.random.Random
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>, seed: Long) {
 
     val finder = JunctionIntersectionFinder(openDrive)
-    val intersections = finder.findIntersection()
+//    val intersections = finder.findIntersection()
+    val intersections: MutableList<Intersection> = ArrayList();
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
     val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, spawnDetails, despawnDetails)
-
     val vehicles: ArrayList<Vehicle> = ArrayList()
 
-    // TODO: Correct lane id checking
-    // TODO: staged updates
     fun update(dt: Double): ArrayList<Vehicle> {
 
         processNonmandatoryLaneChanges()
 
-        val sortedVehicles = vehicles.sortedBy   { it.position }.reversed()
+        // Process vehicles in sorted order due to junction blocking logic
+        // Have to sort not by position, but by distance to the closest junction...
+        val sortedVehicles = vehicles.sortedBy   { it.distToClosestJunction() }
 
-        // Stage y:
+        // Compute accelerations of all vehicles, needs refactor to be done in parallel
+        sortedVehicles.forEach { it ->
+            it.updateAcceleration()
+        }
+
+        // Apply acceleration to each vehicle with deltaTime, can be parallel
         sortedVehicles.forEach { it ->
             it.update(dt)
         }
@@ -47,13 +53,13 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
     }
 
     fun processNonmandatoryLaneChanges() {
-        // Stage x: non-mandatory lane changes
         vehicles.forEach { it ->
-            // TODO: Currently lane changes on junctions are prohibited
+            // Lane changes on junctions are prohibited
             if (it.isInLaneChange() || it.lane.road.junction != "-1") {
                 return@forEach
             }
 
+            // Find possible lanes to change
             val lanesToChange = it.lane.road.lanes.filter { newLane -> abs(newLane.laneId - it.lane.laneId) == 1}
 
             for (toLane in lanesToChange) {
@@ -70,11 +76,10 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
 
     private val isPositionFree = object: WaypointSpawnAbilityChecker {
         override fun isFree(waypoint: Waypoint): Boolean {
-            // TODO: Check vehicle length, other cars and so on...
             val lane = network.getLaneById(waypoint.roadId, waypoint.laneId)
 
             val minVeh = lane.getMinPositionVehicle()
-            if (minVeh == null || minVeh!!.position > 50) {
+            if (minVeh == null || minVeh!!.position > 30) {
                 return true
             }
             return false

@@ -41,5 +41,14 @@ class IDM {
         fun getAcceleration(me: Vehicle?, front: Pair<Vehicle?, Double>): Double {
             return getAcceleration(me, front.first, front.second)
         }
+
+        fun getStopAcceleration(me: Vehicle, deltaV: Double, deltaS: Double): Double {
+            return getAcceleration(me, deltaV, deltaS)
+//            if (deltaV < 5.0 || deltaS > 100.0) {
+//                return getAcceleration(me, deltaV, deltaS)
+//            }
+//            val bkin = deltaV * deltaV / 2.0 / deltaS
+//            return - bkin * bkin / me.safeDeceleration
+        }
     }
 }

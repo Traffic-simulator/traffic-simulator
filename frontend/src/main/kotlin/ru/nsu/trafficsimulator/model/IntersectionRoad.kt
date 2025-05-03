@@ -24,8 +24,8 @@ data class IntersectionRoad(
         val laneNumber =
             min(abs(incomingLaneNumber), abs(outgoingLaneNumber))
 
-        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position)
-        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position)
+        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
+        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
         val geometry = Spline(
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection(),
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection() + fromRoad.getIntersectionDirection(intersection, true).xzProjection().setLength(dirLength1),
