@@ -2,6 +2,7 @@ package ru.nsu.trafficsimulator
 
 import BackendAPI
 import ISimulation
+import OpenDriveReader
 import OpenDriveWriter
 import Waypoint
 import com.badlogic.gdx.ApplicationAdapter
@@ -29,10 +30,11 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.graphics.ModelGenerator
-import ru.nsu.trafficsimulator.graphics.ShaderModelInstance
+import ru.nsu.trafficsimulator.graphics.RoadMaterialAttribute
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
@@ -99,6 +101,7 @@ class Main : ApplicationAdapter() {
         carModel = sceneAsset1?.scene?.model
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
+        sceneManager?.setShaderProvider(CustomShaderProvider("shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl"))
 
         val camController = MyCameraController(camera!!)
         camController.scrollFactor = -0.5f
@@ -116,7 +119,9 @@ class Main : ApplicationAdapter() {
 
         // Add ground
         val modelBuilder = ModelBuilder()
-        val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
+        val groundMaterial = Material(
+            PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)),
+        )
         modelBuilder.begin()
         val meshPartBuilder = modelBuilder.part(
             "Ground",
@@ -124,35 +129,35 @@ class Main : ApplicationAdapter() {
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.TextureCoordinates).toLong(),
             groundMaterial
         )
-//        BoxShapeBuilder.build(meshPartBuilder, 1000.0f, 0.1f, 1000.0f)
-        val a = MeshPartBuilder.VertexInfo().set(
-            Vector3(500.0f, 0.0f, -500.0f),
-            Vector3(0.0f, 1.0f, 0.0f),
-            null,
-            Vector2(1.0f, -1.0f),
-        )
-        val b = MeshPartBuilder.VertexInfo().set(
-            Vector3(500.0f, 0.0f, 500.0f),
-            Vector3(0.0f, 1.0f, 0.0f),
-            null,
-            Vector2(1.0f, 1.0f),
-        )
-        val c = MeshPartBuilder.VertexInfo().set(
-            Vector3(-500.0f, 0.0f, 500.0f),
-            Vector3(0.0f, 1.0f, 0.0f),
-            null,
-            Vector2(-1.0f, 1.0f),
-        )
-        val d = MeshPartBuilder.VertexInfo().set(
-            Vector3(-500.0f, 0.0f, -500.0f),
-            Vector3(0.0f, 1.0f, 0.0f),
-            null,
-            Vector2(-1.0f, -1.0f),
-        )
-        meshPartBuilder.rect(b, a, d, c)
+        BoxShapeBuilder.build(meshPartBuilder, 1000.0f, 0.1f, 1000.0f)
+//        val a = MeshPartBuilder.VertexInfo().set(
+//            Vector3(500.0f, 0.0f, -500.0f),
+//            Vector3(0.0f, 1.0f, 0.0f),
+//            null,
+//            Vector2(2.0f, 0.0f),
+//        )
+//        val b = MeshPartBuilder.VertexInfo().set(
+//            Vector3(500.0f, 0.0f, 500.0f),
+//            Vector3(0.0f, 1.0f, 0.0f),
+//            null,
+//            Vector2(2.0f, 5.0f),
+//        )
+//        val c = MeshPartBuilder.VertexInfo().set(
+//            Vector3(-500.0f, 0.0f, 500.0f),
+//            Vector3(0.0f, 1.0f, 0.0f),
+//            null,
+//            Vector2(-1.0f, 5.0f),
+//        )
+//        val d = MeshPartBuilder.VertexInfo().set(
+//            Vector3(-500.0f, 0.0f, -500.0f),
+//            Vector3(0.0f, 1.0f, 0.0f),
+//            null,
+//            Vector2(-1.0f, 0.0f),
+//        )
+//        meshPartBuilder.rect(b, a, d, c)
         val ground = modelBuilder.end()
-        val instance = ShaderModelInstance(ground, sceneManager!!.environment, "shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl")
-        sceneManager?.addScene(Scene(instance))
+//        val instance = ShaderModelInstance(ground, sceneManager!!.environment, "shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl")
+        sceneManager?.addScene(Scene(ground))
 
         sceneManager?.skyBox = SceneSkybox(
             Cubemap(
@@ -165,9 +170,9 @@ class Main : ApplicationAdapter() {
             )
         )
         Editor.init(camera!!, sceneManager!!)
-//        val dto = OpenDriveReader().read("ourTown01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
-//        Editor.updateLayout()
+        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+        Editor.layout = Deserializer.deserialize(dto)
+        Editor.updateLayout()
     }
 
     fun initializeSimulation(layout: Layout): ISimulation {

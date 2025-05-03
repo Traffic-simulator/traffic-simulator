@@ -1257,35 +1257,35 @@
         <connection connectingRoad="30" contactPoint="start" id="1" incomingRoad="0"/>
     </junction>
     <junction id="1">
-        <connection connectingRoad="53" contactPoint="start" id="0" incomingRoad="5"/>
-        <connection connectingRoad="57" contactPoint="start" id="1" incomingRoad="1"/>
-        <connection connectingRoad="56" contactPoint="start" id="2" incomingRoad="49"/>
-        <connection connectingRoad="9" contactPoint="start" id="3" incomingRoad="1"/>
-        <connection connectingRoad="55" contactPoint="start" id="4" incomingRoad="0"/>
-        <connection connectingRoad="2" contactPoint="start" id="5" incomingRoad="1"/>
-        <connection connectingRoad="52" contactPoint="start" id="6" incomingRoad="49"/>
-        <connection connectingRoad="3" contactPoint="start" id="7" incomingRoad="0"/>
+        <connection connectingRoad="3" contactPoint="start" id="0" incomingRoad="0"/>
+        <connection connectingRoad="56" contactPoint="start" id="1" incomingRoad="49"/>
+        <connection connectingRoad="2" contactPoint="start" id="2" incomingRoad="1"/>
+        <connection connectingRoad="8" contactPoint="start" id="3" incomingRoad="5"/>
+        <connection connectingRoad="6" contactPoint="start" id="4" incomingRoad="5"/>
+        <connection connectingRoad="52" contactPoint="start" id="5" incomingRoad="49"/>
+        <connection connectingRoad="55" contactPoint="start" id="6" incomingRoad="0"/>
+        <connection connectingRoad="7" contactPoint="start" id="7" incomingRoad="0"/>
         <connection connectingRoad="54" contactPoint="start" id="8" incomingRoad="49"/>
-        <connection connectingRoad="8" contactPoint="start" id="9" incomingRoad="5"/>
-        <connection connectingRoad="6" contactPoint="start" id="10" incomingRoad="5"/>
-        <connection connectingRoad="7" contactPoint="start" id="11" incomingRoad="0"/>
+        <connection connectingRoad="53" contactPoint="start" id="9" incomingRoad="5"/>
+        <connection connectingRoad="9" contactPoint="start" id="10" incomingRoad="1"/>
+        <connection connectingRoad="57" contactPoint="start" id="11" incomingRoad="1"/>
     </junction>
     <junction id="5">
-        <connection connectingRoad="15" contactPoint="start" id="0" incomingRoad="5"/>
-        <connection connectingRoad="17" contactPoint="start" id="1" incomingRoad="10"/>
+        <connection connectingRoad="12" contactPoint="start" id="0" incomingRoad="5"/>
+        <connection connectingRoad="11" contactPoint="start" id="1" incomingRoad="10"/>
         <connection connectingRoad="14" contactPoint="start" id="2" incomingRoad="13"/>
         <connection connectingRoad="16" contactPoint="start" id="3" incomingRoad="13"/>
-        <connection connectingRoad="11" contactPoint="start" id="4" incomingRoad="10"/>
-        <connection connectingRoad="12" contactPoint="start" id="5" incomingRoad="5"/>
+        <connection connectingRoad="17" contactPoint="start" id="4" incomingRoad="10"/>
+        <connection connectingRoad="15" contactPoint="start" id="5" incomingRoad="5"/>
     </junction>
     <junction id="7">
         <connection connectingRoad="19" contactPoint="start" id="0" incomingRoad="18"/>
         <connection connectingRoad="20" contactPoint="start" id="1" incomingRoad="13"/>
     </junction>
     <junction id="8">
-        <connection connectingRoad="23" contactPoint="start" id="0" incomingRoad="18"/>
-        <connection connectingRoad="42" contactPoint="start" id="1" incomingRoad="39"/>
-        <connection connectingRoad="43" contactPoint="start" id="2" incomingRoad="18"/>
+        <connection connectingRoad="42" contactPoint="start" id="0" incomingRoad="39"/>
+        <connection connectingRoad="43" contactPoint="start" id="1" incomingRoad="18"/>
+        <connection connectingRoad="23" contactPoint="start" id="2" incomingRoad="18"/>
         <connection connectingRoad="40" contactPoint="start" id="3" incomingRoad="39"/>
         <connection connectingRoad="22" contactPoint="start" id="4" incomingRoad="21"/>
         <connection connectingRoad="41" contactPoint="start" id="5" incomingRoad="21"/>
@@ -1295,19 +1295,19 @@
         <connection connectingRoad="50" contactPoint="start" id="1" incomingRoad="49"/>
     </junction>
     <junction id="18">
-        <connection connectingRoad="36" contactPoint="start" id="0" incomingRoad="31"/>
-        <connection connectingRoad="32" contactPoint="start" id="1" incomingRoad="31"/>
-        <connection connectingRoad="38" contactPoint="start" id="2" incomingRoad="28"/>
+        <connection connectingRoad="35" contactPoint="start" id="0" incomingRoad="34"/>
+        <connection connectingRoad="37" contactPoint="start" id="1" incomingRoad="34"/>
+        <connection connectingRoad="32" contactPoint="start" id="2" incomingRoad="31"/>
         <connection connectingRoad="33" contactPoint="start" id="3" incomingRoad="28"/>
-        <connection connectingRoad="35" contactPoint="start" id="4" incomingRoad="34"/>
-        <connection connectingRoad="37" contactPoint="start" id="5" incomingRoad="34"/>
+        <connection connectingRoad="38" contactPoint="start" id="4" incomingRoad="28"/>
+        <connection connectingRoad="36" contactPoint="start" id="5" incomingRoad="31"/>
     </junction>
     <junction id="20">
         <connection connectingRoad="45" contactPoint="start" id="0" incomingRoad="34"/>
-        <connection connectingRoad="61" contactPoint="start" id="1" incomingRoad="58"/>
-        <connection connectingRoad="44" contactPoint="start" id="2" incomingRoad="39"/>
-        <connection connectingRoad="60" contactPoint="start" id="3" incomingRoad="34"/>
-        <connection connectingRoad="62" contactPoint="start" id="4" incomingRoad="39"/>
+        <connection connectingRoad="60" contactPoint="start" id="1" incomingRoad="34"/>
+        <connection connectingRoad="61" contactPoint="start" id="2" incomingRoad="58"/>
+        <connection connectingRoad="62" contactPoint="start" id="3" incomingRoad="39"/>
+        <connection connectingRoad="44" contactPoint="start" id="4" incomingRoad="39"/>
         <connection connectingRoad="59" contactPoint="start" id="5" incomingRoad="58"/>
     </junction>
 </OpenDRIVE>
