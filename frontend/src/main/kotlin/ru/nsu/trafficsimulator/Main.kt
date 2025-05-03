@@ -2,7 +2,6 @@ package ru.nsu.trafficsimulator
 
 import BackendAPI
 import ISimulation
-import OpenDriveReader
 import OpenDriveWriter
 import Waypoint
 import com.badlogic.gdx.ApplicationAdapter
@@ -30,12 +29,12 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model_generation.ModelGenerator
+import ru.nsu.trafficsimulator.graphics.ModelGenerator
+import ru.nsu.trafficsimulator.graphics.ShaderModelInstance
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
 import java.lang.Math.clamp
-import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.sign
 
@@ -94,7 +93,7 @@ class Main : ApplicationAdapter() {
         )
 
         sceneManager = SceneManager()
-        sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer_big.glb"))
+        sceneAsset1 = GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))
         carModel = sceneAsset1?.scene?.model
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
@@ -125,7 +124,8 @@ class Main : ApplicationAdapter() {
         )
         BoxShapeBuilder.build(meshPartBuilder, 1000.0f, 0.1f, 1000.0f)
         val ground = modelBuilder.end()
-        sceneManager?.addScene(Scene(ground))
+        val instance = ShaderModelInstance(ground, sceneManager!!.environment, "shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl")
+        sceneManager?.addScene(Scene(instance))
 
         sceneManager?.skyBox = SceneSkybox(
             Cubemap(

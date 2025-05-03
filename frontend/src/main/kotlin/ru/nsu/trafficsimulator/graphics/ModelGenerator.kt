@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.model_generation
+package ru.nsu.trafficsimulator.graphics
 
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.VertexAttributes
@@ -13,7 +13,6 @@ import ru.nsu.trafficsimulator.math.Vec3
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
-import kotlin.math.min
 
 class ModelGenerator {
     companion object {
