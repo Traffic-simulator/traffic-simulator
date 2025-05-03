@@ -6,7 +6,6 @@ import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.*
-import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDING
 import kotlin.math.max
 
 class Deserializer {
@@ -101,6 +100,18 @@ class Deserializer {
 
         private fun deserializeIntersection(junction: TJunction): Intersection {
             val intersection = Intersection(junction.id.toLong(), Vec3(0.0, 0.0, 0.0))
+
+            val userParameters: MutableMap<String, String> = mutableMapOf()
+            junction.gAdditionalData.forEach { data ->
+                val userData = data as TUserData
+                userParameters[userData.code] = userData.value
+            }
+            if (userParameters.containsKey("buildingType")) {
+                intersection.building = Building(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
+                    capacity = userParameters["capacity"]!!.toInt()
+                }
+            }
+
             return intersection
         }
 

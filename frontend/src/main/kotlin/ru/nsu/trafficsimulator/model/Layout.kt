@@ -10,7 +10,6 @@ class Layout {
     val roads = mutableMapOf<Long, Road>()
     val intersectionRoads = mutableMapOf<Long, IntersectionRoad>()
     val intersections = mutableMapOf<Long, Intersection>()
-    val intersectionsList = mutableListOf<Intersection>()
 
     var roadIdCount: Long = 0
     var intersectionIdCount: Long = 0
@@ -76,6 +75,14 @@ class Layout {
         return newRoad
     }
 
+    fun addBuilding(
+        intersection: Intersection, intersectionDirection: Vec3,
+        buildingPosition: Vec3, buildingDirection: Vec3,
+        building : Building): Road {
+        val buildingIntersection = addIntersection(buildingPosition, building)
+        return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
+    }
+
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
         for (road in intersection.incomingRoads) {
             road.moveRoad(intersection, newPosition)
@@ -113,12 +120,10 @@ class Layout {
         roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3): Intersection {
+    fun addIntersection(position: Vec3, building: Building? = null): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING)
-        if (!intersections.containsValue(newIntersection)) {
-            intersectionsList.add(newIntersection)
-        }
+        val newBuilding = Building(BuildingType.HOME, 100)
+        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING, newBuilding)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -175,7 +180,6 @@ class Layout {
             deleteRoad(road)
         }
         intersections.remove(intersection.id)
-        intersectionsList.remove(intersection)
     }
 
     companion object {
