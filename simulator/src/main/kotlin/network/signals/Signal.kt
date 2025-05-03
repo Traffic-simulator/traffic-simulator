@@ -1,10 +1,15 @@
 package network.signals;
 
+import mu.KotlinLogging
 import opendrive.TRoad
 import opendrive.TRoadSignalsSignal;
 import signals.SignalState
 
 class Signal(val tsignal: TRoadSignalsSignal, tRoad: TRoad, lane: Int) {
+
+    val logger = KotlinLogging.logger("BACKEND")
+
+    val id = tsignal.id
     val road: TRoad = tRoad
     val laneId: Int = lane
     val s = tsignal.s
@@ -18,7 +23,7 @@ class Signal(val tsignal: TRoadSignalsSignal, tRoad: TRoad, lane: Int) {
     var timeRed = 0.0
     var timeGreen = 0.0
 
-    var nextState = SignalState.GREEN
+    var nextState = SignalState.RED
     var changingStateTime = 0.5
 
     var state: SignalState = SignalState.RED
@@ -27,9 +32,9 @@ class Signal(val tsignal: TRoadSignalsSignal, tRoad: TRoad, lane: Int) {
         }
 
     init {
-        stateChangeTimer = cycle.split("-")[0].toDouble() * 1000 // time before first change
-        timeRed = cycle.split("-")[1].toDouble() * 1000
-        timeGreen = cycle.split("-")[2].toDouble() * 1000
+        stateChangeTimer = cycle.split("-")[0].toDouble()// time before first change
+        timeRed = cycle.split("-")[1].toDouble()
+        timeGreen = cycle.split("-")[2].toDouble()
     }
 
     fun getNewTimer(nextState: SignalState) : Double {
@@ -44,21 +49,23 @@ class Signal(val tsignal: TRoadSignalsSignal, tRoad: TRoad, lane: Int) {
         stateChangeTimer -= deltaTime
 
         if (stateChangeTimer < 0) {
-            // change to next state
+            logger.info("TrafficLight@$id on lane $laneId changed color from $state to $nextState")
             state = nextState
-            println("Changing color from ${state} TO ${nextState}")
+            stateChangeTimer = getNewTimer(state)
+
             nextState = nextState.invert()
-            println("New nextState is ${nextState}")
-            stateChangeTimer = getNewTimer(nextState)
             return
         }
 
         if (stateChangeTimer < changingStateTime) {
             // change to changingStateColor
-            if (nextState == SignalState.GREEN) {
+            if (nextState == SignalState.GREEN && state != SignalState.RED_YELLOW) {
                 state = SignalState.RED_YELLOW  // from red to green through this one
-            } else {
+                logger.info("TrafficLight@$id on lane $laneId changed color from ${SignalState.RED} to ${SignalState.RED_YELLOW}")
+            } else
+            if (nextState == SignalState.RED && state != SignalState.YELLOW){
                 state = SignalState.YELLOW  // from green to red through this
+                logger.info("TrafficLight@$id on lane $laneId changed color from ${SignalState.GREEN} to ${SignalState.YELLOW}")
             }
         }
     }

@@ -19,7 +19,7 @@ class Vehicle(
     val pathBuilder: IPathBuilder,
     val despawnCallback: RouteGeneratorDespawnListener,
     val maxSpeed: Double = 33.0,
-    val maxAcc: Double = 0.73
+    val maxAcc: Double = 2.0
 ) {
 
     private val logger = KotlinLogging.logger("BACKEND")

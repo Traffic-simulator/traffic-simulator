@@ -161,10 +161,10 @@ class Main : ApplicationAdapter() {
         spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
         despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
 
-        val dto = serializeLayout(layout)
-        OpenDriveWriter().write(dto, "export.xodr")
-//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
+//        val dto = serializeLayout(layout)
+//        OpenDriveWriter().write(dto, "export.xodr")
+        val dto = OpenDriveReader().read("simple/UC_Simple-X-Junction-TrafficLights.xodr")
+        Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
 
@@ -173,7 +173,10 @@ class Main : ApplicationAdapter() {
     override fun render() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator && !simState.isPaused) {
-            updateCars(simState.backend.getNextFrame(FRAMETIME * simState.speed))
+            simState.backend.updateSimulation(FRAMETIME * simState.speed)
+            updateCars(simState.backend.getVehicles())
+            // TODO:
+            // updateSingals(simState.backend.getSingals())
         }
 
         if (tmpInputProcessor != null) {
