@@ -164,9 +164,8 @@ class Main : ApplicationAdapter() {
         val back = BackendAPI()
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
-        //val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        //Editor.layout = Deserializer.deserialize(dto)
-        //Editor.updateLayout()
+//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
         back.init(dto, spawnDetails, despawnDetails, 500)
         return back
     }
@@ -225,7 +224,7 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-        logger.debug("Render iteration took ${iterationsMillis} ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
         while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
