@@ -93,6 +93,9 @@ class Layout {
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
+        intersection.intersectionRoads
+            .filter { it.toRoad === road || it.fromRoad === road }
+            .forEach { intersectionRoads.remove(it.id) }
         intersection.removeRoad(road)
         for (incomingRoad in intersection.incomingRoads) {
             if (incomingRoad !== road) {

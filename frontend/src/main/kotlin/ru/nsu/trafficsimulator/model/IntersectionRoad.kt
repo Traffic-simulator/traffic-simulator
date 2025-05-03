@@ -7,9 +7,7 @@ data class IntersectionRoad(
     val id: Long,
     val intersection: Intersection,
     val fromRoad: Road,
-    val toRoad: Road,
-    var geometry: Spline,
-    val laneLinkage: Pair<Int, Int>
+    val toRoad: Road, val laneLinkage: Pair<Int, Int>, var geometry: Spline
 ) {
     val lane get() = 1
 
@@ -18,9 +16,13 @@ data class IntersectionRoad(
     }
 
     fun recalculateGeometry() {
+        this.geometry = calculateGeometry()
+    }
+
+    private fun calculateGeometry(): Spline {
         val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
         val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
-        val geometry = Spline(
+        return Spline(
             fromRoad.getIntersectionPoint(intersection, abs(laneLinkage.first) - 1).xzProjection(),
             fromRoad.getIntersectionPoint(intersection, abs(laneLinkage.first) - 1)
                 .xzProjection() + fromRoad.getIntersectionDirection(intersection, true).xzProjection()
@@ -30,7 +32,5 @@ data class IntersectionRoad(
                 .xzProjection() + toRoad.getIntersectionDirection(intersection, false).xzProjection()
                 .setLength(dirLength2)
         )
-
-        this.geometry = geometry
     }
 }
