@@ -57,7 +57,6 @@ class Editor {
                     }
                 }
             }
-
             if (ImGui.button("Undo")) {
                 if (nextChange > 0) {
                     nextChange--;
