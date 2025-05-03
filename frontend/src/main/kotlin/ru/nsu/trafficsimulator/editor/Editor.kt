@@ -79,12 +79,12 @@ class Editor {
             currentTool.render(modelBatch)
         }
 
-        fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
+        fun createSphereEditorProcessor(): InputProcessor {
             return object : InputAdapter() {
+                var grabInput: Boolean = false
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    camController.camaraEnabled =
-                        !currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
-                    return false
+                    grabInput = currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
+                    return grabInput
                 }
 
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
@@ -98,14 +98,14 @@ class Editor {
                         change.apply(layout)
                         updateLayout()
                     }
-                    camController.camaraEnabled = (button == Input.Buttons.LEFT)
-                    return false
+                    val prevGrabInput = grabInput
+                    grabInput = false
+                    return prevGrabInput
                 }
 
                 override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
                     currentTool.handleDrag(Vec2(screenX.toDouble(), screenY.toDouble()))
-
-                    return false
+                    return grabInput
                 }
             }
         }

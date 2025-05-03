@@ -16,7 +16,6 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
-import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -30,7 +29,6 @@ import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
-import ru.nsu.trafficsimulator.model_generation.ModelGenerator
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
@@ -72,7 +70,7 @@ class Main : ApplicationAdapter() {
         imGuiGlfw.init(windowHandle, true)
         imGuiGl3.init()
 
-        camera = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
+        camera = PerspectiveCamera(66f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         camera?.position?.set(170f, 20f, -170f)
         camera?.lookAt(170f, 0.0f, -170.0f)
         camera?.near = 10.0f
@@ -97,15 +95,17 @@ class Main : ApplicationAdapter() {
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
-        val camController = MyCameraController(camera!!)
+        editorInputProcess = Editor.createSphereEditorProcessor()
+        inputMultiplexer.addProcessor(editorInputProcess)
+
+        val camController = CameraInputController(camera!!)
         camController.scrollFactor = -0.5f
         camController.rotateAngle = 180f
         camController.translateUnits = 130f
         camController.target = camera!!.position
 
-        editorInputProcess = Editor.createSphereEditorProcessor(camController)
-        inputMultiplexer.addProcessor(editorInputProcess)
         inputMultiplexer.addProcessor(camController)
+
         Gdx.input.inputProcessor = inputMultiplexer
 
         modelInstance1 = ModelInstance(carModel)
@@ -266,23 +266,5 @@ class Main : ApplicationAdapter() {
             sceneManager?.removeScene(carInstances[key])
             carInstances.remove(key)
         }
-    }
-}
-
-class MyCameraController(camera: Camera) : CameraInputController(camera) {
-    var camaraEnabled = true
-
-    override fun keyDown(keycode: Int): Boolean {
-        if (camaraEnabled) {
-            super.keyDown(keycode)
-        }
-        return false
-    }
-
-    override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
-        if (camaraEnabled) {
-            super.touchDragged(screenX, screenY, pointer)
-        }
-        return false
     }
 }
