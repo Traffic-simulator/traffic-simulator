@@ -113,6 +113,17 @@ class Deserializer {
 
         private fun deserializeIntersection(junction: TJunction): Intersection {
             val intersection = Intersection(junction.id.toLong(), Vec2(0.0, 0.0))
+
+            val userParameters: MutableMap<String, String> = mutableMapOf()
+            junction.gAdditionalData.forEach { data ->
+                val userData = data as TUserData
+                userParameters[userData.code] = userData.value
+            }
+            if (userParameters.containsKey("buildingType")) {
+                intersection.building = Building(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
+                    capacity = userParameters["capacity"]!!.toInt()
+                }
+            }
             return intersection
         }
 
