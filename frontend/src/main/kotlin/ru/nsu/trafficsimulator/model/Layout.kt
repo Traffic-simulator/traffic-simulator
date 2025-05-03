@@ -3,8 +3,6 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
 import kotlin.math.abs
-import kotlin.math.min
-import kotlin.math.sign
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
@@ -94,10 +92,11 @@ class Layout {
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
-        val incomingRoads = intersection.incomingRoads
-        for (incomingRoad in incomingRoads) {
-            addIntersectionRoad(intersection, road, incomingRoad)
-            addIntersectionRoad(intersection, incomingRoad, road)
+        for (incomingRoad in intersection.incomingRoads) {
+            if (incomingRoad !== road) {
+                addIntersectionRoad(intersection, road, incomingRoad)
+                addIntersectionRoad(intersection, incomingRoad, road)
+            }
         }
         intersection.addRoad(road)
     }
@@ -105,13 +104,13 @@ class Layout {
     fun deleteRoad(road: Road) {
         road.startIntersection.let {
             it.removeRoad(road)
-            if (it.getIncomingRoadsCount() == 0) {
+            if (it.incomingRoadsCount == 0) {
                 deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
-            if (it.getIncomingRoadsCount() == 0) {
+            if (it.incomingRoadsCount == 0) {
                 deleteIntersection(it)
             }
         }
@@ -170,12 +169,8 @@ class Layout {
         road.leftLane = leftLane
         road.rightLane = rightLane
 
-        road.startIntersection?.let {
-            connectRoadToIntersection(road, it)
-        }
-        road.endIntersection?.let {
-            connectRoadToIntersection(road, it)
-        }
+        connectRoadToIntersection(road, road.startIntersection)
+        connectRoadToIntersection(road, road.endIntersection)
     }
 
     override fun toString(): String {
@@ -194,7 +189,7 @@ class Layout {
     }
 
     companion object {
-        const val DEFAULT_INTERSECTION_PADDING = 10.0
+        const val DEFAULT_INTERSECTION_PADDING = 20.0
         const val LANE_WIDTH = 4.0
     }
 }

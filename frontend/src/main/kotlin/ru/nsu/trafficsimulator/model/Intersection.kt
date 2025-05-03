@@ -1,7 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
 import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.math.Vec3
 
 data class Intersection(
     val id: Long,
@@ -12,6 +11,7 @@ data class Intersection(
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
     val isBuilding: Boolean get() = building != null
+    val incomingRoadsCount get() = incomingRoads.size
 
     override fun toString(): String {
         return "Intersection(id=$id, position=$position)"
@@ -46,6 +46,4 @@ data class Intersection(
             }
         }
     }
-
-    fun getIncomingRoadsCount(): Int = incomingRoads.size
 }
