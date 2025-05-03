@@ -1,11 +1,12 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import java.util.*
 
 data class Intersection(
     val id: Long,
-    var position: Vec3,
+    var position: Vec2,
     var padding: Double = 0.0,
     var building: Building? = null
 ) {

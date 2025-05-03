@@ -16,7 +16,6 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
-import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -30,13 +29,12 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model_generation.ModelGenerator
+import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
 import java.lang.Math.clamp
-import kotlin.math.acos
-import kotlin.math.sign
+import kotlin.math.*
 
 
 class Main : ApplicationAdapter() {
@@ -75,7 +73,7 @@ class Main : ApplicationAdapter() {
         imGuiGlfw.init(windowHandle, true)
         imGuiGl3.init()
 
-        camera = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
+        camera = PerspectiveCamera(66f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         camera?.position?.set(170f, 20f, -170f)
         camera?.lookAt(170f, 0.0f, -170.0f)
         camera?.near = 10.0f
@@ -100,15 +98,17 @@ class Main : ApplicationAdapter() {
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
 
-        val camController = MyCameraController(camera!!)
+        editorInputProcess = Editor.createSphereEditorProcessor()
+        inputMultiplexer.addProcessor(editorInputProcess)
+
+        val camController = CameraInputController(camera!!)
         camController.scrollFactor = -0.5f
         camController.rotateAngle = 180f
         camController.translateUnits = 130f
         camController.target = camera!!.position
 
-        editorInputProcess = Editor.createSphereEditorProcessor(camController)
-        inputMultiplexer.addProcessor(editorInputProcess)
         inputMultiplexer.addProcessor(camController)
+
         Gdx.input.inputProcessor = inputMultiplexer
 
         modelInstance1 = ModelInstance(carModel)
@@ -139,8 +139,8 @@ class Main : ApplicationAdapter() {
             )
         )
         Editor.init(camera!!, sceneManager!!)
-        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
+//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
     }
 
     fun initializeSimulation(layout: Layout) {
@@ -283,14 +283,15 @@ class Main : ApplicationAdapter() {
             val pointOnSpline = clamp(if (vehicle.direction == Direction.BACKWARD) { spline.length - vehicle.distance } else { vehicle.distance }, 0.0, spline.length)
             val pos = spline.getPoint(pointOnSpline)
             val dir = spline.getDirection(pointOnSpline).normalized() * if (vehicle.direction == Direction.BACKWARD) { -1.0 } else { 1.0 }
-            val right = Vec3(dir.x, 0.0, dir.y).cross(Vec3(0.0, 1.0, 0.0)).normalized()
-            val angle = - acos(dir.x) * sign(dir.y)
-            val laneOffset = if (vehicle.laneId > 0.0) { vehicle.laneId - 0.5 } else { vehicle.laneId + 0.5 }
+            val right = dir.toVec3().cross(Vec3.UP).normalized()
+            val angle = acos(dir.x) * sign(dir.y)
+            val laneOffset = (abs(vehicle.laneId) - 0.5)
+            val finalTranslation = pos.toVec3() + right * laneOffset * LANE_WIDTH + Vec3.UP
             carInstance
                 .modelInstance
                 .transform
-                .setToRotationRad(Vector3(0.0f, 1.0f, 0.0f), angle.toFloat())
-                .setTranslation((pos.x + laneOffset * right.x * ModelGenerator.laneWidth).toFloat(), 1.0f, (pos.y + laneOffset * right.z * ModelGenerator.laneWidth).toFloat())
+                .setToRotationRad(Vec3.UP.toGdxVec(), angle.toFloat())
+                .setTranslation(finalTranslation.toGdxVec())
         }
 
         // Удаление машин, которых больше нет в vehicleData
@@ -300,23 +301,5 @@ class Main : ApplicationAdapter() {
             sceneManager?.removeScene(carInstances[key])
             carInstances.remove(key)
         }
-    }
-}
-
-class MyCameraController(camera: Camera) : CameraInputController(camera) {
-    var camaraEnabled = true
-
-    override fun keyDown(keycode: Int): Boolean {
-        if (camaraEnabled) {
-            super.keyDown(keycode)
-        }
-        return false
-    }
-
-    override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
-        if (camaraEnabled) {
-            super.touchDragged(screenX, screenY, pointer)
-        }
-        return false
     }
 }

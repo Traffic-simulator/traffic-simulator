@@ -6,17 +6,17 @@ import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDI
 
 class Road(
     val id: Long,
-    var startIntersection: Intersection?,
-    var endIntersection: Intersection?,
+    var startIntersection: Intersection,
+    var endIntersection: Intersection,
     var leftLane: Int = 1,
     var rightLane: Int = 1,
     var geometry: Spline
 ) {
     val startPadding
-        get() = startIntersection?.padding ?: 0.0
+        get() = startIntersection.padding
 
     val endPadding
-        get() = endIntersection?.padding ?: 0.0
+        get() = endIntersection.padding
 
     val length
         get() = geometry.length - startPadding - endPadding
@@ -75,14 +75,14 @@ class Road(
                 val (point, dir) = geometry.splineParts.first().getStartPoint()
                 val tangent = dir - point
                 geometry.moveStart(newPosition.xzProjection(), newPosition.xzProjection() + tangent)
-                startIntersection!!.padding = DEFAULT_INTERSECTION_PADDING
+                startIntersection.padding = DEFAULT_INTERSECTION_PADDING
             }
 
             ContactPoint.END -> {
                 val (point, dir) = geometry.splineParts.last().getEndPoint()
                 val tangent = dir - point
                 geometry.moveEnd(newPosition.xzProjection(), newPosition.xzProjection() + tangent)
-                endIntersection!!.padding = DEFAULT_INTERSECTION_PADDING
+                endIntersection.padding = DEFAULT_INTERSECTION_PADDING
             }
 
             ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
@@ -103,8 +103,8 @@ class Road(
 
             ContactPoint.NULL -> throw IllegalArgumentException("Invalid intersection")
         }
-        startIntersection?.recalculateIntersectionRoads(this)
-        endIntersection?.recalculateIntersectionRoads(this)
+        startIntersection.recalculateIntersectionRoads(this)
+        endIntersection.recalculateIntersectionRoads(this)
     }
 
     fun getIncomingLaneNumber(intersection: Intersection): Int {
@@ -136,7 +136,7 @@ class Road(
     }
 
     override fun toString(): String {
-        return "Road(id=$id, start=${startIntersection?.id}, end=${endIntersection?.id})"
+        return "Road(id=$id, start=${startIntersection.id}, end=${endIntersection.id})"
     }
 }
 

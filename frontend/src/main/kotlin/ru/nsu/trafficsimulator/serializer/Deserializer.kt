@@ -4,7 +4,6 @@ import opendrive.*
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.*
 import kotlin.math.max
 
@@ -21,6 +20,7 @@ class Deserializer {
                 .filter { it.junction == "-1" }
                 .map { deserializeRoad(it, layout.intersections) }
             roads.forEach { pushRoad(it, layout) }
+            layout.intersectionIdCount = layout.intersections.keys.max() + 1
 
             val intersectionRoads = openDRIVE.road
                 .filter { it.junction != "-1" }
@@ -33,22 +33,35 @@ class Deserializer {
         }
 
 
-        private fun deserializeRoad(tRoad: TRoad, idToIntersection: Map<Long, Intersection>): Road {
+        private fun deserializeRoad(tRoad: TRoad, idToIntersection: MutableMap<Long, Intersection>): Road {
             val id = tRoad.id.toLong()
 
-            var startIntersection: Intersection? = null
-            var endIntersection: Intersection? = null
 
+            var nextId = idToIntersection.keys.max() + 1
             // TODO add support for connections between roads
-            tRoad.link?.predecessor?.let {
+            val startIntersection = tRoad.link?.predecessor?.let {
                 if (it.elementType == ERoadLinkElementType.JUNCTION) {
-                    startIntersection = idToIntersection[it.elementId.toLong()]
+                    idToIntersection[it.elementId.toLong()]
+                } else {
+                    println("WARNING: road is connected with road. Import is probably incorrect")
+                    null
                 }
+            } ?: run {
+                // Position and padding will be calculated later
+                idToIntersection[nextId] = Intersection(nextId, Vec2(0.0, 0.0))
+                idToIntersection[nextId++]!!
             }
-            tRoad.link?.successor?.let {
+            val endIntersection = tRoad.link?.successor?.let {
                 if (it.elementType == ERoadLinkElementType.JUNCTION) {
-                    endIntersection = idToIntersection[it.elementId.toLong()]
+                    idToIntersection[it.elementId.toLong()]
+                } else {
+                    println("WARNING: road is connected with road. Import is probably incorrect")
+                    null
                 }
+            } ?: run {
+                // Position and padding will be calculated later
+                idToIntersection[nextId] = Intersection(nextId, Vec2(0.0, 0.0))
+                idToIntersection[nextId]!!
             }
 
             val leftLane = tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
@@ -66,8 +79,8 @@ class Deserializer {
                 spline
             )
 
-            road.endIntersection?.incomingRoads?.add(road)
-            road.startIntersection?.incomingRoads?.add(road)
+            road.endIntersection.incomingRoads.add(road)
+            road.startIntersection.incomingRoads.add(road)
 
             return road
         }
@@ -99,7 +112,7 @@ class Deserializer {
         }
 
         private fun deserializeIntersection(junction: TJunction): Intersection {
-            val intersection = Intersection(junction.id.toLong(), Vec3(0.0, 0.0, 0.0))
+            val intersection = Intersection(junction.id.toLong(), Vec2(0.0, 0.0))
 
             val userParameters: MutableMap<String, String> = mutableMapOf()
             junction.gAdditionalData.forEach { data ->
@@ -111,7 +124,6 @@ class Deserializer {
                     capacity = userParameters["capacity"]!!.toInt()
                 }
             }
-
             return intersection
         }
 
@@ -152,16 +164,12 @@ class Deserializer {
 
         private fun recalculateIntersectionPosition(layout: Layout) {
             for (intersection in layout.intersections.values) {
-                var pos = Vec3(0.0, 0.0, 0.0)
+                var pos = Vec2(0.0, 0.0)
                 for (road in intersection.incomingRoads) {
                     if (road.startIntersection == intersection) {
-                        road.geometry.getPoint(0.0).let {
-                            pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
-                        }
+                        pos += road.geometry.getPoint(0.0)
                     } else {
-                        road.geometry.getPoint(road.geometry.length).let {
-                            pos = Vec3(pos.x + it.x, 0.0, pos.z + it.y)
-                        }
+                        pos += road.geometry.getPoint(road.geometry.length)
                     }
                 }
                 intersection.position = pos / intersection.incomingRoads.size.toDouble()
@@ -188,6 +196,7 @@ class Deserializer {
                 layout.roadIdCount = intersection.id + 1
             }
             layout.intersections[intersection.id] = intersection
+            layout.intersectionIdCount = max(layout.intersectionIdCount, intersection.id + 1)
         }
 
         fun pushIntersectionRoad(road: IntersectionRoad, layout: Layout) {
