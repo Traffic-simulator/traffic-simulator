@@ -22,7 +22,7 @@ import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.editor.*
 
 class InspectTool : IEditingTool {
-    private val name = "Inspect"
+    private val name = "Edit"
     private var draggingIntersection: Intersection? = null
     private val sphereForDraggingIntersection = ModelInstance(createSphere(Color.RED))
     private var layout: Layout? = null
