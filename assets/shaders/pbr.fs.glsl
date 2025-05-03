@@ -305,9 +305,7 @@ uniform float u_alphaTest;
 #endif //alphaTestFlag
 #endif //blendedFlag
 
-#ifdef textureFlag
 varying MED vec2 v_texCoord0;
-#endif // textureFlag
 
 #ifdef textureCoord1Flag
 varying MED vec2 v_texCoord1;
@@ -1232,8 +1230,6 @@ void main() {
 
 #else
 
-// varying vec2 v_generalUV;
-
 void main() {
 
     // Metallic and Roughness material properties are packed together
@@ -1255,7 +1251,7 @@ void main() {
     float alphaRoughness = perceptualRoughness * perceptualRoughness;
 
     vec4 baseColor = getBaseColor();
-    baseColor.xyz = vec3(0.0, 0.0, 0.0);
+    baseColor.xyz = vec3(abs(v_texCoord0.x), abs(v_texCoord0.y), 0.0);
 
     // if (v_generalUV.x + v_generalUV.y > 0.5) {
         // baseColor.xyz = vec3(0.0, 0.0, 0.0);

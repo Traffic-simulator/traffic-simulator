@@ -134,9 +134,10 @@ attribute vec4 a_tangent;
 #endif
 
 
-#ifdef textureFlag
 attribute vec2 a_texCoord0;
 varying vec2 v_texCoord0;
+
+#ifdef textureFlag
 uniform mat3 u_texCoord0Transform;
 #endif // textureFlag
 
@@ -223,12 +224,8 @@ varying vec3 v_csmUVs[numCSM];
 #endif
 #endif //shadowMapFlag
 
-// General UV attibute
-// attribute vec2 a_generalUV;
-// varying vec2 v_generalUV;
-
 void main() {
-    // v_generalUV = a_generalUV;
+    v_texCoord0 = a_texCoord0;
 
 	#ifdef textureFlag
 		v_texCoord0 = (u_texCoord0Transform * vec3(a_texCoord0, 1.0)).xy;
