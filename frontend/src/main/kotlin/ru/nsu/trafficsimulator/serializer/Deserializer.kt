@@ -78,10 +78,8 @@ class Deserializer {
             idToRoad: Map<Long, Road>
         ): IntersectionRoad {
             val intersection = idToIntersection[tRoad.junction.toLong()]
-            val lanes = max(
-                tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0,
-                tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
-            )
+            val lanes = (tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0) +
+                (tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0)
             val intersectionRoad = IntersectionRoad(
                 id = tRoad.id.toLong(),
                 intersection = intersection
@@ -93,6 +91,22 @@ class Deserializer {
                 lane = lanes,
                 geometry = planeViewToSpline(tRoad.planView)
             )
+
+            tRoad.lanes.laneSection[0]?.left?.lane?.forEach { lane ->
+                for (predecessor in lane.link.predecessor) {
+                    for (successor in lane.link.successor) {
+                       intersectionRoad.laneLinkage.add(Triple(predecessor.id.toInt(), -lane.id.toInt(), successor.id.toInt()))
+                    }
+                }
+            }
+
+            tRoad.lanes.laneSection[0]?.right?.lane?.forEach { lane ->
+                for (predecessor in lane.link.predecessor) {
+                    for (successor in lane.link.successor) {
+                        intersectionRoad.laneLinkage.add(Triple(predecessor.id.toInt(), -lane.id.toInt(), successor.id.toInt()))
+                    }
+                }
+            }
 
             intersection.intersectionRoads.add(intersectionRoad)
             return intersectionRoad

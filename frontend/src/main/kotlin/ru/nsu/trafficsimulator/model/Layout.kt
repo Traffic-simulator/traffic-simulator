@@ -27,8 +27,6 @@ class Layout {
         for ((key, value) in other.intersectionRoads) {
             intersectionRoads[key] = value
         }
-        intersectionsList.clear()
-        intersectionsList.addAll(other.intersectionsList)
 
         roadIdCount = other.roadIdCount
         intersectionIdCount = other.intersectionIdCount
@@ -122,8 +120,7 @@ class Layout {
 
     fun addIntersection(position: Vec3, building: Building? = null): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newBuilding = Building(BuildingType.HOME, 100)
-        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING, newBuilding)
+        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING, building)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
