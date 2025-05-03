@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
+import imgui.ImVec2
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.MyCameraController
@@ -26,7 +27,7 @@ class Editor {
         var layout: Layout = Layout()
             set(value) {
                 field = value
-                onLayoutChange()
+                onLayoutChange(true)
             }
         private var layoutScene: Scene? = null
         var sceneManager: SceneManager? = null
@@ -43,22 +44,17 @@ class Editor {
         fun init(camera: Camera, sceneManager: SceneManager) {
             this.camera = camera
             this.sceneManager = sceneManager
-            onLayoutChange()
+            onLayoutChange(true)
         }
 
         fun runImgui() {
             ImGui.begin("Editor")
+            ImGui.labelText("##actions", "Available Actions:")
             for (action in actions) {
                 if (action.runImgui()) {
                     if (action.runAction(layout)) {
-                        onLayoutChange()
+                        onLayoutChange(true)
                     }
-                }
-            }
-            for (tool in tools) {
-                if (ImGui.button(tool.getButtonName())) {
-                    currentTool = tool
-                    onLayoutChange()
                 }
             }
 
@@ -67,7 +63,7 @@ class Editor {
                     nextChange--;
                     changes[nextChange].revert(layout)
                     layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    onLayoutChange()
+                    onLayoutChange(false)
                 }
             }
             if (ImGui.button("Redo")) {
@@ -75,7 +71,16 @@ class Editor {
                     changes[nextChange].apply(layout)
                     nextChange++
                     layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    onLayoutChange()
+                    onLayoutChange(false)
+                }
+            }
+
+            ImGui.separator()
+            ImGui.labelText("##tools", "Available Tools:")
+            for (tool in tools) {
+                if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
+                    currentTool = tool
+                    onLayoutChange(false)
                 }
             }
             ImGui.end()
@@ -106,7 +111,7 @@ class Editor {
                         changes.add(change)
                         nextChange++
                         change.apply(layout)
-                        onLayoutChange()
+                        onLayoutChange(false)
                     }
                     camController.camaraEnabled = (button == Input.Buttons.LEFT)
                     return false
@@ -119,9 +124,9 @@ class Editor {
             }
         }
 
-        private fun onLayoutChange() {
+        private fun onLayoutChange(reset: Boolean) {
             updateLayout()
-            currentTool.init(layout, camera!!)
+            currentTool.init(layout, camera!!, reset)
 
             this.spheres.clear()
             val model = createSphere(Color.RED)

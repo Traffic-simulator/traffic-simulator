@@ -136,16 +136,18 @@ class InspectTool : IEditingTool {
         }
     }
 
-    override fun init(layout: Layout, camera: Camera) {
+    override fun init(layout: Layout, camera: Camera, reset: Boolean) {
         this.layout = layout
         this.camera = camera
 
-        val (left, right) = createDirectionPairSphere()
-        directionSpheres.clear()
-        directionSpheres.add(ModelInstance(left))
-        directionSpheres.add(ModelInstance(right))
-        selectedRoad = null
-        draggingDirectionSphere = null
+        if (reset) {
+            val (left, right) = createDirectionPairSphere()
+            directionSpheres.clear()
+            directionSpheres.add(ModelInstance(left))
+            directionSpheres.add(ModelInstance(right))
+            selectedRoad = null
+            draggingDirectionSphere = null
+        }
     }
 
     private fun findRoadIntersectionAt(point: Vector3): Intersection? {

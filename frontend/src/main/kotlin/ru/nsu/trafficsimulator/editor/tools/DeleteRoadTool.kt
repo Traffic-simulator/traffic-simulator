@@ -37,7 +37,7 @@ class DeleteRoadTool : IEditingTool {
         return
     }
 
-    override fun init(layout: Layout, camera: Camera) {
+    override fun init(layout: Layout, camera: Camera, reset: Boolean) {
         this.camera = camera
         this.layout = layout
     }
