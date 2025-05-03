@@ -248,13 +248,22 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
         return
     }
 
-    fun getSignals(deltaTime: Double) : List<Signal> {
+    fun updateSignals(deltaTime: Double) {
+        for (road in roads) {
+            for (lane in road.lanes) {
+                if (lane.signal != null) {
+                    lane.signal!!.updateState(deltaTime)
+                }
+            }
+        }
+    }
+
+    fun getSignals() : List<Signal> {
         val signals: ArrayList<Signal> = ArrayList()
 
         for (road in roads) {
             for (lane in road.lanes) {
                 if (lane.signal != null) {
-                    lane.signal!!.updateState(deltaTime)
                     signals.add(lane.signal!!)
                 }
             }
