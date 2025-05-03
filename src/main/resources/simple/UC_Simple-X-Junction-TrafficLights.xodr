@@ -88,7 +88,7 @@
         <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="4" name="Sg306Vorfahrtstrasse02.flt" dynamic="no" orientation="-" zOffset="1.6800000131130219e+00" type="306" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.83" width="0.82">
                 <validity fromLane="-3" toLane="3"/>
             </signal>
-            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="12" name="_Sg12" dynamic="yes" orientation="-" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="12" name="_Sg12" dynamic="yes" orientation="-" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="0-3-5" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
                 <validity fromLane="-3" toLane="3"/>
             </signal>
             <signal s="2.0000000000000001e-01" t="-0.0000000000000000e+00" id="0" name="SgRMHoldingline-1Lane.flt" dynamic="no" orientation="-" zOffset="0.0000000000000000e+00" type="294" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.03" width="3.75">
@@ -168,7 +168,7 @@
         <signals>
             <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="8" name="Sg306Vorfahrtstrasse02.flt" dynamic="no" orientation="-" zOffset="1.6800000131130219e+00" type="306" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.83" width="0.82">
             </signal>
-            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="9" name="_Sg9" dynamic="yes" orientation="-" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="9" name="_Sg9" dynamic="yes" orientation="-" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="0-3-5" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
             </signal>
             <signal s="2.0000000000000001e-01" t="-0.0000000000000000e+00" id="1" name="SgRMHoldingline-1Lane.flt" dynamic="no" orientation="-" zOffset="0.0000000000000000e+00" type="294" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.03" width="3.75">
             </signal>
@@ -474,7 +474,7 @@
                         <link>
                         </link>
                         <width sOffset="0.0000000000000000e+00" a="3.7500000000000000e+00" b="0.0000000000000000e+00" c="0.0000000000000000e+00" d="0.0000000000000000e+00"/>
-                        
+
                     </lane>
                 </left>
                 <center>
@@ -493,7 +493,7 @@
                         <link>
                         </link>
                         <width sOffset="0.0000000000000000e+00" a="3.7500000000000000e+00" b="0.0000000000000000e+00" c="0.0000000000000000e+00" d="0.0000000000000000e+00"/>
-                        
+
                     </lane>
                     <lane id="-2" type="border" level="false">
                         <link>
@@ -520,7 +520,7 @@
             <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="2" name="Sg205VorfahrtGew01.flt" dynamic="no" orientation="-" zOffset="1.8500000000000001e+00" type="205" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.51" width="0.58">
                 <validity fromLane="-3" toLane="3"/>
             </signal>
-            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="15" name="_Sg15" dynamic="yes" orientation="-" zOffset="-1.3599998950958252e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="15" name="_Sg15" dynamic="yes" orientation="-" zOffset="-1.3599998950958252e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="0-3-5" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
                 <validity fromLane="-3" toLane="3"/>
             </signal>
             <signal s="2.0000000000000001e-01" t="-0.0000000000000000e+00" id="10" name="SgRMHoldingline-1Lane.flt" dynamic="no" orientation="-" zOffset="0.0000000000000000e+00" type="294" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.03" width="3.75">
@@ -898,7 +898,7 @@
                         <link>
                         </link>
                         <width sOffset="0.0000000000000000e+00" a="3.7500000000000000e+00" b="0.0000000000000000e+00" c="0.0000000000000000e+00" d="0.0000000000000000e+00"/>
-                        
+
                     </lane>
                 </left>
                 <center>
@@ -917,7 +917,7 @@
                         <link>
                         </link>
                         <width sOffset="0.0000000000000000e+00" a="3.7500000000000000e+00" b="0.0000000000000000e+00" c="0.0000000000000000e+00" d="0.0000000000000000e+00"/>
-                        
+
                     </lane>
                     <lane id="-2" type="border" level="false">
                         <link>
@@ -944,8 +944,8 @@
             <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="21" name="Sg205VorfahrtGew01.flt" dynamic="no" orientation="-" zOffset="1.8500000000000001e+00" type="205" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.51" width="0.58">
                 <validity fromLane="-3" toLane="3"/>
             </signal>
-            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="3" name="_Sg3" dynamic="yes" orientation="-" zOffset="-1.3599998950958252e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
-                <validity fromLane="-3" toLane="3"/>
+            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="3" name="_Sg3" dynamic="yes" orientation="-" zOffset="-1.3599998950958252e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="0-3-5" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+                <validity fromLane="-1" toLane="3"/>
             </signal>
             <signal s="2.0000000000000001e-01" t="-0.0000000000000000e+00" id="13" name="SgRMHoldingline-1Lane.flt" dynamic="no" orientation="-" zOffset="0.0000000000000000e+00" type="294" country="OpenDRIVE" countryRevision="2013" subtype="-1" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="0.03" width="3.75">
             </signal>

@@ -10,10 +10,27 @@ class Layout {
     val roads = mutableMapOf<Long, Road>()
     val intersectionRoads = mutableMapOf<Long, IntersectionRoad>()
     val intersections = mutableMapOf<Long, Intersection>()
-    val intersectionsList = mutableListOf<Intersection>()
 
     var roadIdCount: Long = 0
     var intersectionIdCount: Long = 0
+
+    fun copy(other: Layout) {
+        roads.clear()
+        for ((key, value) in other.roads) {
+            roads[key] = value
+        }
+        intersections.clear()
+        for ((key, value) in other.intersections) {
+            intersections[key] = value
+        }
+        intersectionRoads.clear()
+        for ((key, value) in other.intersectionRoads) {
+            intersectionRoads[key] = value
+        }
+
+        roadIdCount = other.roadIdCount
+        intersectionIdCount = other.intersectionIdCount
+    }
 
     fun addRoad(startPosition: Vec3, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
         val startIntersection = addIntersection(startPosition)
@@ -37,9 +54,9 @@ class Layout {
         endIntersection: Intersection,
         endDirection: Vec3
     ): Road {
-        val startPoint = startIntersection.position.xzProjection()
+        val startPoint = startIntersection.position
         val startDir = startDirection.xzProjection()
-        val endPoint = endIntersection.position.xzProjection()
+        val endPoint = endIntersection.position
         val endDir = endDirection.xzProjection()
 
         val newRoad = Road(
@@ -56,15 +73,23 @@ class Layout {
         return newRoad
     }
 
+    fun addBuilding(
+        intersection: Intersection, intersectionDirection: Vec3,
+        buildingPosition: Vec3, buildingDirection: Vec3,
+        building : Building): Road {
+        val buildingIntersection = addIntersection(buildingPosition, building)
+        return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
+    }
+
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
         for (road in intersection.incomingRoads) {
             road.moveRoad(intersection, newPosition)
-            if (road.startIntersection != null && road.startIntersection != intersection)
-                road.startIntersection!!.recalculateIntersectionRoads()
-            if (road.endIntersection != null && road.endIntersection != intersection)
-                road.endIntersection!!.recalculateIntersectionRoads()
+            if (road.startIntersection != intersection)
+                road.startIntersection.recalculateIntersectionRoads()
+            if (road.endIntersection != intersection)
+                road.endIntersection.recalculateIntersectionRoads()
         }
-        intersection.position = newPosition
+        intersection.position = newPosition.xzProjection()
         intersection.recalculateIntersectionRoads()
     }
 
@@ -78,13 +103,13 @@ class Layout {
     }
 
     fun deleteRoad(road: Road) {
-        road.startIntersection?.let {
+        road.startIntersection.let {
             it.removeRoad(road)
             if (it.getIncomingRoadsCount() == 0) {
                 deleteIntersection(it)
             }
         }
-        road.endIntersection?.let {
+        road.endIntersection.let {
             it.removeRoad(road)
             if (it.getIncomingRoadsCount() == 0) {
                 deleteIntersection(it)
@@ -93,12 +118,9 @@ class Layout {
         roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3): Intersection {
+    fun addIntersection(position: Vec3, building: Building? = null): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newIntersection = Intersection(newIntersectionId, position, DEFAULT_INTERSECTION_PADDING)
-        if (!intersections.containsValue(newIntersection)) {
-            intersectionsList.add(newIntersection)
-        }
+        val newIntersection = Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -109,8 +131,8 @@ class Layout {
         val laneNumber =
             min(abs(incomingLaneNumber), abs(outgoingLaneNumber))
 
-        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position)
-        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position)
+        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
+        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
         val geometry = Spline(
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection(),
             fromRoad.getIntersectionPoint(intersection, laneNumber - abs(incomingLaneNumber)).xzProjection() + fromRoad.getIntersectionDirection(intersection, true).xzProjection().setLength(dirLength1),
@@ -155,7 +177,6 @@ class Layout {
             deleteRoad(road)
         }
         intersections.remove(intersection.id)
-        intersectionsList.remove(intersection)
     }
 
     companion object {
