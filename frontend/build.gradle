@@ -16,6 +16,10 @@ dependencies {
   implementation(project(":api"))
   implementation(project(":simulator"))
 
+  // Logging
+  implementation 'io.github.microutils:kotlin-logging-jvm:2.0.11'
+  implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.6'
+
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
     // https://mvnrepository.com/artifact/io.github.spair/imgui-java-natives-linux

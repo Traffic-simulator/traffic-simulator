@@ -1,4 +1,4 @@
-package route_generator
+package route_generator.simple_model_generator
 
 import java.util.*
 import kotlin.math.ceil

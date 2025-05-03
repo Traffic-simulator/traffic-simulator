@@ -1,4 +1,4 @@
-package route_generator.discrete_function
+package route_generator.simple_model_generator.discrete_function
 
 import jakarta.validation.constraints.NotNull
 
