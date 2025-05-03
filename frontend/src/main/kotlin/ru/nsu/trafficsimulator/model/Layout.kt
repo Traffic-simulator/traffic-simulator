@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
 import kotlin.math.abs
+import kotlin.math.sign
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
@@ -92,6 +93,7 @@ class Layout {
     }
 
     private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
+        intersection.removeRoad(road)
         for (incomingRoad in intersection.incomingRoads) {
             if (incomingRoad !== road) {
                 addIntersectionRoad(intersection, road, incomingRoad)
@@ -128,27 +130,12 @@ class Layout {
         val incomingLaneNumber = fromRoad.getIncomingLaneNumber(intersection)
         val outgoingLaneNumber = toRoad.getOutgoingLaneNumber(intersection)
 
-        val incomingSign = if (incomingLaneNumber > 0) 1 else -1
-        val outgoingSign = if (outgoingLaneNumber > 0) 1 else -1
+        val incomingSign = incomingLaneNumber.sign
+        val outgoingSign = outgoingLaneNumber.sign
 
-        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
-        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
-
-        for (incomingLane in 0..<abs(incomingLaneNumber)) {
-            for (outgoingLane in 0..<abs(outgoingLaneNumber)) {
-                val il = incomingLane * incomingSign
-                val ol = outgoingLane * outgoingSign
-
-                val geometry = Spline(
-                    fromRoad.getIntersectionPoint(intersection, -abs(il)).xzProjection(),
-                    fromRoad.getIntersectionPoint(intersection, -abs(il)).xzProjection()
-                        + fromRoad.getIntersectionDirection(intersection, true).xzProjection()
-                        .setLength(dirLength1),
-                    toRoad.getIntersectionPoint(intersection, abs(ol)).xzProjection(),
-                    toRoad.getIntersectionPoint(intersection, abs(ol)).xzProjection()
-                        + toRoad.getIntersectionDirection(intersection, false).xzProjection()
-                        .setLength(dirLength2)
-                )
+        for (incomingLane in 1..abs(incomingLaneNumber)) {
+            for (outgoingLane in 1..abs(outgoingLaneNumber)) {
+                val geometry = Spline()
 
                 val newIntersectionRoad = IntersectionRoad(
                     id = roadIdCount++,
@@ -156,8 +143,9 @@ class Layout {
                     fromRoad = fromRoad,
                     toRoad = toRoad,
                     geometry = geometry,
-                    laneLinkage = (incomingLane + 1) * incomingSign to (outgoingLane + 1) * outgoingSign
+                    laneLinkage = incomingLane * incomingSign to outgoingLane * outgoingSign
                 )
+                newIntersectionRoad.recalculateGeometry()
 
                 intersection.intersectionRoads.add(newIntersectionRoad)
                 intersectionRoads[newIntersectionRoad.id] = newIntersectionRoad
