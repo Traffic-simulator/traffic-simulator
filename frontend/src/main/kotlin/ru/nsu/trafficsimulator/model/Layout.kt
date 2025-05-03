@@ -132,8 +132,8 @@ class Layout {
         val incomingSign = if (incomingLaneNumber > 0) 1 else -1
         val outgoingSign = if (outgoingLaneNumber > 0) 1 else -1
 
-        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position)
-        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position)
+        val dirLength1 = fromRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
+        val dirLength2 = toRoad.getIntersectionPoint(intersection).distance(intersection.position.toVec3())
 
         for (incomingLane in 0..<abs(incomingLaneNumber)) {
             for (outgoingLane in 0..<abs(outgoingLaneNumber)) {

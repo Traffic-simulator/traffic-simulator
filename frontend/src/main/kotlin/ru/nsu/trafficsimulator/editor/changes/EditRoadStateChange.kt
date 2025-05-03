@@ -18,7 +18,6 @@ class EditRoadStateChange(
             leftLane = currentLeftLines?.get() ?: 1,
             rightLane = currentRightLines?.get() ?: 1
         )
-        println("road: ${road.id}, left: ${road.leftLane}, right: ${road.rightLane}")
     }
 
     override fun revert(layout: Layout) {

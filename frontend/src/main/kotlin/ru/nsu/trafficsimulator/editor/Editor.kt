@@ -11,7 +11,6 @@ import imgui.ImGui
 import imgui.type.ImInt
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import ru.nsu.trafficsimulator.MyCameraController
 import ru.nsu.trafficsimulator.editor.actions.LoadAction
 import ru.nsu.trafficsimulator.editor.actions.SaveAction
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
