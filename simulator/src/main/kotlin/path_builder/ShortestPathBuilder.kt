@@ -5,20 +5,16 @@ import network.Lane
 import network.Network
 import vehicle.Direction
 import vehicle.Vehicle
+import vehicle.VehicleDetector
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.random.Random
 
-// TODO: multiple lanes logic:
-// Ask from pathBuilder is it ok to change the lane
-// Consider lane changes as edges in graph
 class ShortestPathBuilder: IPathBuilder {
 
     val vehiclesPaths = HashMap<Int, ArrayList<Pair<Lane, Boolean>>>()
 
-    // In current usage will be called at first for every vehicle
-    // !!! DON'T rely on that in prod realisation
     // Add some type of PathBuildingErrorException to log bad routes...
     override fun getNextPathLane(vehicle: Vehicle): Pair<Lane, Boolean>? {
         if (!vehiclesPaths.containsKey(vehicle.vehicleId)) {
@@ -28,7 +24,7 @@ class ShortestPathBuilder: IPathBuilder {
         return getNextPathLane(vehicle, vehicle.lane, vehicle.direction)
     }
 
-    fun getDijkstraShortestPath(network: Network, source: Waypoint, destination: Waypoint): ArrayList<Pair<Lane, Boolean>> {
+    private fun getDijkstraShortestPath(network: Network, source: Waypoint, destination: Waypoint): ArrayList<Pair<Lane, Boolean>> {
         val queue = PriorityQueue<Pair<RoadWaypoint, Double>>(compareBy { it.second })
         val dist = mutableMapOf<RoadWaypoint, Double>().withDefault { Double.MAX_VALUE }
         val par = mutableMapOf<RoadWaypoint, RoadWaypoint>()
@@ -85,9 +81,7 @@ class ShortestPathBuilder: IPathBuilder {
         }
     }
 
-    // In this realization direction is not used, but you have to use it in prod version
     override fun getNextPathLane(vehicle: Vehicle, lane: Lane, direction: Direction): Pair<Lane, Boolean>? {
-
         for(i in 0 until vehiclesPaths[vehicle.vehicleId]!!.size) {
             if (vehiclesPaths[vehicle.vehicleId]!!.get(i).first == lane) {
                 if (i < vehiclesPaths[vehicle.vehicleId]!!.size - 1) {
@@ -98,54 +92,44 @@ class ShortestPathBuilder: IPathBuilder {
             }
         }
 
-        // In case of errors return null
         return null
     }
 
-    override fun getNextVehicle(vehicle: Vehicle, lane: Lane, direction: Direction, acc_distance: Double, initial_iteration: Boolean): Pair<Vehicle?, Double> {
-        var closestVehicle: Vehicle? = null
-        if (initial_iteration) {
-            // TODO: use binary search and some kind of iterator or stream API
-            lane.vehicles.forEach{ it ->
-                if (it.position > vehicle.position + SimulationConfig.EPS) {
-                    if (closestVehicle == null) {
-                        closestVehicle = it
-                    } else {
-                        if (closestVehicle!!.position > it.position) {
-                            closestVehicle = it
-                        }
-                    }
-                }
-            }
-            if (closestVehicle != null) {
-                val distance = closestVehicle!!.position - closestVehicle!!.length - vehicle.position
-                if (distance > SimulationConfig.MAX_VALUABLE_DISTANCE) {
-                    return Pair(null, SimulationConfig.INF)
-                }
-                return Pair(closestVehicle, distance)
-            }
-        } else {
-            closestVehicle = lane.getMinPositionVehicle()
-        }
+    private fun generateNextRoads(vehicle: Vehicle, lane: Lane, direction: Direction) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
+        var curLane = lane
+        var curDir = direction
 
-        if (acc_distance > SimulationConfig.MAX_VALUABLE_DISTANCE) {
-            return Pair(null, SimulationConfig.INF)
-        }
+        // initial lane
+        var acc_distance = 0.0
+        yield(VehicleDetector.VehicleLaneSequence(vehicle, lane, direction, acc_distance, true))
+        acc_distance += lane.road.troad.length - vehicle.position
 
-        if (closestVehicle == null) {
-            val nextLane = getNextPathLane(vehicle, lane, direction)
+        // next path lanes
+        while (acc_distance < SimulationConfig.MAX_VALUABLE_DISTANCE) {
+            val nextLane = getNextPathLane(vehicle, curLane, curDir)
             if (nextLane == null) {
-                return Pair(null, SimulationConfig.INF)
+                break
             }
 
-            return getNextVehicle(vehicle, nextLane.first, vehicle.direction.opposite(nextLane.second), acc_distance + lane.road.troad.length, false)
-        } else {
-            val distance = closestVehicle!!.position - closestVehicle!!.length - vehicle.position + acc_distance
-            if (distance > SimulationConfig.MAX_VALUABLE_DISTANCE) {
-                return Pair(null, SimulationConfig.INF)
-            }
-            return Pair(closestVehicle, distance)
+            yield(
+                VehicleDetector.VehicleLaneSequence(
+                    vehicle,
+                    nextLane.first,
+                    curDir.opposite(nextLane.second),
+                    acc_distance,
+                    false
+                )
+            )
+            acc_distance += nextLane.first.road.troad.length
+
+            curLane = nextLane.first
+            curDir = curDir.opposite(nextLane.second)
         }
+
+    }
+
+    override fun getNextVehicle(vehicle: Vehicle, lane: Lane, direction: Direction): Pair<Vehicle?, Double> {
+        return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, lane, direction))
     }
 
 }

@@ -1,13 +1,13 @@
+import mu.KotlinLogging
 import network.signals.Signal
 import opendrive.OpenDRIVE
-import vehicle.Direction
 import vehicle.Vehicle
 
 class BackendAPI : ISimulation{
 
+    val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
 
-    // spawnDetails will be deprecated, as all spawn info have to be in OpenDRIVE layout or some extra info file.
     override fun init(layout: OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error? {
         simulator = Simulator(layout, spawnDetails, despawnDetails, seed)
         return null
@@ -17,9 +17,13 @@ class BackendAPI : ISimulation{
         if (simulator == null)
             return ArrayList<ISimulation.VehicleDTO>()
 
-        val vehicles = simulator!!.update(deltaTime)
+        val startNanos = System.nanoTime()
 
-        return vehicles.map{ vehToDTO(it) }.toList()
+        val vehicles = simulator!!.update(deltaTime)
+        val result = vehicles.map{ vehToDTO(it) }.toList()
+
+        logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
+        return result
     }
 
     override fun getSignalStates(deltaTime: Double): List<ISimulation.SignalDTO> {
