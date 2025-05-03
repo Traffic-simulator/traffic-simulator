@@ -6,6 +6,7 @@ import opendrive.TRoadLanesLaneSectionLcrLaneLink
 import opendrive.TRoadLanesLaneSectionLrLane
 import vehicle.Direction
 import vehicle.Vehicle
+import kotlin.math.roundToInt
 
 
 // Assuming that vehicle moves to the next_lane after front bumper (position) is > length(previous_lane)
@@ -24,6 +25,10 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     var successor: ArrayList<Pair<Lane, Boolean>>? = null
 
     var signal: Signal? = null
+
+    val length: Double = road.troad.length
+    val lenOfSegment: Double = 0.1
+    var segments: List<Segment> = ArrayList(length.div(lenOfSegment).roundToInt())
 
     override fun addVehicle(vehicle: Vehicle) {
         vehicles.add(vehicle)

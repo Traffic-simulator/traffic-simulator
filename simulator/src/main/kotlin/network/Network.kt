@@ -141,6 +141,22 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
         return road.lanes.filter { it.laneId.toString() == laneId }.take(1)[0]
     }
 
+    fun updateSegments() {
+        // TODO тут бахну пересчет для каждой дороги и каждого лейна
+
+        // for road
+        // for lane
+        // for Vehicle check vehicle.position
+        // segment.addVehicle
+        // затем вызов update, он перетрет нынешние машинки на этом цикле, создаст новое значение
+    }
+
+    fun getAllLanes(): List<Lane> {
+        val lanes = ArrayList<Lane>()
+        roads.forEach { lanes.addAll(it.lanes) }
+
+        return lanes
+    }
 
     fun getLanesFromConnection(
         currentLane: Lane,
