@@ -1,7 +1,9 @@
 package vehicle
 
 import SimulationConfig
+import SimulationConfig.Companion.JUNCTION_BLOCK_DISTANCE
 import Waypoint
+import mu.KotlinLogging
 import network.Lane
 import network.Network
 import path_builder.IPathBuilder
@@ -20,58 +22,31 @@ class Vehicle(
     val maxAcc: Double = 0.73
 ) {
 
-    var lane = network.getLaneById(source.roadId, source.laneId)
-    var direction = source.direction
+    private val logger = KotlinLogging.logger("BACKEND")
+
     val width = 1.7
     val length = 4.5
     val comfortDeceleration = 1.67
     val safeDeceleration = 4.0
     val maxDeceleration = 9.0
+
+    var lane = network.getLaneById(source.roadId, source.laneId)
+    var direction = source.direction
     var speed = 0.0
     var acc = 0.0
     var laneChangeTimer = 0.0
-
+    var position = 1.0
     var despawned = false
 
     init {
         lane.addVehicle(this)
     }
 
-    // position of front bumper in road length. Vehicle is going to the next road if the front bumper is not on the road
-    var position = 10.0
-
-    // TODO: How to handle road narrowing without junction
+    // Have to be called only after updateAcceleration!!!
     fun update(deltaTime: Double) {
-        println("Veh id: ${vehicleId}, Road id: ${lane.roadId}, Line id: ${lane.laneId}, Position: ${position}, Speed: ${speed}, Direction: ${direction}")
-
-        // TODO: have to rely on PATH
-        val closestJunction = getClosestJunction()
-        var junctionAcc = SimulationConfig.INF
-
-        //When close (TODO: how is depending on Block factor) to junction need block it.
-        // TODO: smart distance logic... Multiple params... Depends on block type..
-        val some_distance = 80.0
-        if (closestJunction != null && closestJunction.distance < some_distance) {
-            val junction = network.getJunctionById(closestJunction.junctionId)
-
-            // TODO: Еще нужно следить, что ранее не блокировали, а в прочем пофиг...
-            // Быть внимательным, если траектория заблокирована машиной перед нами (то есть мы можем проехать)
-            // Не смотря на это заблокироваться от нас она тоже должна.
-            if (junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
-
-            } else {
-                junctionAcc = IDM.getAcceleration(this, this.speed, closestJunction.distance)
-            }
-        }
-
-        // TODO: Not lane, have to use PathBuilder
-        val nextVeh =
-            pathBuilder.getNextVehicle(this, this.lane, this.direction, this.lane.road.troad.length - this.position)
-        acc = Math.min(junctionAcc, IDM.getAcceleration(this, nextVeh.first, nextVeh.second))
-
-        speed += acc
+        speed += acc * deltaTime
         speed = Math.max(speed, 0.0)
-        if (speed < SimulationConfig.EPS * 10.0) {
+        if (speed < SimulationConfig.EPS) {
             speed = 0.0
         }
         position += speed * deltaTime
@@ -81,13 +56,41 @@ class Vehicle(
             if (!moveToNextLane())
                 break
         }
+        logger.info {
+            "Veh@$vehicleId, RoadId: ${lane.roadId}, LineId: ${lane.laneId}, " +
+                "Position: ${"%.3f".format(position)}, " +
+                "Speed: ${"%.3f".format(speed)}, " +
+                "Direction: ${direction}"
+        }
+    }
+
+    fun updateAcceleration() {
+        val closestJunction = getClosestJunction()
+        var junctionAcc = SimulationConfig.INF
+
+        if (closestJunction != null && closestJunction.distance < JUNCTION_BLOCK_DISTANCE) {
+            val junction = network.getJunctionById(closestJunction.junctionId)
+
+            // Быть внимательным, если траектория заблокирована машиной перед нами (то есть мы можем проехать)
+            // Не смотря на это заблокироваться от нас она тоже должна.
+            // Can not block if already blocked, perfomance optimization
+            if (junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
+                // Trajectory was succesfully blocked by us, can continue driving
+            } else {
+                // Trajectory was blocked, have to stop before junction
+                junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
+            }
+        }
+
+        val nextVeh = pathBuilder.getNextVehicle(this, this.lane, this.direction)
+        acc = Math.min(junctionAcc, IDM.getAcceleration(this, nextVeh.first, nextVeh.second))
     }
 
     data class ClosestJunction(val junctionId: String, val distance: Double, val connectingRoadId: String) {
 
     }
 
-    // TODO: What to do if currently on junction?
+    // Get next junction on path, if currently on junction return the next one
     private fun getClosestJunction(): ClosestJunction? {
         var tmp_lane: Pair<Lane, Boolean>? = pathBuilder.getNextPathLane(this)
         var tmp_dir: Direction = direction
@@ -112,10 +115,8 @@ class Vehicle(
         if (nextLane != null) {
             // println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
 
-            // If was blockingJunction have to unlock
-            // TODO: If connection is junc to junc?... By idea have to detect it before and block before...
+            // If was blocking junction have to unlock
             if (lane.road.junction != "-1" && nextLane.first.road.junction != lane.road.junction) {
-                // TODO: is it correct roadId?
                 network.getJunctionById(lane.road.junction).unlockTrajectoryVehicle(lane.roadId, vehicleId)
             }
 
@@ -126,7 +127,7 @@ class Vehicle(
             position = newPosition
         } else {
             // Despawn vehicle
-            println("${vehicleId} despawned")
+            logger.info { "Veh@${vehicleId} was despawned" }
 
             lane.removeVehicle(this)
             despawned = true
@@ -157,6 +158,15 @@ class Vehicle(
 
         laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
         setNewLane(_lane)
+    }
+
+    fun distToClosestJunction(): Double {
+        val closestJunction = getClosestJunction()
+        if (closestJunction != null) {
+            return closestJunction.distance
+        }
+
+        return SimulationConfig.INF
     }
 
     companion object {

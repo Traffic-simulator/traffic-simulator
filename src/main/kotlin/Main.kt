@@ -61,3 +61,14 @@ val SEED: Long = 163
 //    val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), SEED);
 //    return simulator
 //}
+// 
+// fun initTrafficLightsSimulator(odr: OpenDriveReader): Simulator {
+//     val openDRIVE = odr.read("simple/UC_Simple-X-Junction-TrafficLights.xodr")
+//     println(openDRIVE.road.size)
+
+//     val spawnDetails = ArrayList<Triple<String, String, Direction>>()
+
+//     val simulator = Simulator(openDRIVE, SpawnDetails(spawnDetails), SEED);
+//     return simulator
+// }
+

@@ -3,6 +3,7 @@ package network
 import junction_intersection.Intersection
 import network.junction.Connection
 import network.junction.Junction
+import network.signals.Signal
 import opendrive.EContactPoint
 import opendrive.ERoadLinkElementType
 import opendrive.TJunction
@@ -74,16 +75,18 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
             } else if (road.predecessor?.elementType == ERoadLinkElementType.JUNCTION) {
                 val junc = junctions.firstOrNull { it.id == road.predecessor!!.elementId }!!  // that junction
                 // get connections by incomingId, even for predecessor junction
-                val connections = junc.connections[road.id]!!
-
-                for (lane in road.lanes) {
-                    if (lane.predecessor == null) {
-                        lane.predecessor = ArrayList()
-                    }
-                    for (con in connections) {
-                        lane.predecessor!!.addAll(getLanesFromConnection(lane, con, true))
+                junc.connections[road.id]?.let { connections ->
+                    for (lane in road.lanes) {
+                        if (lane.predecessor == null) {
+                            lane.predecessor = ArrayList()
+                        }
+                        for (con in connections) {
+                            lane.predecessor!!.addAll(getLanesFromConnection(lane, con, true))
+                        }
                     }
                 }
+
+
             }
 
             // Road <-> Road
@@ -113,14 +116,14 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
             } else if (road.successor?.elementType == ERoadLinkElementType.JUNCTION) {
                 val junc = junctions.firstOrNull { it.id == road.successor!!.elementId }!!  // that junction
                 // get connections by incomingId, even for successor junction
-                val connections = junc.connections[road.id]!!
-
-                for (lane in road.lanes) {
-                    if (lane.successor == null) {
-                        lane.successor = ArrayList()
-                    }
-                    for (con in connections) {
-                        lane.successor!!.addAll(getLanesFromConnection(lane, con, false))
+                junc.connections[road.id]?.let { connections ->
+                    for (lane in road.lanes) {
+                        if (lane.successor == null) {
+                            lane.successor = ArrayList()
+                        }
+                        for (con in connections) {
+                            lane.successor!!.addAll(getLanesFromConnection(lane, con, false))
+                        }
                     }
                 }
             }
@@ -227,6 +230,13 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
                             }
                 }
             )
+
+            println("Signals:")
+            println(
+                road.lanes.map {
+                    "\n currentLane ${it.laneId} signal: cycle=${it.signal?.cycle}"
+                }
+            )
         }
     }
 
@@ -236,5 +246,20 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
         val nextConnection = nextJunction.connections.filter { it.key == nextRoad.id }  // connection to the next road
         // TODO get the lane from connection or from the lane
         return
+    }
+
+    fun getSignals(deltaTime: Double) : List<Signal> {
+        val signals: ArrayList<Signal> = ArrayList()
+
+        for (road in roads) {
+            for (lane in road.lanes) {
+                if (lane.signal != null) {
+                    lane.signal!!.updateState(deltaTime)
+                    signals.add(lane.signal!!)
+                }
+            }
+        }
+
+        return signals
     }
 }

@@ -3,7 +3,10 @@ package ru.nsu.trafficsimulator.serializer
 import opendrive.*
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
-import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.Intersection
+import ru.nsu.trafficsimulator.model.IntersectionRoad
+import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.Road
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -39,13 +42,13 @@ private fun serializeRoad(road: Road): TRoad {
     tRoad.junction = "-1"
 
     tRoad.link = TRoadLink().apply {
-        road.startIntersection?.let {
+        road.startIntersection.let {
             predecessor = TRoadLinkPredecessorSuccessor()
             predecessor.elementType = ERoadLinkElementType.JUNCTION
             predecessor.elementId = it.id.toString()
         }
 
-        road.endIntersection?.let {
+        road.endIntersection.let {
             successor = TRoadLinkPredecessorSuccessor()
             successor.elementType = ERoadLinkElementType.JUNCTION
             successor.elementId = it.id.toString()
@@ -193,6 +196,12 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
         })
     }
 
+    intersection.building?.let {
+        tJunction.gAdditionalData.add(createUserData("buildingType", it.type.toString()))
+        tJunction.gAdditionalData.add(createUserData("buildingCapacity", it.capacity.toString()))
+        tJunction.gAdditionalData.add(createUserData("buildingFullness", it.fullness.toString()))
+    }
+
     return tJunction
 }
 
@@ -233,4 +242,9 @@ private fun generateRoadPlaneView(geometry: Spline): TRoadPlanView {
         })
     }
     return tRoadPlanViewGeometry
+}
+
+fun createUserData(key: String, value: String) = TUserData().apply {
+    this.code = key
+    this.value = value
 }

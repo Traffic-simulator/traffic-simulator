@@ -5,7 +5,7 @@ import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.math.Vec3
 
 class MoveIntersectionStateChange(private val intersection: Intersection, private val newPos: Vec3) : IStateChange {
-    private val prevPos = intersection.position
+    private val prevPos = intersection.position.toVec3()
     override fun apply(layout: Layout) {
         layout.moveIntersection(intersection, newPos)
     }

@@ -30,7 +30,7 @@ data class Vec3(var x: Double, var y: Double, var z: Double) {
     fun lengthSq(): Double = dot(this)
     fun normalized(): Vec3 = this / length()
     fun toGdxVec(): Vector3 = Vector3(x.toFloat(), y.toFloat(), z.toFloat())
-    fun xzProjection() = Vec2(x, z)
+    fun xzProjection() = Vec2(x, -z)
     fun setLength(length: Double) = this * (length / length())
 
     companion object {

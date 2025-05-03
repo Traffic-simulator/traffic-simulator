@@ -1,6 +1,7 @@
 package network
 
 import SimulationConfig
+import network.signals.Signal
 import opendrive.TRoadLanesLaneSectionLcrLaneLink
 import opendrive.TRoadLanesLaneSectionLrLane
 import vehicle.Direction
@@ -21,6 +22,8 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     // List for lanes from roads AND from junctions and for strange asam.net:xodr:1.4.0:road.lane.link.multiple_connections.
     var predecessor: ArrayList<Pair<Lane, Boolean>>? = null
     var successor: ArrayList<Pair<Lane, Boolean>>? = null
+
+    var signal: Signal? = null
 
     override fun addVehicle(vehicle: Vehicle) {
         vehicles.add(vehicle)
