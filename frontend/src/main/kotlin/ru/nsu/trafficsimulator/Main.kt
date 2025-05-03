@@ -34,9 +34,7 @@ import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
 import java.lang.Math.clamp
-import kotlin.math.abs
-import kotlin.math.acos
-import kotlin.math.sign
+import kotlin.math.*
 
 
 class Main : ApplicationAdapter() {
@@ -44,6 +42,8 @@ class Main : ApplicationAdapter() {
         Editor,
         Simulator,
     }
+
+    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Double = 1.0)
 
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
@@ -58,7 +58,7 @@ class Main : ApplicationAdapter() {
     private var modelInstance1: ModelInstance? = null
     private var modelBatch: ModelBatch? = null
 
-    private var back: ISimulation? = null
+    private var simState: SimulationState = SimulationState(BackendAPI())
     private val carInstances = mutableMapOf<Int, Scene>()
     private var state = ApplicationState.Editor
     private var editorInputProcess: InputProcessor? = null
@@ -139,12 +139,11 @@ class Main : ApplicationAdapter() {
             )
         )
         Editor.init(camera!!, sceneManager!!)
-        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
-        Editor.updateLayout()
+//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
     }
 
-    fun initializeSimulation(layout: Layout): ISimulation {
+    fun initializeSimulation(layout: Layout) {
         val spawnDetails = ArrayList<Waypoint>()
         val despawnDetails = ArrayList<Waypoint>()
 //        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
@@ -162,23 +161,19 @@ class Main : ApplicationAdapter() {
         spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
         despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
 
-        val back = BackendAPI()
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
-        //val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        //Editor.layout = Deserializer.deserialize(dto)
-        //Editor.updateLayout()
-        back.init(dto, spawnDetails, despawnDetails, 500)
-        return back
+//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+//        Editor.layout = Deserializer.deserialize(dto)
+        simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
 
-    val FRAMETIME = 0.010 // It's 1 / FPS, duration of one frame in seconds
-    val SPEEDUP: Long = 3
+    val FRAMETIME = 0.01 // It's 1 / FPS, duration of one frame in seconds
 
     override fun render() {
         val frameStartTime = System.nanoTime()
-        if (state == ApplicationState.Simulator) {
-            updateCars(back!!.getNextFrame(FRAMETIME * SPEEDUP))
+        if (state == ApplicationState.Simulator && !simState.isPaused) {
+            updateCars(simState.backend.getNextFrame(FRAMETIME * simState.speed))
         }
 
         if (tmpInputProcessor != null) {
@@ -188,18 +183,9 @@ class Main : ApplicationAdapter() {
         imGuiGl3.newFrame()
         imGuiGlfw.newFrame()
         ImGui.newFrame()
-        if (ImGui.button("Run/Stop Simulation")) {
-            state = when (state) {
-                ApplicationState.Editor -> ApplicationState.Simulator
-                ApplicationState.Simulator -> ApplicationState.Editor
-            }
-            if (state == ApplicationState.Editor) {
-                inputMultiplexer.addProcessor(0, editorInputProcess)
-            } else {
-                inputMultiplexer.removeProcessor(editorInputProcess)
-            }
-            back = initializeSimulation(Editor.layout)
-        }
+
+        renderSimulationMenu()
+
         if (state == ApplicationState.Editor) {
             Editor.runImgui()
         }
@@ -226,11 +212,46 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-        logger.debug("Render iteration took ${iterationsMillis} ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
         while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
         }
+    }
+
+    private fun renderSimulationMenu() {
+        ImGui.begin("Simulation Controls")
+        val startStopText = if (state == ApplicationState.Editor) { "Start" } else { "Stop" }
+        if (ImGui.button(startStopText)) {
+            state = when (state) {
+                ApplicationState.Editor -> ApplicationState.Simulator
+                ApplicationState.Simulator -> ApplicationState.Editor
+            }
+            if (state == ApplicationState.Editor) {
+                inputMultiplexer.addProcessor(0, editorInputProcess)
+            } else {
+                inputMultiplexer.removeProcessor(editorInputProcess)
+            }
+            initializeSimulation(Editor.layout)
+        }
+        if (state == ApplicationState.Simulator) {
+            if (ImGui.button("||")) {
+                simState.isPaused = !simState.isPaused
+            }
+            ImGui.sameLine()
+            if (ImGui.button(">")) {
+                simState.speed = 1.0
+            }
+            ImGui.sameLine()
+            if (ImGui.button(">>")) {
+                simState.speed = 2.0
+            }
+            ImGui.sameLine()
+            if (ImGui.button(">>>")) {
+                simState.speed = 5.0
+            }
+        }
+        ImGui.end()
     }
 
     override fun dispose() {

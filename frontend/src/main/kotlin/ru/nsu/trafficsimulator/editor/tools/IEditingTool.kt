@@ -20,5 +20,9 @@ interface IEditingTool {
     fun handleUp(screenPos: Vec2, button: Int): IStateChange?
     fun handleDrag(screenPos: Vec2)
     fun render(modelBatch: ModelBatch?)
-    fun init(layout: Layout, camera: Camera)
+
+    /**
+     * @param reset - whether the state should be reset completely or just updated
+     */
+    fun init(layout: Layout, camera: Camera, reset: Boolean)
 }
