@@ -56,10 +56,10 @@ class InspectTool : IEditingTool {
         selectedRoad = findRoad(layout!!, intersection)
         if (selectedRoad != null) {
             directionSpheres[0].transform.setToTranslation(
-                (selectedRoad!!.startIntersection!!.position.toVec3() - selectedRoad!!.getDirection(0.0) / curveCoeff).toGdxVec()
+                (selectedRoad!!.startIntersection.position.toVec3() - selectedRoad!!.getDirection(0.0) / curveCoeff).toGdxVec()
             )
             directionSpheres[1].transform.setToTranslation(
-                (selectedRoad!!.endIntersection!!.position.toVec3() + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
+                (selectedRoad!!.endIntersection.position.toVec3() + selectedRoad!!.getDirection(selectedRoad!!.length) / curveCoeff).toGdxVec()
             )
         }
         return draggingDirectionSphere != null || draggingIntersection != null
@@ -71,14 +71,14 @@ class InspectTool : IEditingTool {
         val editedRoad = selectedRoad ?: return null
 
         val startOffset = Vec3(directionSpheres[0].transform.getTranslation(Vector3()))
-        val startDir = (selectedRoad!!.startIntersection!!.position.toVec3() - startOffset) * curveCoeff
+        val startDir = (selectedRoad!!.startIntersection.position.toVec3() - startOffset) * curveCoeff
         val endOffset = Vec3(directionSpheres[1].transform.getTranslation(Vector3()))
-        val endDir = (endOffset - editedRoad.endIntersection!!.position.toVec3()) * curveCoeff
+        val endDir = (endOffset - editedRoad.endIntersection.position.toVec3()) * curveCoeff
         draggingDirectionSphere = null
         return RedirectRoadStateChange(
             editedRoad,
-            editedRoad.startIntersection!!.position.toVec3() + startDir,
-            editedRoad.endIntersection!!.position.toVec3() + endDir
+            editedRoad.startIntersection.position.toVec3() + startDir,
+            editedRoad.endIntersection.position.toVec3() + endDir
         )
     }
 
@@ -86,8 +86,8 @@ class InspectTool : IEditingTool {
         if (draggingIntersection == null) return null
 
         if (selectedRoad != null) {
-            val startPos = selectedRoad!!.startIntersection!!.position.toVec3()
-            val endPos = selectedRoad!!.endIntersection!!.position.toVec3()
+            val startPos = selectedRoad!!.startIntersection.position.toVec3()
+            val endPos = selectedRoad!!.endIntersection.position.toVec3()
             directionSpheres[0].transform.setToTranslation(
                 (startPos - selectedRoad!!.getDirection(0.0) / curveCoeff).toGdxVec()
             )
@@ -114,15 +114,15 @@ class InspectTool : IEditingTool {
         if (draggingIntersection != null) {
             spheres[draggingIntersection!!.id]?.transform?.setToTranslation(intersection.toGdxVec())
             if (selectedRoad != null) {
-                val startPos = if (selectedRoad!!.startIntersection!! == draggingIntersection) {
+                val startPos = if (selectedRoad!!.startIntersection == draggingIntersection) {
                     intersection
                 } else {
-                    selectedRoad!!.startIntersection!!.position.toVec3()
+                    selectedRoad!!.startIntersection.position.toVec3()
                 }
-                val endPos = if (selectedRoad!!.endIntersection!! == draggingIntersection) {
+                val endPos = if (selectedRoad!!.endIntersection == draggingIntersection) {
                     intersection
                 } else {
-                    selectedRoad!!.endIntersection!!.position.toVec3()
+                    selectedRoad!!.endIntersection.position.toVec3()
                 }
                 directionSpheres[0].transform.setToTranslation(
                     (startPos - selectedRoad!!.getDirection(0.0) / curveCoeff).toGdxVec()

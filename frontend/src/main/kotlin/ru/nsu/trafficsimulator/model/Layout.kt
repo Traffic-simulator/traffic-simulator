@@ -79,10 +79,10 @@ class Layout {
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
         for (road in intersection.incomingRoads) {
             road.moveRoad(intersection, newPosition)
-            if (road.startIntersection != null && road.startIntersection != intersection)
-                road.startIntersection!!.recalculateIntersectionRoads()
-            if (road.endIntersection != null && road.endIntersection != intersection)
-                road.endIntersection!!.recalculateIntersectionRoads()
+            if (road.startIntersection != intersection)
+                road.startIntersection.recalculateIntersectionRoads()
+            if (road.endIntersection != intersection)
+                road.endIntersection.recalculateIntersectionRoads()
         }
         intersection.position = newPosition.xzProjection()
         intersection.recalculateIntersectionRoads()
@@ -98,13 +98,13 @@ class Layout {
     }
 
     fun deleteRoad(road: Road) {
-        road.startIntersection?.let {
+        road.startIntersection.let {
             it.removeRoad(road)
             if (it.getIncomingRoadsCount() == 0) {
                 deleteIntersection(it)
             }
         }
-        road.endIntersection?.let {
+        road.endIntersection.let {
             it.removeRoad(road)
             if (it.getIncomingRoadsCount() == 0) {
                 deleteIntersection(it)

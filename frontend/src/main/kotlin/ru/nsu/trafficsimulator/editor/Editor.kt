@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch
 import imgui.ImGui
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import ru.nsu.trafficsimulator.MyCameraController
 import ru.nsu.trafficsimulator.editor.actions.LoadAction
 import ru.nsu.trafficsimulator.editor.actions.SaveAction
 import ru.nsu.trafficsimulator.editor.changes.IStateChange

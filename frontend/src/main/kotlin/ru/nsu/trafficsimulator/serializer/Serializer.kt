@@ -39,13 +39,13 @@ private fun serializeRoad(road: Road): TRoad {
     tRoad.junction = "-1"
 
     tRoad.link = TRoadLink().apply {
-        road.startIntersection?.let {
+        road.startIntersection.let {
             predecessor = TRoadLinkPredecessorSuccessor()
             predecessor.elementType = ERoadLinkElementType.JUNCTION
             predecessor.elementId = it.id.toString()
         }
 
-        road.endIntersection?.let {
+        road.endIntersection.let {
             successor = TRoadLinkPredecessorSuccessor()
             successor.elementType = ERoadLinkElementType.JUNCTION
             successor.elementId = it.id.toString()
