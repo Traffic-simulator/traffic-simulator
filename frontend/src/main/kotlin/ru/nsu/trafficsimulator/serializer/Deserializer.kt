@@ -173,6 +173,7 @@ class Deserializer {
                 layout.roadIdCount = intersection.id + 1
             }
             layout.intersections[intersection.id] = intersection
+            layout.intersectionIdCount = max(layout.intersectionIdCount, intersection.id + 1)
         }
 
         fun pushIntersectionRoad(road: IntersectionRoad, layout: Layout) {
