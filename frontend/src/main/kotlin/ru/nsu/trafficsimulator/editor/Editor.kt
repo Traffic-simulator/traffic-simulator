@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
-import imgui.ImVec2
 import imgui.type.ImInt
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
@@ -18,6 +17,7 @@ import ru.nsu.trafficsimulator.editor.actions.SaveAction
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.AddRoadTool
 import ru.nsu.trafficsimulator.editor.tools.DeleteRoadTool
+import ru.nsu.trafficsimulator.editor.tools.EditRoadTool
 import ru.nsu.trafficsimulator.editor.tools.InspectTool
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
@@ -86,12 +86,13 @@ class Editor {
                 if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
                     currentTool = tool
                     onLayoutChange(false)
-                    currentTool.init(layout, camera!!)
+//                    currentTool.init(layout, camera!!, )
                     if (tool is EditRoadTool) {
                         tool.setLines(currentLeftLines, currentRightLines)
                     }
                 }
             }
+            editRoadUI()
             ImGui.end()
         }
 

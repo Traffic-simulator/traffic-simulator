@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.editor
+package ru.nsu.trafficsimulator.editor.changes
 
 import imgui.type.ImInt
 import ru.nsu.trafficsimulator.model.Layout

@@ -1,8 +1,10 @@
-package ru.nsu.trafficsimulator.editor
+package ru.nsu.trafficsimulator.editor.tools
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import imgui.type.ImInt
+import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
+import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
@@ -38,7 +40,7 @@ class EditRoadTool() : IEditingTool {
         return
     }
 
-    override fun init(layout: Layout, camera: Camera) {
+    override fun init(layout: Layout, camera: Camera, reset: Boolean) {
         this.camera = camera
         this.layout = layout
     }
