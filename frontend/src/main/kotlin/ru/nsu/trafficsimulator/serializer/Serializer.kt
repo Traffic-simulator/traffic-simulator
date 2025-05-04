@@ -42,17 +42,13 @@ private fun serializeRoad(road: Road): TRoad {
     tRoad.junction = "-1"
 
     tRoad.link = TRoadLink().apply {
-        road.startIntersection.let {
-            predecessor = TRoadLinkPredecessorSuccessor()
-            predecessor.elementType = ERoadLinkElementType.JUNCTION
-            predecessor.elementId = it.id.toString()
-        }
+        predecessor = TRoadLinkPredecessorSuccessor()
+        predecessor.elementType = ERoadLinkElementType.JUNCTION
+        predecessor.elementId = road.startIntersection.id.toString()
 
-        road.endIntersection.let {
-            successor = TRoadLinkPredecessorSuccessor()
-            successor.elementType = ERoadLinkElementType.JUNCTION
-            successor.elementId = it.id.toString()
-        }
+        successor = TRoadLinkPredecessorSuccessor()
+        successor.elementType = ERoadLinkElementType.JUNCTION
+        successor.elementId = road.endIntersection.id.toString()
     }
 
     tRoad.type.add(TRoadType().apply {
@@ -63,8 +59,29 @@ private fun serializeRoad(road: Road): TRoad {
         speed.unit = EUnitSpeed.KM_H
     })
 
-    tRoad.planView = generateRoadPlaneView(geo)
+    tRoad.signals = TRoadSignals().apply {
+        if (road.startIntersection.hasSignals) {
+            val trafficLight = road.startIntersection.signals[road]!!
+            signal.add(TRoadSignalsSignal().apply {
+                orientation = "-"
+                s = 0.0
+                dynamic = TYesNo.YES
+                subtype = "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
+            })
+        }
 
+        if (road.endIntersection.hasSignals) {
+            val trafficLight = road.endIntersection.signals[road]!!
+            signal.add(TRoadSignalsSignal().apply {
+                orientation = "+"
+                s = road.geometry.length
+                dynamic = TYesNo.YES
+                subtype = "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
+            })
+        }
+    }
+
+    tRoad.planView = generateRoadPlaneView(geo)
 
     tRoad.lanes = TRoadLanes()
     tRoad.lanes.laneOffset.add(TRoadLanesLaneOffset().apply {

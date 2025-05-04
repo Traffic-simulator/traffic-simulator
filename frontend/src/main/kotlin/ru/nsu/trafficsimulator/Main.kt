@@ -158,7 +158,7 @@ class Main : ApplicationAdapter() {
 //        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
 
         spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
-        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
 
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")

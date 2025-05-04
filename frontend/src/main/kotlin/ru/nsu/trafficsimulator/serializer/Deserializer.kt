@@ -40,7 +40,6 @@ class Deserializer {
         private fun deserializeRoad(tRoad: TRoad, idToIntersection: MutableMap<Long, Intersection>): Road {
             val id = tRoad.id.toLong()
 
-
             var nextId = idToIntersection.keys.max() + 1
             // TODO add support for connections between roads
             val startIntersection = tRoad.link?.predecessor?.let {
@@ -83,12 +82,13 @@ class Deserializer {
             )
 
             // See https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/latest/specification/14_signals/14_01_introduction.html
-            for (signal in tRoad.signals.signal.filter { it.dynamic == TYesNo.YES }) {
+
+            tRoad.signals?.signal?.filter { it.dynamic == TYesNo.YES }?.forEach { signal ->
                 val trafficLight = Signal()
                 val nums = signal.subtype.split("-")
                 if (nums.size != 3) {
                     logger.error("Invalid dynamic signal found: Number of numbers is not 3")
-                    continue
+                    return@forEach
                 }
 
                 trafficLight.redOffsetOnStartSecs = nums[0].toLong()
@@ -98,13 +98,13 @@ class Deserializer {
                 if (signal.orientation == "+") {
                     if (abs(signal.s - road.geometry.length) > 1e-2) {
                         logger.error("Invalid traffic light: it's on at the end: ${signal.s} <-> ${road.geometry.length}")
-                        continue
+                        return@forEach
                     }
                     endIntersection.signals[road] = trafficLight
                 } else {
                     if (abs(signal.s) > 1e-2) {
                         logger.error("Invalid traffic light: it's on at the start: ${signal.s} <-> 0.0")
-                        continue
+                        return@forEach
                     }
                     startIntersection.signals[road] = trafficLight
                 }
@@ -122,10 +122,8 @@ class Deserializer {
             idToRoad: Map<Long, Road>
         ): IntersectionRoad {
             val intersection = idToIntersection[tRoad.junction.toLong()]
-            val lanes = max(
-                tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0,
-                tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
-            )
+            val lanes = (tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0) +
+                (tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0)
             val intersectionRoad = IntersectionRoad(
                 id = tRoad.id.toLong(),
                 intersection = intersection
@@ -137,6 +135,22 @@ class Deserializer {
                 lane = lanes,
                 geometry = planeViewToSpline(tRoad.planView)
             )
+
+            tRoad.lanes.laneSection[0]?.left?.lane?.filter { it.type == ELaneType.DRIVING }?.forEach { lane ->
+                for (predecessor in lane.link.predecessor) {
+                    for (successor in lane.link.successor) {
+                        intersectionRoad.laneLinkage.add(Triple(predecessor.id.toInt(), -lane.id.toInt(), successor.id.toInt()))
+                    }
+                }
+            }
+
+            tRoad.lanes.laneSection[0]?.right?.lane?.filter { it.type == ELaneType.DRIVING }?.forEach { lane ->
+                for (predecessor in lane.link.predecessor) {
+                    for (successor in lane.link.successor) {
+                        intersectionRoad.laneLinkage.add(Triple(predecessor.id.toInt(), -lane.id.toInt(), successor.id.toInt()))
+                    }
+                }
+            }
 
             intersection.intersectionRoads.add(intersectionRoad)
             return intersectionRoad
