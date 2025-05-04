@@ -129,6 +129,8 @@ class Road(
         return ContactPoint.NULL
     }
 
+    fun ableToSetPadding(oldPadding: Double, newPadding: Double) = length - oldPadding + newPadding > 0.0
+
     companion object {
         enum class ContactPoint {
             START, END, NULL
