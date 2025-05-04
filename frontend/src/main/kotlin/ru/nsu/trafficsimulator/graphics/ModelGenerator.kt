@@ -269,7 +269,7 @@ class ModelGenerator {
                     to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
                     val bdPoint = getRefinedGuess(b, d).toVec3()
                     val acPoint = getRefinedGuess(a, c).toVec3()
-                    val normal = -(bdPoint - acPoint).cross(Vec3.UP).normalized()
+                    val normal = (bdPoint - acPoint).cross(Vec3.UP).normalized()
                     insertRect(acPoint, bdPoint, normal)
                     meshPartBuilder.rect(
                         MeshPartBuilder.VertexInfo().set((c.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
