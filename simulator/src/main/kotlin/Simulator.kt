@@ -18,16 +18,24 @@ import kotlin.random.Random
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>, seed: Long) {
 
     val finder = JunctionIntersectionFinder(openDrive)
-    //val intersections = finder.findIntersection()
-    val intersections: MutableList<Intersection> = ArrayList()
+    val intersections = finder.findIntersection()
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
     val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, spawnDetails, despawnDetails)
     val vehicles: ArrayList<Vehicle> = ArrayList()
 
     fun update(dt: Double): ArrayList<Vehicle> {
-
+        /*
+            Traffic Lights logic:
+                1) First of all we need to unlock all trajectories that was blocked by vehicles for which RED is appeared
+                2) Secondly we have to say to each vehicle on lines with RED to don't pretend to any trajectories.
+                    To do that we can just check lane signal for each vehicle
+                        and in case of RED, RED_YELLOW or YELLOW don't block any trajectories and stop
+         */
         network.updateSignals(dt)
+
+        // Unlock trajectories blocked by vehicles with not GREEN traffic lights
+        vehicles.forEach{ it.processTrafficLight() }
 
         // Not working for now
         // processNonmandatoryLaneChanges()
