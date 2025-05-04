@@ -1,26 +1,29 @@
 package ru.nsu.trafficsimulator.editor.changes
 
-import imgui.type.ImInt
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
 
 class EditRoadStateChange(
-    private val layout: Layout,
     private val road: Road,
-    private var currentLeftLines: ImInt?,
-    private var currentRightLines: ImInt?
-) :
-    IStateChange {
+    private var currentLeftLines: Int,
+    private var currentRightLines: Int
+) : IStateChange {
+    private val prevLeftLaneCnt = road.leftLane
+    private val prevRightLaneCnt = road.rightLane
 
     override fun apply(layout: Layout) {
         layout.roadSetLaneNumber(
             road,
-            leftLane = currentLeftLines?.get() ?: 1,
-            rightLane = currentRightLines?.get() ?: 1
+            leftLane = currentLeftLines,
+            rightLane = currentRightLines
         )
     }
 
     override fun revert(layout: Layout) {
-        TODO("Not yet implemented")
+        layout.roadSetLaneNumber(
+            road,
+            leftLane = prevLeftLaneCnt,
+            rightLane = prevRightLaneCnt
+        )
     }
 }

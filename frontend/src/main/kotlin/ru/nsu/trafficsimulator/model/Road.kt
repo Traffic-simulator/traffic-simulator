@@ -133,6 +133,9 @@ class Road(
         enum class ContactPoint {
             START, END, NULL
         }
+
+        const val MIN_LANE_COUNT = 1
+        const val MAX_LANE_COUNT = 10
     }
 
     override fun toString(): String {
