@@ -58,13 +58,14 @@ class InspectorTool() : IEditingTool {
         }
         ImGui.begin("Road settings")
 
+        val leftLaneCnt = ImInt(road.leftLane)
+        val rightLaneCnt = ImInt(road.rightLane)
         if (ImGui.beginTable("##Road", 2)) {
             ImGui.tableNextRow()
 
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Left lane count")
             ImGui.tableSetColumnIndex(1)
-            val leftLaneCnt = ImInt(road.leftLane)
             if (ImGui.inputInt("##left", leftLaneCnt)) {
                 leftLaneCnt.set(leftLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
             }
@@ -74,17 +75,17 @@ class InspectorTool() : IEditingTool {
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Right lane count")
             ImGui.tableSetColumnIndex(1)
-            val rightLaneCnt = ImInt(road.rightLane)
             if (ImGui.inputInt("##right", rightLaneCnt)) {
                 rightLaneCnt.set(rightLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
             }
-            ImGui.endTable()
-            ImGui.textDisabled("Acceptable range: ${Road.MIN_LANE_COUNT}..${Road.MAX_LANE_COUNT}")
-            ImGui.end()
 
-            if (leftLaneCnt.get() != road.leftLane || rightLaneCnt.get() != road.rightLane) {
-                return EditRoadStateChange(road, leftLaneCnt.get(), rightLaneCnt.get())
-            }
+            ImGui.endTable()
+        }
+        ImGui.textDisabled("Acceptable range: ${Road.MIN_LANE_COUNT}..${Road.MAX_LANE_COUNT}")
+        ImGui.end()
+
+        if (leftLaneCnt.get() != road.leftLane || rightLaneCnt.get() != road.rightLane) {
+            return EditRoadStateChange(road, leftLaneCnt.get(), rightLaneCnt.get())
         }
 
         return null
