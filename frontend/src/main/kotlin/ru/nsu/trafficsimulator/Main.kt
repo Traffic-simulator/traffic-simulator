@@ -14,11 +14,8 @@ import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
-import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -33,8 +30,6 @@ import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.graphics.ModelGenerator
-import ru.nsu.trafficsimulator.graphics.RoadMaterialAttribute
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
@@ -130,37 +125,11 @@ class Main : ApplicationAdapter() {
         val meshPartBuilder = modelBuilder.part(
             "Ground",
             GL20.GL_TRIANGLES,
-            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.TextureCoordinates).toLong(),
+            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(),
             groundMaterial
         )
         BoxShapeBuilder.build(meshPartBuilder, 1000.0f, 0.1f, 1000.0f)
-//        val a = MeshPartBuilder.VertexInfo().set(
-//            Vector3(500.0f, 0.0f, -500.0f),
-//            Vector3(0.0f, 1.0f, 0.0f),
-//            null,
-//            Vector2(2.0f, 0.0f),
-//        )
-//        val b = MeshPartBuilder.VertexInfo().set(
-//            Vector3(500.0f, 0.0f, 500.0f),
-//            Vector3(0.0f, 1.0f, 0.0f),
-//            null,
-//            Vector2(2.0f, 5.0f),
-//        )
-//        val c = MeshPartBuilder.VertexInfo().set(
-//            Vector3(-500.0f, 0.0f, 500.0f),
-//            Vector3(0.0f, 1.0f, 0.0f),
-//            null,
-//            Vector2(-1.0f, 5.0f),
-//        )
-//        val d = MeshPartBuilder.VertexInfo().set(
-//            Vector3(-500.0f, 0.0f, -500.0f),
-//            Vector3(0.0f, 1.0f, 0.0f),
-//            null,
-//            Vector2(-1.0f, 0.0f),
-//        )
-//        meshPartBuilder.rect(b, a, d, c)
         val ground = modelBuilder.end()
-//        val instance = ShaderModelInstance(ground, sceneManager!!.environment, "shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl")
         sceneManager?.addScene(Scene(ground))
 
         sceneManager?.skyBox = SceneSkybox(
