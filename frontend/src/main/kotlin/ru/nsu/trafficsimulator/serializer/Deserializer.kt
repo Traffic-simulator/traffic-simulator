@@ -185,9 +185,7 @@ class Deserializer {
             }
 
             if (spline.splineParts.size > 1) {
-                val red = "\u001b[31m"
-                val reset = "\u001b[0m"
-                println("${red}WARNING: Full editing of loaded layout is not supported. Beware.${reset}")
+                logger.warn("Full editing of loaded layout is not supported. Beware.")
             }
 
             return spline
@@ -204,8 +202,6 @@ class Deserializer {
                     }
                 }
                 intersection.position = pos / intersection.incomingRoads.size.toDouble()
-                println(intersection.position)
-                println(intersection.intersectionRoads.size)
             }
         }
 
@@ -251,6 +247,7 @@ class Deserializer {
                         logger.error("Road $road doesn't have a signal at intersection $intersection; Using default")
                         intersection.signals[road] = Signal()
                     }
+                    logger.info("Road $road;$intersection: ${intersection.signals[road]}")
                 }
             }
         }

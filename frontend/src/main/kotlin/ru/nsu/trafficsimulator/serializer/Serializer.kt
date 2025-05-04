@@ -207,7 +207,6 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
 
 private fun generateRoadPlaneView(geometry: Spline): TRoadPlanView {
     val tRoadPlanViewGeometry = TRoadPlanView()
-    println(geometry)
     for (roadGeometry in geometry.splineParts) {
         val (start, direction) = roadGeometry.getStartPoint()
         val rotAngle = -((direction - start).angle())

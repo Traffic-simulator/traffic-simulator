@@ -136,7 +136,7 @@ class Editor {
         }
 
         private fun updateLayout() {
-            println("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
+            logger.info("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
             }

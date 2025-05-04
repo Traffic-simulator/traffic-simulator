@@ -28,6 +28,10 @@ class Signal {
             }
         }
 
+    override fun toString(): String {
+        return "Signal(redOffset=${redOffsetOnStartSecs}, redTime=${redTimeSecs}, greenTime=${greenTimeSecs})"
+    }
+
     companion object {
         private const val DEFAULT_RED_OFFSET_ON_START: Long = 0
         private const val DEFAULT_RED_TIME: Long = 10

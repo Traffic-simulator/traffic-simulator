@@ -130,7 +130,6 @@ class ModelGenerator {
                 )
             }
             val samplePerSide = 40
-            println(layout.intersections.size)
             for (intersection in layout.intersections.values) {
                 val intersectionBoxSize = max(intersection.padding * 2.0 * 1.1, 40.0)
                 val cellSize = intersectionBoxSize / (samplePerSide - 1).toDouble()
