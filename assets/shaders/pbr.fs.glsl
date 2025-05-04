@@ -1,6 +1,6 @@
 #line 1
 
-#define LINE_WIDTH 0.05
+#define LINE_WIDTH 0.025
 
 // Extensions required for WebGL and some Android versions
 
@@ -296,9 +296,7 @@ varying vec3 v_normal;
 
 #endif //normalFlag
 
-#if defined(colorFlag)
 varying vec4 v_color;
-#endif
 
 #ifdef blendedFlag
 uniform float u_opacity;
@@ -307,7 +305,9 @@ uniform float u_alphaTest;
 #endif //alphaTestFlag
 #endif //blendedFlag
 
+#ifdef textureCoord0Flag
 varying MED vec2 v_texCoord0;
+#endif
 
 #ifdef textureCoord1Flag
 varying MED vec2 v_texCoord1;
@@ -1253,12 +1253,21 @@ void main() {
     float alphaRoughness = perceptualRoughness * perceptualRoughness;
 
     vec4 baseColor = getBaseColor();
-    float x_abs = abs(v_texCoord0.x);
-    baseColor.xyz = vec3(0.2, 0.2, 0.2);
-    if (x_abs >= LINE_WIDTH && x_abs < 3 * LINE_WIDTH) {
-        baseColor.xyz = vec3(1.0, 1.0, 1.0);
-    } else if (x_abs > LINE_WIDTH && abs(v_texCoord0.x - round(v_texCoord0.x)) <= LINE_WIDTH && fract(v_texCoord0.y) >= 0.5) {
-        baseColor.xyz = vec3(1.0, 1.0, 1.0);
+    float x_abs = abs(v_color.x);
+    float closest_lane = round(v_color.x);
+    bool is_border_lane = (abs(closest_lane - v_color.z) < 0.01) || (abs(closest_lane - v_color.w) < 0.01);
+    vec3 black_color = vec3(0.2, 0.2, 0.2);
+    vec3 white_color = vec3(1.0, 1.0, 1.0);
+    if (x_abs < LINE_WIDTH) {
+        baseColor.xyz = black_color;
+    } else if (x_abs < 3 * LINE_WIDTH) {
+        baseColor.xyz = white_color;
+    } else if (abs(v_color.x - closest_lane) <= 2 * LINE_WIDTH && is_border_lane) {
+        baseColor.xyz = white_color;
+    } else if (abs(v_color.x - closest_lane) <= LINE_WIDTH && fract(v_color.y) >= 0.5) {
+        baseColor.xyz = white_color;
+    } else {
+        baseColor.xyz = black_color;
     }
     // baseColor.xyz = vec3(abs(v_texCoord0.x), abs(v_texCoord0.y), 0.0);
 

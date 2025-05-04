@@ -114,10 +114,8 @@ uniform vec4 u_morphTargets2;
 #endif
 
 
-#if defined(colorFlag)
 varying vec4 v_color;
 attribute vec4 a_color;
-#endif // colorFlag
 
 #ifdef normalFlag
 attribute vec3 a_normal;
@@ -134,10 +132,9 @@ attribute vec4 a_tangent;
 #endif
 
 
+#ifdef textureFlag
 attribute vec2 a_texCoord0;
 varying vec2 v_texCoord0;
-
-#ifdef textureFlag
 uniform mat3 u_texCoord0Transform;
 #endif // textureFlag
 
@@ -225,8 +222,6 @@ varying vec3 v_csmUVs[numCSM];
 #endif //shadowMapFlag
 
 void main() {
-    v_texCoord0 = a_texCoord0;
-
 	#ifdef textureFlag
 		v_texCoord0 = (u_texCoord0Transform * vec3(a_texCoord0, 1.0)).xy;
 	#endif
@@ -235,9 +230,7 @@ void main() {
 		v_texCoord1 = (u_texCoord1Transform * vec3(a_texCoord1, 1.0)).xy;
 	#endif
 
-	#if defined(colorFlag)
-		v_color = a_color;
-	#endif // colorFlag
+	v_color = a_color;
 
 	#ifdef skinningFlag
 		mat4 skinning = mat4(0.0);

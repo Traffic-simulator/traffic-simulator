@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.graphics
 
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
@@ -29,6 +30,16 @@ class ModelGenerator {
         private val TO_INTERSECTION_HEIGHT = Vec3.UP * INTERSECTION_HEIGHT
         private const val INTERSECTION_SAMPLES_PER_SIDE = 40
 
+        // Function to create a color with uncapped values
+        private fun colorOf(r: Float, g: Float, b: Float, a: Float): Color {
+            val res = Color()
+            res.r = r
+            res.g = g
+            res.b = b
+            res.a = a
+            return res
+        }
+
         fun createLayoutModel(layout: Layout): Model {
             val modelBuilder = ModelBuilder()
             modelBuilder.begin()
@@ -45,13 +56,15 @@ class ModelGenerator {
             return model
         }
 
+        // Unpacked color in models below is used to convey information about lanes
+        // And is used to create road markings
         fun addRoadToModel(road: Road, modelBuilder: ModelBuilder) {
             val node = modelBuilder.node()
             node.translation.set(0.0f, 0.0f, 0.0f)
             val meshPartBuilder = modelBuilder.part(
                 "road${road.id}",
                 GL20.GL_TRIANGLES,
-                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.TextureCoordinates).toLong(),
+                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.ColorUnpacked).toLong(),
                 Material(
                     RoadMaterialAttribute(),
                     PBRFloatAttribute(PBRFloatAttribute.Metallic, 0.0f),
@@ -73,37 +86,57 @@ class ModelGenerator {
             var prevRight = prevDir.cross(Vec3.UP).normalized() * LANE_WIDTH * road.rightLane.toDouble()
             var prevLeft = -prevDir.cross(Vec3.UP).normalized() * LANE_WIDTH * road.leftLane.toDouble()
             meshPartBuilder.rect(
-                MeshPartBuilder.VertexInfo().set((prevPos + prevLeft).toGdxVec(), -prevDir.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                MeshPartBuilder.VertexInfo().set((prevPos + prevRight).toGdxVec(), -prevDir.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                MeshPartBuilder.VertexInfo().set((prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(), -prevDir.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                MeshPartBuilder.VertexInfo().set((prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(), -prevDir.toGdxVec(), null, Vector2(0.0f, 0.0f)),
+                MeshPartBuilder.VertexInfo().set((prevPos + prevLeft).toGdxVec(), -prevDir.toGdxVec(), Color.CLEAR, null),
+                MeshPartBuilder.VertexInfo().set((prevPos + prevRight).toGdxVec(), -prevDir.toGdxVec(), Color.CLEAR, null),
+                MeshPartBuilder.VertexInfo().set((prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(), -prevDir.toGdxVec(), Color.CLEAR, null),
+                MeshPartBuilder.VertexInfo().set((prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(), -prevDir.toGdxVec(), Color.CLEAR, null),
             )
 
             val insertSegment = fun(left: Vec3, pos: Vec3, right: Vec3, prevOffset: Double, offset: Double) {
                 // Top
                 meshPartBuilder.rect(
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(rightLaneCntF, prevOffset.toFloat())),
-                    MeshPartBuilder.VertexInfo().set((pos + right + TO_ROAD_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(rightLaneCntF, offset.toFloat())),
-                    MeshPartBuilder.VertexInfo().set((pos + left + TO_ROAD_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(leftLaneCntF, offset.toFloat())),
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(leftLaneCntF, prevOffset.toFloat())),
+                    MeshPartBuilder.VertexInfo().set(
+                        (prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(),
+                        Vec3.UP.toGdxVec(),
+                        colorOf(rightLaneCntF, prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
+                        null
+                    ),
+                    MeshPartBuilder.VertexInfo().set(
+                        (pos + right + TO_ROAD_HEIGHT).toGdxVec(),
+                        Vec3.UP.toGdxVec(),
+                        colorOf(rightLaneCntF, offset.toFloat(), leftLaneCntF, rightLaneCntF),
+                        null
+                    ),
+                    MeshPartBuilder.VertexInfo().set(
+                        (pos + left + TO_ROAD_HEIGHT).toGdxVec(),
+                        Vec3.UP.toGdxVec(),
+                        colorOf(leftLaneCntF, offset.toFloat(), leftLaneCntF, rightLaneCntF),
+                        null
+                    ),
+                    MeshPartBuilder.VertexInfo().set(
+                        (prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(),
+                        Vec3.UP.toGdxVec(),
+                        colorOf(leftLaneCntF, prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
+                        null
+                    ),
                 )
 
                 // Right
                 val rightNormal = (pos - prevPos).cross(Vec3.UP).toGdxVec()
                 meshPartBuilder.rect(
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight).toGdxVec(), rightNormal, null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set((pos + right).toGdxVec(), rightNormal, null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set((pos + right + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, null, Vector2(0.0f, 0.0f)),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight).toGdxVec(), rightNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((pos + right).toGdxVec(), rightNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((pos + right + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, Color.CLEAR, null),
                 )
 
                 // Left
                 val leftNormal = -rightNormal
                 meshPartBuilder.rect(
-                    MeshPartBuilder.VertexInfo().set((pos + left).toGdxVec(), leftNormal, null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft).toGdxVec(), leftNormal, null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set((pos + left + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, null, Vector2(0.0f, 0.0f)),
+                    MeshPartBuilder.VertexInfo().set((pos + left).toGdxVec(), leftNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft).toGdxVec(), leftNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((pos + left + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, Color.CLEAR, null),
                 )
             }
 
@@ -133,10 +166,10 @@ class ModelGenerator {
 
             val endNormal = direction.toGdxVec()
             meshPartBuilder.rect(
-                MeshPartBuilder.VertexInfo().set((pos + right).toGdxVec(), endNormal, null, Vector2(0.0f, 0.0f)),
-                MeshPartBuilder.VertexInfo().set((pos + left).toGdxVec(), endNormal, null, Vector2(0.0f, 0.0f)),
-                MeshPartBuilder.VertexInfo().set((pos + left + TO_ROAD_HEIGHT).toGdxVec(), endNormal, null, Vector2(0.0f, 0.0f)),
-                MeshPartBuilder.VertexInfo().set((pos + right + TO_ROAD_HEIGHT).toGdxVec(), endNormal, null, Vector2(0.0f, 0.0f)),
+                MeshPartBuilder.VertexInfo().set((pos + right).toGdxVec(), endNormal, Color.CLEAR, null),
+                MeshPartBuilder.VertexInfo().set((pos + left).toGdxVec(), endNormal, Color.CLEAR, null),
+                MeshPartBuilder.VertexInfo().set((pos + left + TO_ROAD_HEIGHT).toGdxVec(), endNormal, Color.CLEAR, null),
+                MeshPartBuilder.VertexInfo().set((pos + right + TO_ROAD_HEIGHT).toGdxVec(), endNormal, Color.CLEAR, null),
             )
         }
 
@@ -149,7 +182,7 @@ class ModelGenerator {
             val meshPartBuilder = modelBuilder.part(
                 "intersection${intersection.id}",
                 GL20.GL_TRIANGLES,
-                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.TextureCoordinates).toLong(),
+                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.ColorUnpacked).toLong(),
                 Material(
                     RoadMaterialAttribute(),
                     PBRFloatAttribute(PBRFloatAttribute.Metallic, 0.0f),
@@ -171,10 +204,10 @@ class ModelGenerator {
             }
             val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
                 meshPartBuilder.rect(
-                    MeshPartBuilder.VertexInfo().set((a + TO_INTERSECTION_HEIGHT).toGdxVec(), normal.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set(a.toGdxVec(), normal.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set(b.toGdxVec(), normal.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                    MeshPartBuilder.VertexInfo().set((b + TO_INTERSECTION_HEIGHT).toGdxVec(), normal.toGdxVec(), null, Vector2(0.0f, 0.0f)),
+                    MeshPartBuilder.VertexInfo().set((a + TO_INTERSECTION_HEIGHT).toGdxVec(), normal.toGdxVec(), Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set(a.toGdxVec(), normal.toGdxVec(), Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set(b.toGdxVec(), normal.toGdxVec(), Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((b + TO_INTERSECTION_HEIGHT).toGdxVec(), normal.toGdxVec(), Color.CLEAR, null),
                 )
             }
             val insertTriangle = { a: Vec3, b: Vec3, c: Vec3, normal: Vec3 ->
@@ -182,20 +215,20 @@ class ModelGenerator {
                     MeshPartBuilder.VertexInfo().set(
                         a.toGdxVec(),
                         normal.toGdxVec(),
-                        null,
-                        Vector2(0.0f, 0.0f)
+                        Color.CLEAR,
+                        null
                     ),
                     MeshPartBuilder.VertexInfo().set(
                         b.toGdxVec(),
                         normal.toGdxVec(),
-                        null,
-                        Vector2(0.0f, 0.0f)
+                        Color.CLEAR,
+                        null
                     ),
                     MeshPartBuilder.VertexInfo().set(
                         c.toGdxVec(),
                         normal.toGdxVec(),
-                        null,
-                        Vector2(0.0f, 0.0f)
+                        Color.CLEAR,
+                        null
                     ),
                 )
             }
@@ -239,10 +272,10 @@ class ModelGenerator {
                     val normal = -(bdPoint - acPoint).cross(Vec3.UP).normalized()
                     insertRect(acPoint, bdPoint, normal)
                     meshPartBuilder.rect(
-                        MeshPartBuilder.VertexInfo().set((c.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                        MeshPartBuilder.VertexInfo().set((acPoint + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                        MeshPartBuilder.VertexInfo().set((bdPoint + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                        MeshPartBuilder.VertexInfo().set((d.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
+                        MeshPartBuilder.VertexInfo().set((c.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
+                        MeshPartBuilder.VertexInfo().set((acPoint + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
+                        MeshPartBuilder.VertexInfo().set((bdPoint + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
+                        MeshPartBuilder.VertexInfo().set((d.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
                     )
                 },
                 {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
@@ -267,10 +300,10 @@ class ModelGenerator {
                 { aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and !bType and !cType and !dType }
                     to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
                     meshPartBuilder.rect(
-                        MeshPartBuilder.VertexInfo().set((a.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                        MeshPartBuilder.VertexInfo().set((b.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                        MeshPartBuilder.VertexInfo().set((d.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
-                        MeshPartBuilder.VertexInfo().set((c.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), null, Vector2(0.0f, 0.0f)),
+                        MeshPartBuilder.VertexInfo().set((a.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
+                        MeshPartBuilder.VertexInfo().set((b.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
+                        MeshPartBuilder.VertexInfo().set((d.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
+                        MeshPartBuilder.VertexInfo().set((c.toVec3() + TO_INTERSECTION_HEIGHT).toGdxVec(), Vec3.UP.toGdxVec(), Color.CLEAR, null),
                     )
                 },
             )
