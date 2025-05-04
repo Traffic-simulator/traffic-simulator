@@ -44,6 +44,7 @@ class InspectTool : IEditingTool {
 
         draggingIntersection = findRoadIntersectionAt(intersection)
         if (draggingIntersection != null) {
+            sphereForDraggingIntersection.transform?.setToTranslation(intersection.toGdxVec())
             draggingDirectionSphere = null
             return true
         }

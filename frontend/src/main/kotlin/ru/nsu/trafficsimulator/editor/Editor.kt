@@ -19,7 +19,7 @@ import ru.nsu.trafficsimulator.editor.tools.DeleteRoadTool
 import ru.nsu.trafficsimulator.editor.tools.InspectTool
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
-import ru.nsu.trafficsimulator.model_generation.ModelGenerator
+import ru.nsu.trafficsimulator.graphics.ModelGenerator
 
 class Editor {
     companion object {
