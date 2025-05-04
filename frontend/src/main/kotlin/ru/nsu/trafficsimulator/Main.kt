@@ -146,25 +146,25 @@ class Main : ApplicationAdapter() {
     fun initializeSimulation(layout: Layout) {
         val spawnDetails = ArrayList<Waypoint>()
         val despawnDetails = ArrayList<Waypoint>()
-//        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
-//
-//        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
 
-        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
-        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
 
-        val dto = serializeLayout(layout)
-        OpenDriveWriter().write(dto, "export.xodr")
-//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
+//        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
+//        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
+
+//        val dto = serializeLayout(layout)
+//        OpenDriveWriter().write(dto, "export.xodr")
+        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+        Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
 
@@ -173,7 +173,10 @@ class Main : ApplicationAdapter() {
     override fun render() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator && !simState.isPaused) {
-            updateCars(simState.backend.getNextFrame(FRAMETIME * simState.speed))
+            simState.backend.updateSimulation(FRAMETIME * simState.speed)
+            updateCars(simState.backend.getVehicles())
+            // TODO:
+            // updateSingals(simState.backend.getSingals())
         }
 
         if (tmpInputProcessor != null) {
@@ -212,7 +215,7 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+        // logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
         while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
