@@ -2,16 +2,24 @@ package ru.nsu.trafficsimulator.model
 
 import ru.nsu.trafficsimulator.math.Vec2
 
-data class Intersection(
+class Intersection(
     val id: Long,
     var position: Vec2,
-    var padding: Double = 0.0,
+    padding: Double = 0.0,
     var building: Building? = null
 ) {
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
     val isBuilding: Boolean get() = building != null
     val incomingRoadsCount get() = incomingRoads.size
+    var padding = padding
+        set(value) {
+            if (incomingRoads.any { !it.ableToSetPadding(field, value) }) {
+                throw IllegalArgumentException("Can't set padding to $value")
+            }
+            field = value
+            recalculateIntersectionRoads()
+        }
 
     override fun toString(): String {
         return "Intersection(id=$id, position=$position)"
@@ -39,7 +47,7 @@ data class Intersection(
         }
     }
 
-    fun recalculateIntersectionRoads(road : Road) {
+    fun recalculateIntersectionRoads(road: Road) {
         for (intersectionRoad in intersectionRoads) {
             if (intersectionRoad.fromRoad === road || intersectionRoad.toRoad === road) {
                 intersectionRoad.recalculateGeometry()

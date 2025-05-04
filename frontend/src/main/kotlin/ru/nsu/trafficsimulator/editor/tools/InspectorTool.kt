@@ -1,12 +1,11 @@
 package ru.nsu.trafficsimulator.editor.tools
 
-import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import imgui.ImGui
-import imgui.ImVec2
-import imgui.flag.ImGuiCond
+import imgui.type.ImDouble
 import imgui.type.ImInt
+import ru.nsu.trafficsimulator.editor.changes.EditIntersectionStateChange
 import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
@@ -129,6 +128,7 @@ class InspectorTool() : IEditingTool {
         }
         ImGui.begin("Intersection settings")
 
+        val padding = ImDouble(intersection.padding)
         if (ImGui.beginTable("##Intersection", 2)) {
             ImGui.tableNextRow()
             ImGui.tableSetColumnIndex(0)
@@ -148,10 +148,23 @@ class InspectorTool() : IEditingTool {
             ImGui.tableSetColumnIndex(1)
             ImGui.text(intersection.intersectionRoads.map{ it.id }.toString())
 
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Intersection padding")
+            ImGui.tableSetColumnIndex(1)
+            if (ImGui.inputDouble("##padding", padding)) {
+                padding.set(padding.get().coerceIn(0.0, Double.MAX_VALUE))
+            }
+
             ImGui.endTable()
         }
 
         ImGui.end()
+
+        if (padding.get() != intersection.padding) {
+            return EditIntersectionStateChange(intersection, padding.get())
+        }
+
         return null
     }
 
