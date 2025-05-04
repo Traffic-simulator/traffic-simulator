@@ -85,7 +85,6 @@ class Spline {
     }
 
     fun addSpiral(start: Vec2, startAngle: Double, startCurvature: Double, endCurvature: Double, length: Double) {
-        println()
         val maxPart = PI / 2.0
         val integralPartCount = 100
         val curvatureK = (endCurvature - startCurvature) / length
@@ -93,7 +92,6 @@ class Spline {
             val D = (startPartCurv / curvatureK).pow(2.0) + (endPartAngle - startPartAngle) / curvatureK
             val root1 = (-startPartCurv / curvatureK - sqrt(D))
             val root2 = (-startPartCurv / curvatureK + sqrt(D))
-            println("$root1; $root2; $curvatureK; ${D};")
             if (root1 > 0.0 && (root2 < 0.0 || root1 < root2)) {
                 root1
             } else if (root2 > 0.0 && (root1 < 0.0 || root2 < root1)) {
@@ -116,13 +114,8 @@ class Spline {
             var endPoint = curPoint
             for (j in 0 until integralPartCount) {
                 val rightAngle = leftAngle + step / integralPartCount
-
                 val partLength = getPartLength(leftAngle, rightAngle, leftCurvature)
-
-                println("$leftAngle; $rightAngle; $partLength")
-                println("$parts $startCurvature $curCurvature $leftCurvature $endCurvature $length")
                 if (partLength < 1e-6 && j != integralPartCount - 1) {
-//                    println("$parts $startCurvature $curCurvature $leftCurvature $endCurvature $length")
                     throw Exception("Part #$j is too small? $partLength $leftAngle $rightAngle $leftCurvature $curvatureK")
                 }
                 val rightCurvature = leftCurvature + curvatureK * partLength

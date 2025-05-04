@@ -27,6 +27,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
@@ -63,8 +64,6 @@ class Main : ApplicationAdapter() {
     private var state = ApplicationState.Editor
     private var editorInputProcess: InputProcessor? = null
     private val inputMultiplexer = InputMultiplexer()
-
-    private val logger = KotlinLogging.logger("FRONTEND")
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -212,7 +211,7 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
         while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {

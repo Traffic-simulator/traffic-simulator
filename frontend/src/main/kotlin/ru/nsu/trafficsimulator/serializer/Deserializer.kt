@@ -1,10 +1,12 @@
 package ru.nsu.trafficsimulator.serializer
 
 import opendrive.*
+import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
+import kotlin.math.abs
 import kotlin.math.max
 
 class Deserializer {
@@ -29,6 +31,8 @@ class Deserializer {
 
             recalculateIntersectionPosition(layout)
 
+            ensureFullSignals(layout)
+
             return layout
         }
 
@@ -43,7 +47,7 @@ class Deserializer {
                 if (it.elementType == ERoadLinkElementType.JUNCTION) {
                     idToIntersection[it.elementId.toLong()]
                 } else {
-                    println("WARNING: road is connected with road. Import is probably incorrect")
+                    logger.warn("Road is connected with road. Import is probably incorrect")
                     null
                 }
             } ?: run {
@@ -55,7 +59,7 @@ class Deserializer {
                 if (it.elementType == ERoadLinkElementType.JUNCTION) {
                     idToIntersection[it.elementId.toLong()]
                 } else {
-                    println("WARNING: road is connected with road. Import is probably incorrect")
+                    logger.warn("Road is connected with road. Import is probably incorrect")
                     null
                 }
             } ?: run {
@@ -69,7 +73,6 @@ class Deserializer {
 
             val spline = planeViewToSpline(tRoad.planView)
 
-
             val road = Road(
                 id,
                 startIntersection,
@@ -78,6 +81,34 @@ class Deserializer {
                 rightLane,
                 spline
             )
+
+            // See https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/latest/specification/14_signals/14_01_introduction.html
+            for (signal in tRoad.signals.signal.filter { it.dynamic == TYesNo.YES }) {
+                val trafficLight = Signal()
+                val nums = signal.subtype.split("-")
+                if (nums.size != 3) {
+                    logger.error("Invalid dynamic signal found: Number of numbers is not 3")
+                    continue
+                }
+
+                trafficLight.redOffsetOnStartSecs = nums[0].toLong()
+                trafficLight.redTimeSecs = nums[1].toLong()
+                trafficLight.greenTimeSecs = nums[2].toLong()
+
+                if (signal.orientation == "+") {
+                    if (abs(signal.s - road.geometry.length) > 1e-2) {
+                        logger.error("Invalid traffic light: it's on at the end: ${signal.s} <-> ${road.geometry.length}")
+                        continue
+                    }
+                    endIntersection.signals[road] = trafficLight
+                } else {
+                    if (abs(signal.s) > 1e-2) {
+                        logger.error("Invalid traffic light: it's on at the start: ${signal.s} <-> 0.0")
+                        continue
+                    }
+                    startIntersection.signals[road] = trafficLight
+                }
+            }
 
             road.endIntersection.incomingRoads.add(road)
             road.startIntersection.incomingRoads.add(road)
@@ -207,6 +238,21 @@ class Deserializer {
                 layout.roadIdCount = road.id + 1
             }
             layout.intersectionRoads[road.id] = road
+        }
+
+        private fun ensureFullSignals(layout: Layout) {
+            for (intersection in layout.intersections.values) {
+                if (!intersection.hasSignals) {
+                    continue
+                }
+
+                for (road in intersection.incomingRoads) {
+                    if (!intersection.signals.containsKey(road)) {
+                        logger.error("Road $road doesn't have a signal at intersection $intersection; Using default")
+                        intersection.signals[road] = Signal()
+                    }
+                }
+            }
         }
     }
 }

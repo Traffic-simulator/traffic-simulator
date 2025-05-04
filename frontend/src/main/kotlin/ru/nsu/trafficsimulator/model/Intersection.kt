@@ -12,10 +12,13 @@ data class Intersection(
 ) {
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
+    var signals: HashMap<Road, Signal> = HashMap()
+
     val isBuilding: Boolean get() = building != null
+    val hasSignals: Boolean get() = signals.isNotEmpty()
 
     override fun toString(): String {
-        return "Intersection(id=$id, position=$position)"
+        return "Intersection(id=$id, position=$position, building=$building, signals=$signals)"
     }
 
     fun addRoad(road: Road) {
