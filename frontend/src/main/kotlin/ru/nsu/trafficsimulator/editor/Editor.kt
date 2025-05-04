@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
-import imgui.ImVec2
+import imgui.type.ImInt
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.editor.actions.LoadAction
@@ -16,6 +16,7 @@ import ru.nsu.trafficsimulator.editor.actions.SaveAction
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.AddRoadTool
 import ru.nsu.trafficsimulator.editor.tools.DeleteRoadTool
+import ru.nsu.trafficsimulator.editor.tools.EditRoadTool
 import ru.nsu.trafficsimulator.editor.tools.InspectTool
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
@@ -35,7 +36,12 @@ class Editor {
         private var nextChange = 0
 
         private val actions = listOf(LoadAction(), SaveAction())
-        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
+        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool(), EditRoadTool())
+        private val currentLeftLines = ImInt(1)
+        private val currentRightLines = ImInt(1)
+        private const val MIN_LINE = 1
+        private const val MAX_LINE = 10
+
         private var currentTool = tools[0]
 
         private val spheres = mutableMapOf<Long, ModelInstance>()
@@ -79,8 +85,27 @@ class Editor {
                 if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
                     currentTool = tool
                     onLayoutChange(false)
+//                    currentTool.init(layout, camera!!, )
+                    if (tool is EditRoadTool) {
+                        tool.setLines(currentLeftLines, currentRightLines)
+                    }
                 }
             }
+            editRoadUI()
+            ImGui.end()
+        }
+
+        private fun editRoadUI() {
+            ImGui.begin("Road settings")
+            ImGui.text("Enter left lines count")
+            if (ImGui.inputInt("##left", currentLeftLines)) {
+                currentLeftLines.set(currentLeftLines.get().coerceIn(MIN_LINE, MAX_LINE))
+            }
+            ImGui.text("Enter right lines count")
+            if (ImGui.inputInt("##right", currentRightLines)) {
+                currentRightLines.set(currentRightLines.get().coerceIn(MIN_LINE, MAX_LINE))
+            }
+            ImGui.textDisabled("Acceptable range: $MIN_LINE..$MAX_LINE")
             ImGui.end()
         }
 

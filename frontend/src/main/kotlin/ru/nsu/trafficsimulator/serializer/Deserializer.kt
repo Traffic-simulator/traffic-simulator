@@ -91,10 +91,16 @@ class Deserializer {
             idToRoad: Map<Long, Road>
         ): IntersectionRoad {
             val intersection = idToIntersection[tRoad.junction.toLong()]
-            val lanes = max(
-                tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0,
-                tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
-            )
+
+            val leftLanes = tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
+            val rightLanes = tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
+            if (rightLanes != 1 || leftLanes != 0) {
+                throw IllegalArgumentException("Intersection road mast have only 1 right lane")
+            }
+
+            val link = tRoad.lanes.laneSection[0]?.right?.lane?.get(0)?.link
+                ?: throw IllegalArgumentException("Cant find right link")
+
             val intersectionRoad = IntersectionRoad(
                 id = tRoad.id.toLong(),
                 intersection = intersection
@@ -103,8 +109,8 @@ class Deserializer {
                     ?: throw IllegalArgumentException("Intersection road have no predecessor"),
                 toRoad = idToRoad[tRoad.link.successor.elementId.toLong()]
                     ?: throw IllegalArgumentException("Intersection road have no successor"),
-                lane = lanes,
-                geometry = planeViewToSpline(tRoad.planView)
+                geometry = planeViewToSpline(tRoad.planView),
+                laneLinkage = link.predecessor[0].id.toInt() to link.successor[0].id.toInt()
             )
 
             intersection.intersectionRoads.add(intersectionRoad)

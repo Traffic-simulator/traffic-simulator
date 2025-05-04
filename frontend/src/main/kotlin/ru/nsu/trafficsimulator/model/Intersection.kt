@@ -1,8 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
 import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.math.Vec3
-import java.util.*
 
 data class Intersection(
     val id: Long,
@@ -13,6 +11,7 @@ data class Intersection(
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: HashSet<IntersectionRoad> = HashSet()
     val isBuilding: Boolean get() = building != null
+    val incomingRoadsCount get() = incomingRoads.size
 
     override fun toString(): String {
         return "Intersection(id=$id, position=$position)"
@@ -31,21 +30,7 @@ data class Intersection(
         }
 
         incomingRoads.remove(road)
-
-        val irToRemove = LinkedList<IntersectionRoad>()
-        for (intersectionRoad in intersectionRoads) {
-            if (intersectionRoad.toRoad === road) {
-                irToRemove.add(intersectionRoad)
-                continue
-            }
-            if (intersectionRoad.fromRoad === road) {
-                irToRemove.add(intersectionRoad)
-            }
-        }
-
-        for (intersectionRoad in irToRemove) {
-            intersectionRoads.remove(intersectionRoad)
-        }
+        intersectionRoads.removeIf { it.toRoad === road || it.fromRoad === road }
     }
 
     fun recalculateIntersectionRoads() {
@@ -61,6 +46,4 @@ data class Intersection(
             }
         }
     }
-
-    fun getIncomingRoadsCount(): Int = incomingRoads.size
 }

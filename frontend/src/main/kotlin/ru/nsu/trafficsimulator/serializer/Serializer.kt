@@ -151,16 +151,16 @@ private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
         center.lane.add(centerLane)
 
         right = TRoadLanesLaneSectionRight()
-        for (linkage in road.laneLinkage) {
-            val rightLane = TRoadLanesLaneSectionRightLane()
-            rightLane.id = (-linkage.second).toBigInteger()
+
+        val rightLane = TRoadLanesLaneSectionRightLane()
+        rightLane.id = (-1).toBigInteger()
             rightLane.type = ELaneType.DRIVING
             rightLane.link = TRoadLanesLaneSectionLcrLaneLink()
             rightLane.link.predecessor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
-                id = linkage.first.toBigInteger()
+                id = road.laneLinkage.first.toBigInteger()
             })
             rightLane.link.successor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
-                id = linkage.third.toBigInteger()
+                id = road.laneLinkage.second.toBigInteger()
             })
             rightLane.borderOrWidth.add(TRoadLanesLaneSectionLrLaneWidth().apply {
                 a = Layout.LANE_WIDTH
@@ -169,7 +169,7 @@ private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
                 d = 0.0
             })
             right.lane.add(rightLane)
-        }
+
     })
 
     return tRoad
@@ -187,12 +187,12 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
             incomingRoad = intersectionRoad.fromRoad.id.toString()
             connectingRoad = intersectionRoad.id.toString()
             contactPoint = EContactPoint.START
-            for (linkage in intersectionRoad.laneLinkage) {
-                laneLink.add(TJunctionConnectionLaneLink().apply {
-                    from = linkage.first.toBigInteger()
-                    to = -linkage.second.toBigInteger()
+
+            laneLink.add(TJunctionConnectionLaneLink().apply {
+                from = intersectionRoad.laneLinkage.first.toBigInteger()
+                to = (-1).toBigInteger()
                 })
-            }
+
         })
     }
 
