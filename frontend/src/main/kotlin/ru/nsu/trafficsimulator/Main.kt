@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
+import mu.KotlinLogging
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
@@ -64,6 +65,8 @@ class Main : ApplicationAdapter() {
     private var state = ApplicationState.Editor
     private var editorInputProcess: InputProcessor? = null
     private val inputMultiplexer = InputMultiplexer()
+
+    private val logger = KotlinLogging.logger("FRONTEND")
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -146,24 +149,24 @@ class Main : ApplicationAdapter() {
     fun initializeSimulation(layout: Layout) {
         val spawnDetails = ArrayList<Waypoint>()
         val despawnDetails = ArrayList<Waypoint>()
-//        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
-//
-//        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
 
-        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
-        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+
+//        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
+//        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
 
 //        val dto = serializeLayout(layout)
 //        OpenDriveWriter().write(dto, "export.xodr")
-        val dto = OpenDriveReader().read("simple/UC_Simple-X-Junction-TrafficLights.xodr")
+        val dto = OpenDriveReader().read("self_made_town_01.xodr")
         Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
