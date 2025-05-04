@@ -10,12 +10,9 @@ import com.badlogic.gdx.math.Vector3
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.changes.MoveIntersectionStateChange
 import ru.nsu.trafficsimulator.editor.changes.RedirectRoadStateChange
-import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.math.Vec3
-import ru.nsu.trafficsimulator.math.findRoad
-import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.editor.*
+import ru.nsu.trafficsimulator.math.*
 
 class EditTool : IEditingTool {
     private val name = "Edit"
@@ -38,7 +35,7 @@ class EditTool : IEditingTool {
         if (button != Input.Buttons.LEFT) return false
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return false
 
-        draggingIntersection = findRoadIntersectionAt(intersection)
+        draggingIntersection = findRoadIntersectionAt(layout!!, intersection)
         if (draggingIntersection != null) {
             sphereForDraggingIntersection.transform?.setToTranslation(intersection.toGdxVec())
             draggingDirectionSphere = null
@@ -157,15 +154,6 @@ class EditTool : IEditingTool {
             selectedRoad = null
             draggingDirectionSphere = null
         }
-    }
-
-    private fun findRoadIntersectionAt(point: Vec3): Intersection? {
-        for ((_, intersection) in layout!!.intersections) {
-            if (intersection.position.distance(point.xzProjection()) < 5.0f) {
-                return intersection
-            }
-        }
-        return null
     }
 
     private fun findDirectionSphere(intersection: Vec3): ModelInstance? {

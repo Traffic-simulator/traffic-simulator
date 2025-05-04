@@ -11,7 +11,9 @@ import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
+import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
+import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
 
@@ -20,7 +22,9 @@ class InspectorTool() : IEditingTool {
     private var layout: Layout? = null
     private var camera: Camera? = null
 
+    // TODO: hold a variant somehow? Maybe make abstract class Inspector and override for each primitive?
     private var selectedRoad: Road? = null
+    private var selectedIntersection: Intersection? = null
     private var lastClickPos: Vec2? = null
 
     override fun getButtonName(): String = name
@@ -28,8 +32,17 @@ class InspectorTool() : IEditingTool {
     override fun handleDown(screenPos: Vec2, button: Int): Boolean {
         lastClickPos = screenPos
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return false
+        selectedIntersection = findRoadIntersectionAt(layout!!, intersection)
+        if (selectedIntersection != null) {
+            selectedRoad = null
+            return true
+        }
         selectedRoad = findRoad(layout!!, intersection)
-        return selectedRoad != null
+        if (selectedRoad != null) {
+            selectedIntersection = null
+            return true
+        }
+        return false
     }
 
     override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
@@ -47,6 +60,8 @@ class InspectorTool() : IEditingTool {
     override fun runImgui(): IStateChange? {
         if (selectedRoad != null) {
             return runRoadMenu(selectedRoad!!)
+        } else if (selectedIntersection != null) {
+            return runIntersectionMenu(selectedIntersection!!)
         }
         return null
     }
@@ -104,6 +119,33 @@ class InspectorTool() : IEditingTool {
             return EditRoadStateChange(road, leftLaneCnt.get(), rightLaneCnt.get())
         }
 
+        return null
+    }
+
+    private fun runIntersectionMenu(intersection: Intersection): IStateChange? {
+        if (lastClickPos != null) {
+            ImGui.setNextWindowPos(lastClickPos!!.x.toFloat(), lastClickPos!!.y.toFloat())
+            lastClickPos = null
+        }
+        ImGui.begin("Intersection settings")
+
+        if (ImGui.beginTable("##Intersection", 2)) {
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("ID")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.text(intersection.id.toString())
+
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Incoming roads IDs")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.text(intersection.incomingRoads.map{ it.id }.toString())
+
+            ImGui.endTable()
+        }
+
+        ImGui.end()
         return null
     }
 

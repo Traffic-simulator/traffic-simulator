@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
@@ -37,3 +38,13 @@ fun findRoad(layout: Layout, point: Vec3): Road? {
     }
     return null
 }
+
+fun findRoadIntersectionAt(layout: Layout, point: Vec3): Intersection? {
+    for ((_, intersection) in layout.intersections) {
+        if (intersection.position.distance(point.xzProjection()) < 5.0f) {
+            return intersection
+        }
+    }
+    return null
+}
+
