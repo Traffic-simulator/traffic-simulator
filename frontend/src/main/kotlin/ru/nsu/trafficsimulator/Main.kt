@@ -27,6 +27,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
@@ -93,10 +94,11 @@ class Main : ApplicationAdapter() {
         )
 
         sceneManager = SceneManager()
-        sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer_big.glb"))
+        sceneAsset1 = GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))
         carModel = sceneAsset1?.scene?.model
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
+        sceneManager?.setShaderProvider(CustomShaderProvider("shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl"))
 
         editorInputProcess = Editor.createSphereEditorProcessor()
         inputMultiplexer.addProcessor(editorInputProcess)
@@ -116,7 +118,9 @@ class Main : ApplicationAdapter() {
 
         // Add ground
         val modelBuilder = ModelBuilder()
-        val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
+        val groundMaterial = Material(
+            PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)),
+        )
         modelBuilder.begin()
         val meshPartBuilder = modelBuilder.part(
             "Ground",
