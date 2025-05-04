@@ -62,7 +62,24 @@ class InspectorTool() : IEditingTool {
         val rightLaneCnt = ImInt(road.rightLane)
         if (ImGui.beginTable("##Road", 2)) {
             ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("ID")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.text(road.id.toString())
 
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Start junction ID")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.text(road.startIntersection.id.toString())
+
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("End junction ID")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.text(road.endIntersection.id.toString())
+
+            ImGui.tableNextRow()
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Left lane count")
             ImGui.tableSetColumnIndex(1)
@@ -71,7 +88,6 @@ class InspectorTool() : IEditingTool {
             }
 
             ImGui.tableNextRow()
-
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Right lane count")
             ImGui.tableSetColumnIndex(1)
