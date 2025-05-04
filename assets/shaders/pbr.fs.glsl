@@ -1254,11 +1254,11 @@ void main() {
 
     vec4 baseColor = getBaseColor();
     float x_abs = abs(v_texCoord0.x);
-    baseColor.xyz = vec3(1.0, 1.0, 1.0);
+    baseColor.xyz = vec3(0.2, 0.2, 0.2);
     if (x_abs >= LINE_WIDTH && x_abs < 3 * LINE_WIDTH) {
-        baseColor.xyz = vec3(0.0, 0.0, 0.0);
+        baseColor.xyz = vec3(1.0, 1.0, 1.0);
     } else if (x_abs > LINE_WIDTH && abs(v_texCoord0.x - round(v_texCoord0.x)) <= LINE_WIDTH && fract(v_texCoord0.y) >= 0.5) {
-        baseColor.xyz = vec3(0.0, 0.0, 0.0);
+        baseColor.xyz = vec3(1.0, 1.0, 1.0);
     }
     // baseColor.xyz = vec3(abs(v_texCoord0.x), abs(v_texCoord0.y), 0.0);
 

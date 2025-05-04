@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector2
 import ktx.math.unaryMinus
+import net.mgsx.gltf.data.material.GLTFpbrMetallicRoughness
+import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
@@ -50,7 +52,11 @@ class ModelGenerator {
                 "road${road.id}",
                 GL20.GL_TRIANGLES,
                 (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.TextureCoordinates).toLong(),
-                Material(RoadMaterialAttribute())
+                Material(
+                    RoadMaterialAttribute(),
+                    PBRFloatAttribute(PBRFloatAttribute.Metallic, 0.0f),
+                    PBRFloatAttribute(PBRFloatAttribute.Roughness, 1.0f),
+                )
             )
 
             val hasStart = road.startIntersection.intersectionRoads.size > 0
@@ -144,7 +150,11 @@ class ModelGenerator {
                 "intersection${intersection.id}",
                 GL20.GL_TRIANGLES,
                 (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.TextureCoordinates).toLong(),
-                Material(RoadMaterialAttribute())
+                Material(
+                    RoadMaterialAttribute(),
+                    PBRFloatAttribute(PBRFloatAttribute.Metallic, 0.0f),
+                    PBRFloatAttribute(PBRFloatAttribute.Roughness, 1.0f),
+                )
             )
             val intersectionSdf = { local: Vec2 ->
                 val point = intersection.position + local
