@@ -1,6 +1,7 @@
 import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import network.Network
+import network.Road
 import opendrive.OpenDRIVE
 import route_generator.IRouteGenerator
 import route_generator.RouteGeneratorDespawnListener
@@ -70,6 +71,19 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
                     it.performLaneChange(toLane)
                     return@forEach
                 }
+            }
+        }
+    }
+
+    fun updateSegments() {
+        // TODO тут бахну пересчет для каждой дороги и каждого лейна
+        val roads: List<Road> = network.roads
+        for (road in roads) {
+            for (lane in road.lanes) {
+                lane.vehicles.forEach {
+                    lane.segments[(it.position / lane.lenOfSegment).toInt()].addVehicleSpeed(it)
+                }
+                lane.segments.forEach { it.update() }
             }
         }
     }

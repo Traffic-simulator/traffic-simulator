@@ -32,7 +32,7 @@ interface ISimulation {
     /**
      * Class to create heatmap for lanes.
      */
-    data class SegmentDTO(val road: opendrive.TRoad, val laneId: Int, val segments: List<Double>)
+    data class SegmentDTO(val road: opendrive.TRoad, val laneId: Int, val segmentLen: Double, val segments: List<Double>)
 
     /**
      * Initialize simulation state with.

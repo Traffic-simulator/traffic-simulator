@@ -1,6 +1,6 @@
 import mu.KotlinLogging
 import network.Lane
-import network.Segment
+import heatmap.Segment
 import network.signals.Signal
 import opendrive.OpenDRIVE
 import vehicle.Vehicle
@@ -41,7 +41,7 @@ class BackendAPI : ISimulation{
         if (simulator == null)
             return ArrayList<ISimulation.SegmentDTO>()
 
-        simulator!!.network.updateSegments()
+        simulator!!.updateSegments()
         val lanes = simulator!!.network.getAllLanes()
 
         return lanes.map { segmentToDTO(it) }.toList()
@@ -70,6 +70,7 @@ class BackendAPI : ISimulation{
         return ISimulation.SegmentDTO(
             lane.road.troad,
             lane.laneId,
+            lane.lenOfSegment,
             lane.segments.map { it.currentState }
         )
     }
