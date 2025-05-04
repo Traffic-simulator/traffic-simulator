@@ -1269,11 +1269,6 @@ void main() {
     } else {
         baseColor.xyz = black_color;
     }
-    // baseColor.xyz = vec3(abs(v_texCoord0.x), abs(v_texCoord0.y), 0.0);
-
-    // if (v_generalUV.x + v_generalUV.y > 0.5) {
-        // baseColor.xyz = vec3(0.0, 0.0, 0.0);
-    // }
 
 #ifdef iorFlag
     vec3 f0 = vec3(pow(( u_ior - 1.0) /  (u_ior + 1.0), 2.0));
