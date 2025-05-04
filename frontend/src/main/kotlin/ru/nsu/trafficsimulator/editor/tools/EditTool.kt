@@ -3,13 +3,9 @@ package ru.nsu.trafficsimulator.editor.tools
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.VertexAttributes
-import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.changes.MoveIntersectionStateChange
@@ -21,7 +17,7 @@ import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.editor.*
 
-class InspectTool : IEditingTool {
+class EditTool : IEditingTool {
     private val name = "Edit"
     private var draggingIntersection: Intersection? = null
     private val sphereForDraggingIntersection = ModelInstance(createSphere(Color.RED))
