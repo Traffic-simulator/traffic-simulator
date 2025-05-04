@@ -4,6 +4,8 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import imgui.ImGui
+import imgui.ImVec2
+import imgui.flag.ImGuiCond
 import imgui.type.ImInt
 import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
@@ -19,10 +21,12 @@ class InspectorTool() : IEditingTool {
     private var camera: Camera? = null
 
     private var selectedRoad: Road? = null
+    private var lastClickPos: Vec2? = null
 
     override fun getButtonName(): String = name
 
     override fun handleDown(screenPos: Vec2, button: Int): Boolean {
+        lastClickPos = screenPos
         val intersection = getIntersectionWithGround(screenPos, camera!!) ?: return false
         selectedRoad = findRoad(layout!!, intersection)
         return selectedRoad != null
@@ -48,6 +52,10 @@ class InspectorTool() : IEditingTool {
     }
 
     private fun runRoadMenu(road: Road): IStateChange? {
+        if (lastClickPos != null) {
+            ImGui.setNextWindowPos(lastClickPos!!.x.toFloat(), lastClickPos!!.y.toFloat())
+            lastClickPos = null
+        }
         ImGui.begin("Road settings")
 
         if (ImGui.beginTable("##Road", 2)) {
