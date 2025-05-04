@@ -142,6 +142,12 @@ class InspectorTool() : IEditingTool {
             ImGui.tableSetColumnIndex(1)
             ImGui.text(intersection.incomingRoads.map{ it.id }.toString())
 
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Inner roads IDs")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.text(intersection.intersectionRoads.map{ it.id }.toString())
+
             ImGui.endTable()
         }
 
