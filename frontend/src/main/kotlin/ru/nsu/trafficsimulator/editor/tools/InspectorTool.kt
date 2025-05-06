@@ -7,12 +7,14 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.flag.ImGuiCond
 import imgui.type.ImInt
+import ru.nsu.trafficsimulator.editor.changes.EditBuildingStateChange
 import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
+import ru.nsu.trafficsimulator.model.BuildingType
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
@@ -61,7 +63,11 @@ class InspectorTool() : IEditingTool {
         if (selectedRoad != null) {
             return runRoadMenu(selectedRoad!!)
         } else if (selectedIntersection != null) {
-            return runIntersectionMenu(selectedIntersection!!)
+            return if (selectedIntersection!!.isBuilding) {
+                runBuildingMenu(selectedIntersection!!)
+            } else {
+                runIntersectionMenu(selectedIntersection!!)
+            }
         }
         return null
     }
@@ -122,6 +128,52 @@ class InspectorTool() : IEditingTool {
         return null
     }
 
+    private fun runBuildingMenu(intersection: Intersection): IStateChange? {
+        if (lastClickPos != null) {
+            ImGui.setNextWindowPos(lastClickPos!!.x.toFloat(), lastClickPos!!.y.toFloat())
+            lastClickPos = null
+        }
+
+        ImGui.begin("Building settings")
+        val buildingCapacity = ImInt(intersection.building!!.capacity)
+        val types = arrayOf(
+            "Home",
+            "Shopping",
+            "Education",
+            "Work",
+            "Entertainment"
+        )
+        val selectedType = ImInt(intersection.building!!.type.ordinal)
+        if (ImGui.beginTable("##Building", 2)) {
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Building capacity")
+            ImGui.tableSetColumnIndex(1)
+            if (ImGui.inputInt("##capacity", buildingCapacity)) {
+                buildingCapacity.set(buildingCapacity.get().coerceIn(0, 1000))
+            }
+
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Building type")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.combo("##type", selectedType, types)
+
+            ImGui.endTable()
+        }
+        ImGui.end()
+
+        if (buildingCapacity.get() != intersection.building!!.capacity || types[selectedType.get()].uppercase() != intersection.building!!.type.toString()) {
+            return EditBuildingStateChange(
+                intersection,
+                buildingCapacity.get(),
+                types[selectedType.get()].uppercase()
+            )
+        }
+
+        return null
+    }
+
     private fun runIntersectionMenu(intersection: Intersection): IStateChange? {
         if (lastClickPos != null) {
             ImGui.setNextWindowPos(lastClickPos!!.x.toFloat(), lastClickPos!!.y.toFloat())
@@ -140,13 +192,13 @@ class InspectorTool() : IEditingTool {
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Incoming roads IDs")
             ImGui.tableSetColumnIndex(1)
-            ImGui.text(intersection.incomingRoads.map{ it.id }.toString())
+            ImGui.text(intersection.incomingRoads.map { it.id }.toString())
 
             ImGui.tableNextRow()
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Inner roads IDs")
             ImGui.tableSetColumnIndex(1)
-            ImGui.text(intersection.intersectionRoads.map{ it.id }.toString())
+            ImGui.text(intersection.intersectionRoads.map { it.id }.toString())
 
             ImGui.endTable()
         }

@@ -13,10 +13,7 @@ import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.editor.actions.LoadAction
 import ru.nsu.trafficsimulator.editor.actions.SaveAction
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
-import ru.nsu.trafficsimulator.editor.tools.AddRoadTool
-import ru.nsu.trafficsimulator.editor.tools.DeleteRoadTool
-import ru.nsu.trafficsimulator.editor.tools.InspectorTool
-import ru.nsu.trafficsimulator.editor.tools.EditTool
+import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.graphics.ModelGenerator
@@ -35,7 +32,7 @@ class Editor {
         private var nextChange = 0
 
         private val actions = listOf(LoadAction(), SaveAction())
-        private val tools = listOf(EditTool(), AddRoadTool(), DeleteRoadTool(), InspectorTool())
+        private val tools = listOf(EditTool(), AddRoadTool(), AddBuildingTool(), DeleteRoadTool(), InspectorTool())
 
         private var currentTool = tools[0]
 
