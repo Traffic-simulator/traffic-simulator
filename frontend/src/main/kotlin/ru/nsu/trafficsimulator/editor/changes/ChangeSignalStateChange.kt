@@ -8,6 +8,8 @@ class ChangeSignalStateChange(private val signal: Signal, private val offset: In
     private val prevRed = signal.redTimeSecs
     private val prevGreen = signal.greenTimeSecs
 
+    override fun isStructuralChange(): Boolean = false
+
     override fun apply(layout: Layout) {
         signal.redOffsetOnStartSecs = offset
         signal.redTimeSecs = red
