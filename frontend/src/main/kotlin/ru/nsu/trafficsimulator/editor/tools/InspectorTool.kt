@@ -7,6 +7,7 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.flag.ImGuiCond
 import imgui.type.ImInt
+import ru.nsu.trafficsimulator.editor.changes.ChangeSignalStateChange
 import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
@@ -16,6 +17,7 @@ import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
+import ru.nsu.trafficsimulator.model.Signal
 
 class InspectorTool() : IEditingTool {
     private val name = "Inspector"
@@ -129,6 +131,7 @@ class InspectorTool() : IEditingTool {
         }
         ImGui.begin("Intersection settings")
 
+        var stateChange: IStateChange? = null
         if (ImGui.beginTable("##Intersection", 2)) {
             ImGui.tableNextRow()
             ImGui.tableSetColumnIndex(0)
@@ -148,15 +151,57 @@ class InspectorTool() : IEditingTool {
             ImGui.tableSetColumnIndex(1)
             ImGui.text(intersection.intersectionRoads.map{ it.id }.toString())
 
+            if (intersection.hasSignals) {
+                for (road in intersection.incomingRoads) {
+                    ImGui.pushID(road.id)
+                    ImGui.tableNextRow()
+                    ImGui.tableSetColumnIndex(0)
+                    ImGui.text("Signal for road #${road.id}")
+                    ImGui.tableSetColumnIndex(1)
+                    val signal = intersection.signals[road]
+                    if (signal == null) {
+                        ImGui.textColored(1.0f, 0.0f, 0.0f, 1.0f, "ERROR: no signal found")
+                    } else {
+                        var currentOffset = ImInt(signal.redOffsetOnStartSecs)
+                        var currentRed = ImInt(signal.redTimeSecs)
+                        var currentGreen = ImInt(signal.greenTimeSecs)
+                        ImGui.pushItemWidth(80.0f)
+                        if (ImGui.inputInt("##offset", currentOffset)) {
+                            currentOffset.set(Signal.clampOffsetTime(currentOffset.get()))
+                        }
+                        ImGui.sameLine()
+                        if (ImGui.inputInt("##red", currentRed)) {
+                            currentRed.set(Signal.clampSignalTime(currentRed.get()))
+                        }
+                        ImGui.sameLine()
+                        if (ImGui.inputInt("##green", currentGreen)) {
+                            currentGreen.set(Signal.clampSignalTime(currentGreen.get()))
+                        }
+                        ImGui.popItemWidth()
+                        if (currentOffset.get() != signal.redOffsetOnStartSecs
+                            || currentRed.get() != signal.redTimeSecs
+                            || currentGreen.get() != signal.greenTimeSecs
+                            ) {
+                            stateChange = ChangeSignalStateChange(signal, currentOffset.get(), currentRed.get(), currentGreen.get())
+                        }
+                    }
+                    ImGui.popID()
+                }
+            }
+
             ImGui.endTable()
         }
 
         ImGui.end()
-        return null
+        return stateChange
     }
 
     override fun init(layout: Layout, camera: Camera, reset: Boolean) {
         this.camera = camera
         this.layout = layout
+        if (reset) {
+            selectedIntersection = null
+            selectedRoad = null
+        }
     }
 }

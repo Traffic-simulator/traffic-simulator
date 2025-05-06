@@ -79,7 +79,7 @@ class Editor {
             for (tool in tools) {
                 if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
                     currentTool = tool
-                    onLayoutChange(false)
+                    onLayoutChange(true)
                 }
             }
             ImGui.end()

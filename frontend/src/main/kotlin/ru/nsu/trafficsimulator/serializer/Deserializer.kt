@@ -91,9 +91,9 @@ class Deserializer {
                     return@forEach
                 }
 
-                trafficLight.redOffsetOnStartSecs = nums[0].toLong()
-                trafficLight.redTimeSecs = nums[1].toLong()
-                trafficLight.greenTimeSecs = nums[2].toLong()
+                trafficLight.redOffsetOnStartSecs = nums[0].toInt()
+                trafficLight.redTimeSecs = nums[1].toInt()
+                trafficLight.greenTimeSecs = nums[2].toInt()
 
                 if (signal.orientation == "+") {
                     if (abs(signal.s - road.geometry.length) > 1e-2) {
