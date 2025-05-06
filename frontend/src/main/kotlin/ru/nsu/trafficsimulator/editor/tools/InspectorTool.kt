@@ -1,15 +1,13 @@
 package ru.nsu.trafficsimulator.editor.tools
 
-import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import imgui.ImGui
-import imgui.ImVec2
-import imgui.flag.ImGuiCond
 import imgui.type.ImInt
 import ru.nsu.trafficsimulator.editor.changes.ChangeSignalStateChange
 import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.editor.changes.ReplaceIntersectionSignalsStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
@@ -19,7 +17,7 @@ import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
 import ru.nsu.trafficsimulator.model.Signal
 
-class InspectorTool() : IEditingTool {
+class InspectorTool : IEditingTool {
     private val name = "Inspector"
     private var layout: Layout? = null
     private var camera: Camera? = null
@@ -150,6 +148,21 @@ class InspectorTool() : IEditingTool {
             ImGui.text("Inner roads IDs")
             ImGui.tableSetColumnIndex(1)
             ImGui.text(intersection.intersectionRoads.map{ it.id }.toString())
+
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Has signals")
+            ImGui.tableSetColumnIndex(1)
+            val hasSignalsChanged = ImGui.radioButton("##signals", intersection.hasSignals)
+            if (hasSignalsChanged) {
+                val newSignals = HashMap<Road, Signal>()
+                if (!intersection.hasSignals) {
+                    for (road in intersection.incomingRoads) {
+                        newSignals[road] = Signal()
+                    }
+                }
+                stateChange = ReplaceIntersectionSignalsStateChange(intersection, newSignals)
+            }
 
             if (intersection.hasSignals) {
                 for (road in intersection.incomingRoads) {
