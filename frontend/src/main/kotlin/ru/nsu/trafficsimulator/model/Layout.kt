@@ -65,6 +65,13 @@ class Layout {
             geometry = Spline(startPoint, startDir, endPoint, endDir)
         )
 
+        if (startIntersection.hasSignals) {
+            startIntersection.signals[newRoad] = Signal()
+        }
+        if (endIntersection.hasSignals) {
+            endIntersection.signals[newRoad] = Signal()
+        }
+
         connectRoadToIntersection(newRoad, startIntersection)
         connectRoadToIntersection(newRoad, endIntersection)
 
