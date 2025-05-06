@@ -109,12 +109,18 @@ class Layout {
     fun deleteRoad(road: Road) {
         road.startIntersection.let {
             it.removeRoad(road)
+            it.intersectionRoads
+                .filter { ir -> ir.toRoad === road || ir.fromRoad === road }
+                .forEach { ir -> intersectionRoads.remove(ir.id) }
             if (it.incomingRoadsCount == 0) {
                 deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
+            it.intersectionRoads
+                .filter { ir -> ir.toRoad === road || ir.fromRoad === road }
+                .forEach { ir -> intersectionRoads.remove(ir.id) }
             if (it.incomingRoadsCount == 0) {
                 deleteIntersection(it)
             }
