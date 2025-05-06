@@ -2,23 +2,25 @@ package ru.nsu.trafficsimulator.editor.tools
 
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
-import com.badlogic.gdx.graphics.g3d.ModelBatch
-import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.editor.changes.AddBuildingStateChange
 import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
-import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.Intersection
+import ru.nsu.trafficsimulator.model.Layout
+import java.security.KeyStore.TrustedCertificateEntry
 
-class AddRoadTool : IEditingTool {
-    private val name = "Add Road"
+class AddBuildingTool : IEditingTool {
+    private val name = "Add Building"
     private var layout: Layout? = null
     private var camera: Camera? = null
     private val startDirectionLength = 25.0
 
     private val selectedIntersections = arrayOfNulls<Intersection>(2)
     private var selectedIntersectionCount = 0
+
     override fun getButtonName(): String {
         return name
     }
@@ -27,15 +29,16 @@ class AddRoadTool : IEditingTool {
         if (button != Input.Buttons.LEFT) return false
         val intersectionPoint = getIntersectionWithGround(screenPos, camera!!) ?: return false
 
-        var roadIntersection = findRoadIntersectionAt(intersectionPoint)
-        if (roadIntersection != null) {
-            if (roadIntersection.isBuilding) return false
-        }
-        if (roadIntersection == null) {
+        var roadIntersection: Intersection?;
+        if (selectedIntersectionCount == 0) {
+            roadIntersection = findRoadIntersectionAt(intersectionPoint) ?: return false
+        } else {
+            roadIntersection = findRoadIntersectionAt(intersectionPoint)
+            if (roadIntersection != null) return false
             roadIntersection = layout!!.addIntersection(intersectionPoint)
         }
-        selectedIntersections[selectedIntersectionCount] = roadIntersection
 
+        selectedIntersections[selectedIntersectionCount] = roadIntersection
         selectedIntersectionCount += 1
         return true
     }
@@ -49,21 +52,12 @@ class AddRoadTool : IEditingTool {
         val startDirection = selectedIntersections[0]!!.position + dir * startDirectionLength
         val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
 
-        return AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
-    }
-
-    override fun handleDrag(screenPos: Vec2) {
-        return
-    }
-
-    override fun render(modelBatch: ModelBatch) {
-        return
+        return AddBuildingStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
     }
 
     override fun init(layout: Layout, camera: Camera, reset: Boolean) {
         this.layout = layout
         this.camera = camera
-        selectedIntersectionCount = 0
     }
 
     private fun findRoadIntersectionAt(point: Vec3): Intersection? {
