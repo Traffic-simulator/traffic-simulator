@@ -34,6 +34,7 @@ data class Intersection(
 
         incomingRoads.remove(road)
         intersectionRoads.removeIf { it.toRoad === road || it.fromRoad === road }
+        signals.remove(road)
     }
 
     fun recalculateIntersectionRoads() {
