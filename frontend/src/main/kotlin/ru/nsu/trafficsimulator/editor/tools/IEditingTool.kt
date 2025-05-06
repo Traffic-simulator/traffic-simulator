@@ -12,14 +12,26 @@ interface IEditingTool {
     /**
      * @return Whether to disable camera controls until mouse up
      */
-    fun handleDown(screenPos: Vec2, button: Int): Boolean
+    fun handleDown(screenPos: Vec2, button: Int): Boolean {
+        return false
+    }
 
     /**
      * @return Whether to update layout model
      */
     fun handleUp(screenPos: Vec2, button: Int): IStateChange?
-    fun handleDrag(screenPos: Vec2)
-    fun render(modelBatch: ModelBatch?)
+
+    fun handleDrag(screenPos: Vec2) {
+        return
+    }
+
+    fun runImgui(): IStateChange? {
+       return null
+    }
+
+    fun render(modelBatch: ModelBatch?) {
+        return
+    }
 
     /**
      * @param reset - whether the state should be reset completely or just updated

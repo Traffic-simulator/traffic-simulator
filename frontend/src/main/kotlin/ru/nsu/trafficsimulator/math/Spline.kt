@@ -169,10 +169,13 @@ class Spline {
         return sp.getDirection(distance - sp.offset)
     }
 
-    fun closestPoint(point: Vec2): Vec2 {
+    /**
+     * @return Pair of closest point and distance from the start of that point
+     */
+    fun closestPoint(point: Vec2): Pair<Vec2, Double> {
         return splineParts
             .map { it.closestPoint(point) }
-            .minBy { closest -> point.distance(closest) }
+            .minBy { (closestPoint, _) -> point.distance(closestPoint) }
     }
 
     fun moveEnd(newPoint: Vec2, newDirection: Vec2) {
@@ -322,7 +325,7 @@ class Spline {
             return Vec2(x.derivativeValue(distance), y.derivativeValue(distance))
         }
 
-        fun closestPoint(point: Vec2): Vec2 {
+        fun closestPoint(point: Vec2): Pair<Vec2, Double> {
             val maxValue = if (normalized) {
                 1.0
             } else {
@@ -364,7 +367,8 @@ class Spline {
                 }
             }
 
-            return Vec2(x.value(bestGuess), y.value(bestGuess))
+            val distanceFromStart = if (normalized) { bestGuess * length } else { bestGuess }
+            return Vec2(x.value(bestGuess), y.value(bestGuess)) to distanceFromStart
         }
 
         override fun toString(): String {

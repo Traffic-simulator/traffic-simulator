@@ -212,7 +212,7 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
         while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
