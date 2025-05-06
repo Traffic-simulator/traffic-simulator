@@ -7,5 +7,7 @@ class Building(
     val capacity: Int,
     var currentPeople: Int,
     val junctionId: String) {
-
+    override fun toString(): String {
+        return "Building(type=$type, capacity=$capacity, currentPeople=$currentPeople, junctionId='$junctionId')"
+    }
 }
