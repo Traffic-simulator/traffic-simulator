@@ -26,7 +26,7 @@ class Editor {
         var layout: Layout = Layout()
             set(value) {
                 field = value
-                onLayoutChange(true)
+                onLayoutChange(true, true)
             }
         private var layoutScene: Scene? = null
         var sceneManager: SceneManager? = null
@@ -44,7 +44,7 @@ class Editor {
         fun init(camera: Camera, sceneManager: SceneManager) {
             this.camera = camera
             this.sceneManager = sceneManager
-            onLayoutChange(true)
+            onLayoutChange(true, true)
         }
 
         fun runImgui() {
@@ -53,7 +53,7 @@ class Editor {
             for (action in actions) {
                 if (action.runImgui()) {
                     if (action.runAction(layout)) {
-                        onLayoutChange(true)
+                        onLayoutChange(action.isStructuralAction(), true)
                     }
                 }
             }
@@ -62,7 +62,7 @@ class Editor {
                     nextChange--;
                     changes[nextChange].revert(layout)
                     layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    onLayoutChange(false)
+                    onLayoutChange(changes[nextChange].isStructuralChange(), false)
                 }
             }
             if (ImGui.button("Redo")) {
@@ -70,7 +70,7 @@ class Editor {
                     changes[nextChange].apply(layout)
                     nextChange++
                     layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    onLayoutChange(false)
+                    onLayoutChange(changes[nextChange - 1].isStructuralChange(), false)
                 }
             }
 
@@ -79,7 +79,7 @@ class Editor {
             for (tool in tools) {
                 if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
                     currentTool = tool
-                    onLayoutChange(false)
+                    onLayoutChange(false, true)
                 }
             }
             ImGui.end()
@@ -131,11 +131,13 @@ class Editor {
             changes.add(change)
             nextChange++
             change.apply(layout)
-            onLayoutChange(false)
+            onLayoutChange(change.isStructuralChange(), false)
         }
 
-        private fun onLayoutChange(reset: Boolean) {
-            updateLayout()
+        private fun onLayoutChange(generateLayoutMesh: Boolean, reset: Boolean) {
+            if (generateLayoutMesh) {
+                updateLayout()
+            }
             currentTool.init(layout, camera!!, reset)
 
             this.spheres.clear()
@@ -147,7 +149,7 @@ class Editor {
         }
 
         private fun updateLayout() {
-            println("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
+            logger.info("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
             }

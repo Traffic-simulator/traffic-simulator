@@ -4,6 +4,10 @@ import ru.nsu.trafficsimulator.model.Layout
 
 interface IAction {
     /**
+     * Simply: do we need to update mesh for layout or not?
+     */
+    fun isStructuralAction(): Boolean
+    /**
      * Function to draw a menu
      * @return whether to run the action
      */

@@ -9,6 +9,8 @@ import ru.nsu.trafficsimulator.serializer.Deserializer
 class LoadAction : IAction {
     private val str = ImString()
     private var errorMessage = ""
+    override fun isStructuralAction(): Boolean = true
+
     override fun runImgui(): Boolean {
         ImGui.text("Filename:")
         ImGui.sameLine()

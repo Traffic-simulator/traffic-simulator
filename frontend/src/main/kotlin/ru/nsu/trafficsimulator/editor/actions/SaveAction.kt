@@ -1,16 +1,17 @@
 package ru.nsu.trafficsimulator.editor.actions
 
-import OpenDriveReader
 import OpenDriveWriter
 import imgui.ImGui
 import imgui.type.ImString
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 
 class SaveAction : IAction {
     private val str = ImString()
     private var errorMessage = ""
+
+    override fun isStructuralAction(): Boolean = true
+
     override fun runImgui(): Boolean {
         ImGui.text("Filename:")
         ImGui.sameLine()

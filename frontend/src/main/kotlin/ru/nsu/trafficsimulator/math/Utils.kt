@@ -26,10 +26,8 @@ fun findRoad(layout: Layout, point: Vec3): Road? {
         val direction = road.geometry.getDirection(pointOffset).normalized()
         val toRight = direction.toVec3().cross(Vec3.UP)
         val laneCount = if ((point - closestPoint.toVec3()).dot(toRight) > 0.0) {
-            println("Picked right lane")
-           road.rightLane
+            road.rightLane
         } else {
-            println("Picked left lane")
             road.leftLane
         }
         if ((closestPoint - point2d).length() <= laneCount * LANE_WIDTH) {
