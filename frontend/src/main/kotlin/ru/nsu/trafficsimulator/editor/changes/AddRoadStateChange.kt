@@ -24,19 +24,6 @@ class AddRoadStateChange(private val start: Intersection, private val startDir: 
     }
 
     override fun revert(layout: Layout) {
-        layout.roads.values.firstOrNull {
-            it.startIntersection == start && it.endIntersection == end
-        }?.let { roadToDelete ->
-            // 1. Удаляем все IntersectionRoad, связанные с этой дорогой
-            start.intersectionRoads.removeIf { ir ->
-                ir.fromRoad == roadToDelete || ir.toRoad == roadToDelete
-            }
-            end.intersectionRoads.removeIf { ir ->
-                ir.fromRoad == roadToDelete || ir.toRoad == roadToDelete
-            }
-
-            // 2. Удаляем саму дорогу
-            layout.deleteRoad(roadToDelete)
-        }
+        newRoad?.let { layout.deleteRoad(it) }
     }
 }
