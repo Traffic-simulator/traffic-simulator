@@ -1,7 +1,6 @@
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
-import ru.nsu.trafficsimulator.editor.changes.DeleteRoadStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Intersection
@@ -18,6 +17,7 @@ class AddRoadStateChangeDetailedTest {
         val change = AddRoadStateChange(startPos, Vec3(-2.0, 0.0, 0.0), endPos, Vec3(2.0, 0.0, 0.0))
 
         change.apply(layout)
+        change.apply(layout)
 
         assertEquals(1, layout.roads.size)
         assertEquals(2, layout.intersections.size)
@@ -25,7 +25,6 @@ class AddRoadStateChangeDetailedTest {
 
         change.revert(layout)
         assertEquals(0, layout.roads.size)
-
         assertEquals(0, layout.intersections.size)
         assertTrue(layout.intersectionRoads.isEmpty())
     }

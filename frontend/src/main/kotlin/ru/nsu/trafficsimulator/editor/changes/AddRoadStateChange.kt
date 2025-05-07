@@ -24,6 +24,8 @@ class AddRoadStateChange(private val start: Intersection, private val startDir: 
     }
 
     override fun revert(layout: Layout) {
-        newRoad?.let { layout.deleteRoad(it) }
+        if (newRoad != null) {
+            layout.deleteRoad(newRoad!!)
+        }
     }
 }
