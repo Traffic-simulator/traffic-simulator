@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
 import kotlin.math.abs
@@ -65,11 +66,27 @@ class Layout {
             geometry = Spline(startPoint, startDir, endPoint, endDir)
         )
 
-        connectRoadToIntersection(newRoad, startIntersection)
-        connectRoadToIntersection(newRoad, endIntersection)
+        addRoad(newRoad)
 
-        roads[newRoad.id] = newRoad
         return newRoad
+    }
+
+    fun addRoad(road: Road) {
+        if (roads.containsKey(road.id)) {
+            logger.warn("Tried to add a road that is already in the layout")
+        }
+
+        if (road.startIntersection.hasSignals) {
+            road.startIntersection.signals[road] = Signal()
+        }
+        if (road.endIntersection.hasSignals) {
+            road.endIntersection.signals[road] = Signal()
+        }
+
+        connectRoadToIntersection(road, road.startIntersection)
+        connectRoadToIntersection(road, road.endIntersection)
+
+        roads[road.id] = road
     }
 
     fun addBuilding(
@@ -108,15 +125,21 @@ class Layout {
 
     fun deleteRoad(road: Road) {
         road.startIntersection.let {
+            it.intersectionRoads
+                .filter { ir -> ir.toRoad === road || ir.fromRoad === road }
+                .forEach { ir -> intersectionRoads.remove(ir.id) }
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0) {
-                deleteIntersection(it)
+                intersections.remove(it.id)
             }
         }
         road.endIntersection.let {
+            it.intersectionRoads
+                .filter { ir -> ir.toRoad === road || ir.fromRoad === road }
+                .forEach { ir -> intersectionRoads.remove(ir.id) }
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0) {
-                deleteIntersection(it)
+                intersections.remove(it.id)
             }
         }
         roads.remove(road.id)
@@ -176,6 +199,8 @@ class Layout {
         for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
+        intersection.intersectionRoads
+            .forEach { intersectionRoads.remove(it.id) }
         intersections.remove(intersection.id)
     }
 

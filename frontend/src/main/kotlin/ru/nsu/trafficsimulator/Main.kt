@@ -19,7 +19,6 @@ import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
-import mu.KotlinLogging
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
@@ -27,6 +26,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
@@ -64,8 +64,6 @@ class Main : ApplicationAdapter() {
     private var state = ApplicationState.Editor
     private var editorInputProcess: InputProcessor? = null
     private val inputMultiplexer = InputMultiplexer()
-
-    private val logger = KotlinLogging.logger("FRONTEND")
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -118,9 +116,7 @@ class Main : ApplicationAdapter() {
 
         // Add ground
         val modelBuilder = ModelBuilder()
-        val groundMaterial = Material(
-            PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)),
-        )
+        val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
         modelBuilder.begin()
         val meshPartBuilder = modelBuilder.part(
             "Ground",
