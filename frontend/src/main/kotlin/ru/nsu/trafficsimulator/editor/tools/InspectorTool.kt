@@ -1,20 +1,21 @@
 package ru.nsu.trafficsimulator.editor.tools
 
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
+import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
 import imgui.type.ImDouble
 import imgui.type.ImInt
 import ru.nsu.trafficsimulator.editor.changes.EditIntersectionStateChange
 import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
-import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.math.findRoad
-import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
-import ru.nsu.trafficsimulator.math.getIntersectionWithGround
+import ru.nsu.trafficsimulator.editor.createSphere
+import ru.nsu.trafficsimulator.math.*
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
+import kotlin.math.abs
 
 class InspectorTool() : IEditingTool {
     private val name = "Inspector"
@@ -26,6 +27,8 @@ class InspectorTool() : IEditingTool {
     private var selectedIntersection: Intersection? = null
     private var lastClickPos: Vec2? = null
 
+    private val connectionSpheres = mutableListOf<ModelInstance>()
+
     override fun getButtonName(): String = name
 
     override fun handleDown(screenPos: Vec2, button: Int): Boolean {
@@ -34,6 +37,7 @@ class InspectorTool() : IEditingTool {
         selectedIntersection = findRoadIntersectionAt(layout!!, intersection)
         if (selectedIntersection != null) {
             selectedRoad = null
+            drawIntersectionConnections(selectedIntersection!!)
             return true
         }
         selectedRoad = findRoad(layout!!, intersection)
@@ -53,6 +57,9 @@ class InspectorTool() : IEditingTool {
     }
 
     override fun render(modelBatch: ModelBatch?) {
+        for (sphere in connectionSpheres) {
+            modelBatch!!.render(sphere)
+        }
         return
     }
 
@@ -140,13 +147,13 @@ class InspectorTool() : IEditingTool {
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Incoming roads IDs")
             ImGui.tableSetColumnIndex(1)
-            ImGui.text(intersection.incomingRoads.map{ it.id }.toString())
+            ImGui.text(intersection.incomingRoads.map { it.id }.toString())
 
             ImGui.tableNextRow()
             ImGui.tableSetColumnIndex(0)
             ImGui.text("Inner roads IDs")
             ImGui.tableSetColumnIndex(1)
-            ImGui.text(intersection.intersectionRoads.map{ it.id }.toString())
+            ImGui.text(intersection.intersectionRoads.map { it.id }.toString())
 
             ImGui.tableNextRow()
             ImGui.tableSetColumnIndex(0)
@@ -166,6 +173,32 @@ class InspectorTool() : IEditingTool {
         }
 
         return null
+    }
+
+    private fun drawIntersectionConnections(intersection: Intersection) {
+        connectionSpheres.clear()
+        for (road in intersection.incomingRoads) {
+            for (i in 1..abs(road.getOutgoingLaneNumber(intersection))) {
+                val sphereModel = createSphere(Color.BROWN, 1.0)
+                val sphereInstance = ModelInstance(sphereModel)
+                val position = road.getIntersectionPoint(intersection, -(i.toDouble() - 0.5))
+                position.y = 1.0
+                sphereInstance.transform.setToTranslation(position.toGdxVec())
+                connectionSpheres.add(sphereInstance)
+            }
+
+            for (i in 1..abs(road.getIncomingLaneNumber(intersection))) {
+                val sphereModel = createSphere(Color.GREEN, 1.0)
+                val sphereInstance = ModelInstance(sphereModel)
+                val position = road.getIntersectionPoint(intersection, (i.toDouble() - 0.5))
+                position.y = 1.0
+                sphereInstance.transform.setToTranslation(position.toGdxVec())
+                connectionSpheres.add(sphereInstance)
+            }
+
+            println(road.getIncomingLaneNumber(intersection))
+            println(road.getOutgoingLaneNumber(intersection))
+        }
     }
 
     override fun init(layout: Layout, camera: Camera, reset: Boolean) {
