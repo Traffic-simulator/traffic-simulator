@@ -14,34 +14,32 @@ class DeleteRoadStateChange(private val road: Road) : IStateChange {
     private val roadConnections = mutableListOf<Pair<Intersection, IntersectionRoad>>()
 
     init {
-        start.intersectionRoads.forEach { ir ->
-            if (ir.fromRoad == road || ir.toRoad == road) {
+        start.intersectionRoads.forEach { (_, ir) ->
+            if (ir.fromRoad === road || ir.toRoad === road) {
                 roadConnections.add(start to ir)
             }
         }
-        end.intersectionRoads.forEach { ir ->
-            if (ir.fromRoad == road || ir.toRoad == road) {
+        end.intersectionRoads.forEach { (_, ir) ->
+            if (ir.fromRoad === road || ir.toRoad === road) {
                 roadConnections.add(end to ir)
             }
         }
     }
 
     override fun apply(layout: Layout) {
-        layout.roads.values.firstOrNull {
-            it.id == road.id
-        }?.let { roadToDelete ->
+        layout.roads[road.id]?.let { roadToDelete ->
             layout.deleteRoad(roadToDelete)
         }
     }
 
     override fun revert(layout: Layout) {
-        if (!layout.intersections.contains(start.id)) layout.intersections[start.id] = start
-        if (!layout.intersections.contains(end.id)) layout.intersections[end.id] = end
+        if (!layout.intersections.contains(start.id)) layout.pushIntersection(start)
+        if (!layout.intersections.contains(end.id)) layout.pushIntersection(end)
 
-        layout.addRoad(road)
+        layout.pushRoad(road)
 
         roadConnections.forEach { (intersection, originalIr) ->
-            intersection.intersectionRoads.add(originalIr)
+            intersection.intersectionRoads[originalIr.id] = originalIr
         }
 
         if (startSignal != null) {
