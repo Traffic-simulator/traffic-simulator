@@ -15,20 +15,25 @@ const val MAX_SPEED = "60"
 fun serializeLayout(layout: Layout): OpenDRIVE {
     val openDrive = OpenDRIVE()
 
+    var irId = layout.roads.values.maxBy { it.id }.id + 1
+    for (intersection in layout.intersections.values) {
+        for (intersectionRoad in intersection.intersectionRoads.values) {
+            intersectionRoad.id = irId++
+        }
+    }
+
     for (road in layout.roads.values) {
         openDrive.road.add(serializeRoad(road))
     }
 
-    val ctx = SerializationContext()
-    ctx.nextIntersectionRoadId = layout.roads.values.maxBy { it.id }.id + 1
     for (intersectionRoad in layout.intersections
         .map { (_, intersection) -> intersection.intersectionRoads.values }
         .flatten()) {
-        openDrive.road.add(serializeIntersectionRoad(intersectionRoad, ctx))
+        openDrive.road.add(serializeIntersectionRoad(intersectionRoad))
     }
 
     for (intersection in layout.intersections.values) {
-        openDrive.junction.add(serializeIntersection(intersection, ctx))
+        openDrive.junction.add(serializeIntersection(intersection))
     }
     return openDrive
 }
@@ -134,10 +139,10 @@ private fun serializeRoad(road: Road): TRoad {
     return tRoad
 }
 
-private fun serializeIntersectionRoad(road: IntersectionRoad, ctx: SerializationContext): TRoad {
+private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
     val tRoad = TRoad()
     //An intersection road changes id
-    tRoad.id = (ctx.nextIntersectionRoadId + road.id).toString()
+    tRoad.id = road.id.toString()
     tRoad.length = road.geometry.length
     tRoad.junction = road.intersection.id.toString()
 
@@ -197,7 +202,7 @@ private fun serializeIntersectionRoad(road: IntersectionRoad, ctx: Serialization
     return tRoad
 }
 
-private fun serializeIntersection(intersection: Intersection, serializationContext: SerializationContext): TJunction {
+private fun serializeIntersection(intersection: Intersection): TJunction {
     val tJunction = TJunction()
 
     tJunction.id = intersection.id.toString()
@@ -270,7 +275,3 @@ fun createUserData(key: String, value: String) = TUserData().apply {
     this.value = value
 }
 
-private class SerializationContext {
-    var nextIntersectionRoadId: Long = 0
-        get() = field++
-}
