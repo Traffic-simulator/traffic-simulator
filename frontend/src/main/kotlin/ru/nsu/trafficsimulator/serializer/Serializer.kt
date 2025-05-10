@@ -21,7 +21,9 @@ fun serializeLayout(layout: Layout): OpenDRIVE {
 
     val ctx = SerializationContext()
     ctx.nextIntersectionRoadId = layout.roads.values.maxBy { it.id }.id + 1
-    for (intersectionRoad in layout.intersectionRoads) {
+    for (intersectionRoad in layout.intersections
+        .map { (_, intersection) -> intersection.intersectionRoads.values }
+        .flatten()) {
         openDrive.road.add(serializeIntersectionRoad(intersectionRoad, ctx))
     }
 

@@ -7,12 +7,8 @@ import ru.nsu.trafficsimulator.math.Vec3
 class Layout {
     val roads = mutableMapOf<Long, Road>()
     val intersections = mutableMapOf<Long, Intersection>()
-    val intersectionRoadNumber
+    val intersectionRoadsNumber
         get() = intersections.values.sumOf { it.intersectionRoads.size }
-    val intersectionRoads
-        get() = intersections
-            .map { (_, intersection) -> intersection.intersectionRoads.values }
-            .flatten().toSet()
 
     var roadIdCount: Long = 0
     var intersectionIdCount: Long = 0
