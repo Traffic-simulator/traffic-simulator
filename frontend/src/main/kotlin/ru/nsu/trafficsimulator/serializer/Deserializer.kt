@@ -144,7 +144,7 @@ class Deserializer {
                 laneLinkage = link.predecessor[0].id.toInt() to link.successor[0].id.toInt()
             )
 
-            intersection.intersectionRoads.add(intersectionRoad)
+            intersection.intersectionRoads[intersectionRoad.id] = intersectionRoad
             return intersectionRoad
         }
 
@@ -212,7 +212,7 @@ class Deserializer {
         }
 
         fun pushRoad(road: Road, layout: Layout) {
-            if (layout.roads.containsKey(road.id) || layout.intersectionRoads.containsKey(road.id)) {
+            if (layout.roads.containsKey(road.id)) {
                 throw IllegalArgumentException("Road with id ${road.id} already exists.")
             }
             if (road.id > layout.roadIdCount) {
@@ -233,13 +233,10 @@ class Deserializer {
         }
 
         fun pushIntersectionRoad(road: IntersectionRoad, layout: Layout) {
-            if (layout.roads.containsKey(road.id) || layout.intersectionRoads.containsKey(road.id)) {
-                throw IllegalArgumentException("Road with id ${road.id} already exists.")
-            }
             if (road.id > layout.roadIdCount) {
                 layout.roadIdCount = road.id + 1
             }
-            layout.intersectionRoads[road.id] = road
+            road.intersection.intersectionRoads[road.id] = road
         }
 
         private fun ensureFullSignals(layout: Layout) {

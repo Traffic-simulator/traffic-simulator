@@ -104,6 +104,10 @@ class DeleteRoadStateChangeDetailedTest {
         val intersection2 = Intersection(2, pos2, 0.0)
         val intersection3 = Intersection(3, pos3, 0.0)
 
+        layout.pushIntersection(intersection1)
+        layout.pushIntersection(intersection2)
+        layout.pushIntersection(intersection3)
+
         val road1 = layout.addRoad(
             intersection1,
             Vec3(1.0, 0.0, 0.0),
@@ -126,11 +130,20 @@ class DeleteRoadStateChangeDetailedTest {
         )
 
         val change1 = DeleteRoadStateChange(road1)
-        val change2 = DeleteRoadStateChange(road2)
-        val change3 = DeleteRoadStateChange(road3)
-
         change1.apply(layout)
+
+        assertEquals(2, layout.roads.size)
+        assertEquals(3, layout.intersections.size)
+        assertEquals(2, layout.intersectionRoads.size)
+
+        val change2 = DeleteRoadStateChange(road2)
         change2.apply(layout)
+
+        assertEquals(1, layout.roads.size)
+        assertEquals(2, layout.intersections.size)
+        assertEquals(0, layout.intersectionRoads.size)
+
+        val change3 = DeleteRoadStateChange(road3)
         change3.apply(layout)
 
         assertEquals(0, layout.roads.size)
@@ -142,17 +155,17 @@ class DeleteRoadStateChangeDetailedTest {
 
         assertEquals(1, layout.roads.size)
         assertEquals(2, layout.intersections.size)
-        assertEquals(0, layout.intersectionRoads.size)
+        assertEquals(0, layout.intersectionRoadNumber)
 
         change2.revert(layout)
 
         assertEquals(2, layout.roads.size)
         assertEquals(3, layout.intersections.size)
-        assertEquals(2, layout.intersectionRoads.size)
+        assertEquals(2, layout.intersectionRoadNumber)
 
         change1.revert(layout)
         assertEquals(3, layout.roads.size)
         assertEquals(3, layout.intersections.size)
-        assertEquals(6, layout.intersectionRoads.size)
+        assertEquals(6, layout.intersectionRoadNumber)
     }
 }

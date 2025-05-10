@@ -11,7 +11,7 @@ class AddRoadStateChange(private val start: Intersection, private val startDir: 
     private var newRoad: Road? = null
 
     override fun apply(layout: Layout) {
-        affectedIntersectionRoads = start.intersectionRoads.toList() + end.intersectionRoads.toList()
+        affectedIntersectionRoads = start.intersectionRoads.values.toList() + end.intersectionRoads.values.toList()
         if (!layout.intersections.contains(start.id))
             layout.intersections[start.id] = start
         if (!layout.intersections.contains(end.id))

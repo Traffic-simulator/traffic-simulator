@@ -19,12 +19,14 @@ fun serializeLayout(layout: Layout): OpenDRIVE {
         openDrive.road.add(serializeRoad(road))
     }
 
-    for (intersectionRoad in layout.intersectionRoads.values) {
-        openDrive.road.add(serializeIntersectionRoad(intersectionRoad))
+    val ctx = SerializationContext()
+    ctx.nextIntersectionRoadId = layout.roads.values.maxBy { it.id }.id + 1
+    for (intersectionRoad in layout.intersectionRoads) {
+        openDrive.road.add(serializeIntersectionRoad(intersectionRoad, ctx))
     }
 
     for (intersection in layout.intersections.values) {
-        openDrive.junction.add(serializeIntersection(intersection))
+        openDrive.junction.add(serializeIntersection(intersection, ctx))
     }
     return openDrive
 }
@@ -130,9 +132,10 @@ private fun serializeRoad(road: Road): TRoad {
     return tRoad
 }
 
-private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
+private fun serializeIntersectionRoad(road: IntersectionRoad, ctx: SerializationContext): TRoad {
     val tRoad = TRoad()
-    tRoad.id = road.id.toString()
+    //An intersection road changes id
+    tRoad.id = (ctx.nextIntersectionRoadId + road.id).toString()
     tRoad.length = road.geometry.length
     tRoad.junction = road.intersection.id.toString()
 
@@ -192,13 +195,13 @@ private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
     return tRoad
 }
 
-private fun serializeIntersection(intersection: Intersection): TJunction {
+private fun serializeIntersection(intersection: Intersection, serializationContext: SerializationContext): TJunction {
     val tJunction = TJunction()
 
     tJunction.id = intersection.id.toString()
 
     var connectorId = 0
-    for (intersectionRoad in intersection.intersectionRoads) {
+    for ((_, intersectionRoad) in intersection.intersectionRoads) {
         tJunction.connection.add(TJunctionConnection().apply {
             id = (connectorId++).toString()
             incomingRoad = intersectionRoad.fromRoad.id.toString()
@@ -263,4 +266,9 @@ private fun generateRoadPlaneView(geometry: Spline): TRoadPlanView {
 fun createUserData(key: String, value: String) = TUserData().apply {
     this.code = key
     this.value = value
+}
+
+private class SerializationContext {
+    var nextIntersectionRoadId: Long = 0
+        get() = field++
 }

@@ -3,13 +3,16 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
-import kotlin.math.abs
-import kotlin.math.sign
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
-    val intersectionRoads = mutableMapOf<Long, IntersectionRoad>()
     val intersections = mutableMapOf<Long, Intersection>()
+    val intersectionRoadNumber
+        get() = intersections.values.sumOf { it.intersectionRoads.size }
+    val intersectionRoads
+        get() = intersections
+            .map { (_, intersection) -> intersection.intersectionRoads.values }
+            .flatten().toSet()
 
     var roadIdCount: Long = 0
     var intersectionIdCount: Long = 0
@@ -22,10 +25,6 @@ class Layout {
         intersections.clear()
         for ((key, value) in other.intersections) {
             intersections[key] = value
-        }
-        intersectionRoads.clear()
-        for ((key, value) in other.intersectionRoads) {
-            intersectionRoads[key] = value
         }
 
         roadIdCount = other.roadIdCount
@@ -83,8 +82,8 @@ class Layout {
             road.endIntersection.signals[road] = Signal()
         }
 
-        connectRoadToIntersection(road, road.startIntersection)
-        connectRoadToIntersection(road, road.endIntersection)
+        road.startIntersection.connectRoad(road)
+        road.endIntersection.connectRoad(road)
 
         roads[road.id] = road
     }
@@ -109,34 +108,14 @@ class Layout {
         intersection.recalculateIntersectionRoads()
     }
 
-    private fun connectRoadToIntersection(road: Road, intersection: Intersection) {
-        intersection.intersectionRoads
-            .filter { it.toRoad === road || it.fromRoad === road }
-            .forEach { intersectionRoads.remove(it.id) }
-        intersection.removeRoad(road)
-        for (incomingRoad in intersection.incomingRoads) {
-            if (incomingRoad !== road) {
-                addIntersectionRoad(intersection, road, incomingRoad)
-                addIntersectionRoad(intersection, incomingRoad, road)
-            }
-        }
-        intersection.addRoad(road)
-    }
-
     fun deleteRoad(road: Road) {
         road.startIntersection.let {
-            it.intersectionRoads
-                .filter { ir -> ir.toRoad === road || ir.fromRoad === road }
-                .forEach { ir -> intersectionRoads.remove(ir.id) }
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0) {
                 intersections.remove(it.id)
             }
         }
         road.endIntersection.let {
-            it.intersectionRoads
-                .filter { ir -> ir.toRoad === road || ir.fromRoad === road }
-                .forEach { ir -> intersectionRoads.remove(ir.id) }
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0) {
                 intersections.remove(it.id)
@@ -152,46 +131,19 @@ class Layout {
         return newIntersection
     }
 
-    private fun addIntersectionRoad(intersection: Intersection, fromRoad: Road, toRoad: Road) {
-        val incomingLaneNumber = fromRoad.getIncomingLaneNumber(intersection)
-        val outgoingLaneNumber = toRoad.getOutgoingLaneNumber(intersection)
-
-        val incomingSign = incomingLaneNumber.sign
-        val outgoingSign = outgoingLaneNumber.sign
-
-        for (incomingLane in 1..abs(incomingLaneNumber)) {
-            for (outgoingLane in 1..abs(outgoingLaneNumber)) {
-                val geometry = Spline()
-
-                val newIntersectionRoad = IntersectionRoad(
-                    id = roadIdCount++,
-                    intersection = intersection,
-                    fromRoad = fromRoad,
-                    toRoad = toRoad,
-                    geometry = geometry,
-                    laneLinkage = incomingLane * incomingSign to outgoingLane * outgoingSign
-                )
-                newIntersectionRoad.recalculateGeometry()
-
-                intersection.intersectionRoads.add(newIntersectionRoad)
-                intersectionRoads[newIntersectionRoad.id] = newIntersectionRoad
-            }
-        }
-    }
-
     fun roadSetLaneNumber(road: Road, leftLane: Int = road.leftLane, rightLane: Int = road.rightLane) {
         road.leftLane = leftLane
         road.rightLane = rightLane
 
-        connectRoadToIntersection(road, road.startIntersection)
-        connectRoadToIntersection(road, road.endIntersection)
+        road.startIntersection.connectRoad(road)
+        road.endIntersection.connectRoad(road)
     }
 
     override fun toString(): String {
         val roadsString = roads.values.joinToString(", ") { it.toString() }
         val intersectionsString = intersections.values.joinToString(", ") { it.toString() }
         return "Layout(roads=[$roadsString], intersections=[$intersectionsString], " +
-            "roadIdCount=$roadIdCount, intersectionIdCount=$intersectionIdCount), intersectionRoads=$intersectionRoads"
+            "roadIdCount=$roadIdCount, intersectionIdCount=$intersectionIdCount)"
 
     }
 
@@ -199,9 +151,27 @@ class Layout {
         for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
-        intersection.intersectionRoads
-            .forEach { intersectionRoads.remove(it.id) }
         intersections.remove(intersection.id)
+    }
+
+    /**
+     * Only for adding a road without any additional actions.
+     */
+    fun pushRoad(road: Road) {
+        if (roads.containsKey(road.id))
+            throw IllegalArgumentException("Road id already exists, can't push road")
+
+        roads[road.id] = road
+    }
+
+    /**
+     * Only for adding a road without any additional actions.
+     */
+    fun pushIntersection(intersection: Intersection) {
+        if (intersections.containsKey(intersection.id))
+            throw IllegalArgumentException("Intersection id already exists, can't push intersection")
+
+        intersections[intersection.id] = intersection
     }
 
     companion object {
