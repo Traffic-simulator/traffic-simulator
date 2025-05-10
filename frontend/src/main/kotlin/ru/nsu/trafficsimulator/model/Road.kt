@@ -35,9 +35,12 @@ class Road(
         return geometry.getDirection(startPadding + distance).toVec3()
     }
 
+    fun getIntersectionPoint(intersection: Intersection, laneOffset: Int): Vec3 =
+        getIntersectionPoint(intersection, laneOffset.toDouble())
+
     // laneOffset < 0 - lanes incoming to the intersection
     // laneOffset > 0 - lanes outgoing from the intersection
-    fun getIntersectionPoint(intersection: Intersection, laneOffset: Int = 0): Vec3 {
+    fun getIntersectionPoint(intersection: Intersection, laneOffset: Double = 0.0): Vec3 {
         return when (contact(intersection)) {
             ContactPoint.START -> {
                 val dir = getDirection(0.0)
