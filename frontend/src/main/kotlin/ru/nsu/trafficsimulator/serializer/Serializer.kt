@@ -15,11 +15,20 @@ const val MAX_SPEED = "60"
 fun serializeLayout(layout: Layout): OpenDRIVE {
     val openDrive = OpenDRIVE()
 
+    var irId = layout.roads.values.maxBy { it.id }.id + 1
+    for (intersection in layout.intersections.values) {
+        for (intersectionRoad in intersection.intersectionRoads.values) {
+            intersectionRoad.id = irId++
+        }
+    }
+
     for (road in layout.roads.values) {
         openDrive.road.add(serializeRoad(road))
     }
 
-    for (intersectionRoad in layout.intersectionRoads.values) {
+    for (intersectionRoad in layout.intersections
+        .map { (_, intersection) -> intersection.intersectionRoads.values }
+        .flatten()) {
         openDrive.road.add(serializeIntersectionRoad(intersectionRoad))
     }
 
@@ -132,6 +141,7 @@ private fun serializeRoad(road: Road): TRoad {
 
 private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
     val tRoad = TRoad()
+    //An intersection road changes id
     tRoad.id = road.id.toString()
     tRoad.length = road.geometry.length
     tRoad.junction = road.intersection.id.toString()
@@ -198,7 +208,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
     tJunction.id = intersection.id.toString()
 
     var connectorId = 0
-    for (intersectionRoad in intersection.intersectionRoads) {
+    for ((_, intersectionRoad) in intersection.intersectionRoads) {
         tJunction.connection.add(TJunctionConnection().apply {
             id = (connectorId++).toString()
             incomingRoad = intersectionRoad.fromRoad.id.toString()
@@ -264,3 +274,4 @@ fun createUserData(key: String, value: String) = TUserData().apply {
     this.code = key
     this.value = value
 }
+

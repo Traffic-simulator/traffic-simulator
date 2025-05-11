@@ -21,12 +21,12 @@ class AddRoadStateChangeDetailedTest {
 
         assertEquals(1, layout.roads.size)
         assertEquals(2, layout.intersections.size)
-        assertTrue(layout.intersectionRoads.isEmpty())
+        assertTrue(layout.intersectionRoadsNumber == 0)
 
         change.revert(layout)
         assertEquals(0, layout.roads.size)
         assertEquals(0, layout.intersections.size)
-        assertTrue(layout.intersectionRoads.isEmpty())
+        assertTrue(layout.intersectionRoadsNumber == 0)
     }
 
     @Test
@@ -49,7 +49,7 @@ class AddRoadStateChangeDetailedTest {
         assertEquals(startPos, road.startIntersection)
         assertEquals(endPos, road.endIntersection)
         assertTrue(road.length > 0)
-        assertEquals(0, layout.intersectionRoads.size)
+        assertEquals(0, layout.intersectionRoadsNumber)
 
         change.revert(layout)
     }
@@ -125,7 +125,7 @@ class AddRoadStateChangeDetailedTest {
         )
         change1.apply(layout)
         assertEquals(1, layout.roads.size)
-        assertEquals(0, layout.intersectionRoads.size)
+        assertEquals(0, layout.intersectionRoadsNumber)
 
         val change2 = AddRoadStateChange(
             pos2,
@@ -135,16 +135,16 @@ class AddRoadStateChangeDetailedTest {
         )
         change2.apply(layout)
         assertEquals(2, layout.roads.size)
-        assertEquals(2, layout.intersectionRoads.size)
+        assertEquals(2, layout.intersectionRoadsNumber)
 
         change2.revert(layout)
         assertEquals(1, layout.roads.size)
-        assertEquals(0, layout.intersectionRoads.size)
+        assertEquals(0, layout.intersectionRoadsNumber)
 
         change1.revert(layout)
         assertEquals(0, layout.roads.size)
         assertEquals(0, layout.intersections.size)
-        assertEquals(0, layout.intersectionRoads.size)
+        assertEquals(0, layout.intersectionRoadsNumber)
     }
 
     @Test
@@ -186,17 +186,17 @@ class AddRoadStateChangeDetailedTest {
 
         assertEquals(3, layout.roads.size)
         assertEquals(3, layout.intersections.size)
-        assertEquals(6, layout.intersectionRoads.size)
+        assertEquals(6, layout.intersectionRoadsNumber)
 
         change3.revert(layout)
         assertEquals(2, layout.roads.size)
         assertEquals(3, layout.intersections.size)
-        assertEquals(2, layout.intersectionRoads.size)
+        assertEquals(2, layout.intersectionRoadsNumber)
 
         change2.revert(layout)
         assertEquals(1, layout.roads.size)
         assertEquals(2, layout.intersections.size)
-        assertEquals(0, layout.intersectionRoads.size)
+        assertEquals(0, layout.intersectionRoadsNumber)
 
         change1.revert(layout)
         assertEquals(0, layout.roads.size)
