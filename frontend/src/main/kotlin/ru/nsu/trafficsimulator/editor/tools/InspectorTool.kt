@@ -7,13 +7,8 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
 import imgui.type.ImDouble
 import imgui.type.ImInt
-import ru.nsu.trafficsimulator.editor.changes.ChangeSignalStateChange
-import ru.nsu.trafficsimulator.editor.changes.EditIntersectionStateChange
-import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
-import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.editor.changes.*
 import ru.nsu.trafficsimulator.editor.createSphere
-import ru.nsu.trafficsimulator.math.*
-import ru.nsu.trafficsimulator.editor.changes.ReplaceIntersectionSignalsStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
@@ -21,8 +16,8 @@ import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
-import kotlin.math.abs
 import ru.nsu.trafficsimulator.model.Signal
+import kotlin.math.abs
 
 class InspectorTool : IEditingTool {
     private val name = "Inspector"
@@ -208,14 +203,19 @@ class InspectorTool : IEditingTool {
                         if (currentOffset.get() != signal.redOffsetOnStartSecs
                             || currentRed.get() != signal.redTimeSecs
                             || currentGreen.get() != signal.greenTimeSecs
-                            ) {
-                            stateChange = ChangeSignalStateChange(signal, currentOffset.get(), currentRed.get(), currentGreen.get())
+                        ) {
+                            stateChange = ChangeSignalStateChange(
+                                signal,
+                                currentOffset.get(),
+                                currentRed.get(),
+                                currentGreen.get()
+                            )
                         }
                     }
                     ImGui.popID()
                 }
             }
-            ImGui.text(intersection.intersectionRoads.map { it.id }.toString())
+            ImGui.text(intersection.intersectionRoads.keys.toString())
 
             ImGui.tableNextRow()
             ImGui.tableSetColumnIndex(0)
@@ -234,7 +234,6 @@ class InspectorTool : IEditingTool {
             return EditIntersectionStateChange(intersection, padding.get())
         }
 
-        return null
         return stateChange
     }
 
