@@ -13,6 +13,6 @@ class SimulationConfig {
 
         // Distance when vehicle can see other vehicles on junction, junction traffic lights
         // TODO: it would be good to depend on speed
-        const val JUNCTION_BLOCK_DISTANCE = 80.0
+        const val JUNCTION_BLOCK_DISTANCE = 50.0
     }
 }
