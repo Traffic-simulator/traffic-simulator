@@ -139,7 +139,7 @@ class Road(
             START, END, NULL
         }
 
-        const val MIN_LANE_COUNT = 1
+        const val MIN_LANE_COUNT = 0
         const val MAX_LANE_COUNT = 10
     }
 

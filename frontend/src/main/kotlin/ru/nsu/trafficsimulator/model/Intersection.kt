@@ -40,6 +40,41 @@ class Intersection(
         addRoad(road)
     }
 
+    fun disconnectLanes(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int) {
+        if (incomingRoads.contains(fromRoad) && incomingRoads.contains(toRoad)) {
+            findConnectingRoad(fromRoad, fromLane, toRoad, toLane)?.let {
+                intersectionRoads.remove(it.id)
+            }
+        }
+    }
+
+    fun connectLanes(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int) {
+        if (incomingRoads.contains(fromRoad) && incomingRoads.contains(toRoad)) {
+            findConnectingRoad(fromRoad, fromLane, toRoad, toLane) ?: run {
+                val geometry = Spline()
+
+                val newIntersectionRoad = IntersectionRoad(
+                    id = irNextId++,
+                    intersection = this,
+                    fromRoad = fromRoad,
+                    toRoad = toRoad,
+                    geometry = geometry,
+                    laneLinkage = fromLane to toLane
+                )
+                newIntersectionRoad.recalculateGeometry()
+
+                intersectionRoads[newIntersectionRoad.id] = newIntersectionRoad
+            }
+        }
+    }
+
+    fun findConnectingRoad(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int): IntersectionRoad? =
+        intersectionRoads.values.find {
+            it.fromRoad === fromRoad && it.toRoad === toRoad
+                && it.laneLinkage == fromLane to toLane
+        }
+
+
     private fun addIntersectionRoad(fromRoad: Road, toRoad: Road) {
         val incomingLaneNumber = fromRoad.getIncomingLaneNumber(this)
         val outgoingLaneNumber = toRoad.getOutgoingLaneNumber(this)
