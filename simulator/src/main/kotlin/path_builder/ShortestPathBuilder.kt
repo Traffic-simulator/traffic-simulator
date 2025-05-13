@@ -18,7 +18,10 @@ class ShortestPathBuilder: IPathBuilder {
     // Add some type of PathBuildingErrorException to log bad routes...
     override fun getNextPathLane(vehicle: Vehicle): Pair<Lane, Boolean>? {
         if (!vehiclesPaths.containsKey(vehicle.vehicleId)) {
-            vehiclesPaths[vehicle.vehicleId] = getDijkstraShortestPath(vehicle.network, vehicle.source, vehicle.destination)
+            vehiclesPaths[vehicle.vehicleId] = getDijkstraShortestPath(
+                vehicle.network,
+                Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString(), vehicle.direction),
+                vehicle.destination)
         }
 
         return getNextPathLane(vehicle, vehicle.lane, vehicle.direction)
@@ -82,6 +85,13 @@ class ShortestPathBuilder: IPathBuilder {
     }
 
     override fun getNextPathLane(vehicle: Vehicle, lane: Lane, direction: Direction): Pair<Lane, Boolean>? {
+        if (!vehiclesPaths.containsKey(vehicle.vehicleId)) {
+            vehiclesPaths[vehicle.vehicleId] = getDijkstraShortestPath(
+                vehicle.network,
+                Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString(), vehicle.direction),
+                vehicle.destination)
+        }
+
         for(i in 0 until vehiclesPaths[vehicle.vehicleId]!!.size) {
             if (vehiclesPaths[vehicle.vehicleId]!!.get(i).first == lane) {
                 if (i < vehiclesPaths[vehicle.vehicleId]!!.size - 1) {
@@ -129,6 +139,13 @@ class ShortestPathBuilder: IPathBuilder {
     }
 
     override fun getNextVehicle(vehicle: Vehicle, lane: Lane, direction: Direction): Pair<Vehicle?, Double> {
+        if (!vehiclesPaths.containsKey(vehicle.vehicleId)) {
+            vehiclesPaths[vehicle.vehicleId] = getDijkstraShortestPath(
+                vehicle.network,
+                Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString(), vehicle.direction),
+                vehicle.destination)
+        }
+
         return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, lane, direction))
     }
 

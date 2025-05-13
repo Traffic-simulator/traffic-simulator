@@ -12,26 +12,37 @@ class MOBIL {
         val ath = 0.1
         val politeness = 0.1
 
-        // TODO: Right and Left biases not used now
         fun calcAccelerationBalance(me: Vehicle, toLane: Lane): Double {
-            // TODO: check type of toLane, to not change lane to entrance lane...
+
+            // Check results if me will be in toLane.
+            // Building whole path will be too long, so later have to do something another
+            // So, calculate it temporary moving our vehicle to toLane
+            me.pathBuilder.removePath(me)
+            val oldLane = me.lane
+            me.lane = toLane
 
             // New Front
-            // TODO:
-            val newFront = toLane.mockNextVehicle() // vehicle.pathBuilder.getNextVehicle(me)
+            val newFront = me.pathBuilder.getNextVehicle(me, me.lane, me.direction)
             if (newFront.first?.isInLaneChange() ?: false || newFront.second < minimumGap) {
+                me.pathBuilder.removePath(me)
+                me.lane = oldLane
+                return negativeBalance
+            }
+            // New Back
+            val newBack = me.lane.getPrevVehicle(me)
+            if (newBack.first?.isInLaneChange() ?: false || newBack.second < minimumGap) {
+                me.pathBuilder.removePath(me)
+                me.lane = oldLane
                 return negativeBalance
             }
 
-            // New Back
-            val newBack = toLane.getPrevVehicle(me)
-            if (newBack.first?.isInLaneChange() ?: false || newBack.second < minimumGap) {
-                return negativeBalance
-            }
+            // Moving to initial lane
+            me.pathBuilder.removePath(me)
+            me.lane = oldLane
+
 
             // Cur Front
-            // TODO:
-            val curFront = me.lane.mockNextVehicle() //null //me.lane.getNextVehicle(me)
+            val curFront = me.pathBuilder.getNextVehicle(me, me.lane, me.direction)
             if (curFront.first?.isInLaneChange() ?: false) {
                 return negativeBalance
             }
@@ -54,7 +65,8 @@ class MOBIL {
             val newBackDiffAcc = newBackNewAcc - newBackOldAcc
             val meDiffAcc = meNewAcc - curMeAcc
 
-            return meDiffAcc + politeness * (curBackDiffAcc + newBackDiffAcc) - ath
+            val balance = meDiffAcc + politeness * (curBackDiffAcc + newBackDiffAcc) - ath
+            return balance
         }
 
         val negativeBalance = -Double.MAX_VALUE

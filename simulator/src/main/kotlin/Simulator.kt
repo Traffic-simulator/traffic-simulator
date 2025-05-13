@@ -18,8 +18,7 @@ import kotlin.random.Random
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>, seed: Long) {
 
     val finder = JunctionIntersectionFinder(openDrive)
-//    val intersections = finder.findIntersection()
-    val intersections: MutableList<Intersection> = ArrayList();
+    val intersections = finder.findIntersection()
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
     val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, spawnDetails, despawnDetails)

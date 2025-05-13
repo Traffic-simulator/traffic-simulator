@@ -12,6 +12,7 @@ class TrajectoryBlockList(me: TJunctionConnection, others: List<TJunctionConnect
         blockList = others.filter { otherConn ->
             filtered.find { (it.roadId1 == otherConn.connectingRoad || it.roadId2 == otherConn.connectingRoad) && otherConn.connectingRoad != me.connectingRoad} != null
         }.filter {it.incomingRoad != me.incomingRoad}
-        // TODO: also consider outcoming roads!
+        // TODO: filter not by incoming road but by incoming lane...
+        // AND block junction not by distance but by time to junction or by time to and with junction
     }
 }
