@@ -9,14 +9,14 @@ import ru.nsu.trafficsimulator.model.Layout
 class AddBuildingStateChange(
     private val start: Intersection,
     private val startDir: Vec3,
-    private val end: Intersection,
+    private val end: Vec3,
     private val endDir: Vec3
 ) : IStateChange {
 
     private var building: Building = Building(BuildingType.HOME)
 
     override fun apply(layout: Layout) {
-        layout.addBuilding(start, startDir, end.position.toVec3(), endDir, building)
+        layout.addBuilding(start, startDir, end, endDir, building)
     }
 
     override fun revert(layout: Layout) {
