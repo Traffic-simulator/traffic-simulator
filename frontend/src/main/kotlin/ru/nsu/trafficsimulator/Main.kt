@@ -167,7 +167,7 @@ class Main : ApplicationAdapter() {
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
+      //  Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
 

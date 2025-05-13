@@ -179,6 +179,7 @@ class Vehicle(
     fun performLaneChange(_lane: Lane) {
         if (_lane == this.lane) return
 
+        logger.info("Veh@$vehicleId changed it's lane from ${lane.laneId} to ${_lane.laneId}")
         laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
         setNewLane(_lane)
     }
