@@ -3,14 +3,12 @@ package ru.nsu.trafficsimulator.editor.tools
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import ru.nsu.trafficsimulator.editor.changes.AddBuildingStateChange
-import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
-import java.security.KeyStore.TrustedCertificateEntry
 
 class AddBuildingTool : IEditingTool {
     private val name = "Add Building"
@@ -18,7 +16,8 @@ class AddBuildingTool : IEditingTool {
     private var camera: Camera? = null
     private val startDirectionLength = 25.0
 
-    private val selectedIntersections = arrayOfNulls<Intersection>(2)
+    private var start: Intersection? = null;
+    private lateinit var end: Vec3;
     private var selectedIntersectionCount = 0
 
     override fun getButtonName(): String {
@@ -29,16 +28,14 @@ class AddBuildingTool : IEditingTool {
         if (button != Input.Buttons.LEFT) return false
         val intersectionPoint = getIntersectionWithGround(screenPos, camera!!) ?: return false
 
-        var roadIntersection: Intersection?;
         if (selectedIntersectionCount == 0) {
-            roadIntersection = findRoadIntersectionAt(intersectionPoint) ?: return false
+            start = findRoadIntersectionAt(intersectionPoint) ?: return false
         } else {
-            roadIntersection = findRoadIntersectionAt(intersectionPoint)
+            val roadIntersection = findRoadIntersectionAt(intersectionPoint)
             if (roadIntersection != null) return false
-            roadIntersection = layout!!.addIntersection(intersectionPoint)
+            end = intersectionPoint;
         }
 
-        selectedIntersections[selectedIntersectionCount] = roadIntersection
         selectedIntersectionCount += 1
         return true
     }
@@ -46,13 +43,18 @@ class AddBuildingTool : IEditingTool {
     override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
         if (selectedIntersectionCount != 2) return null
         selectedIntersectionCount = 0
-        if (selectedIntersections[0] == selectedIntersections[1]) return null
+        if (start!!.position.toVec3() == end) return null
 
-        val dir = (selectedIntersections[1]!!.position - selectedIntersections[0]!!.position).normalized()
-        val startDirection = selectedIntersections[0]!!.position + dir * startDirectionLength
-        val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
+        val dir = (end.xzProjection() - start!!.position).normalized()
+        val startDirection = start!!.position + dir * startDirectionLength
+        val endDirection = end.xzProjection() + dir * startDirectionLength
 
-        return AddBuildingStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
+        return AddBuildingStateChange(
+            start!!,
+            startDirection.toVec3(),
+            end,
+            endDirection.toVec3()
+        )
     }
 
     override fun init(layout: Layout, camera: Camera, reset: Boolean) {
