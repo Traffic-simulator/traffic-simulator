@@ -63,7 +63,7 @@ class Road(val troad: TRoad) {
         numLanes = lanes.size
 
         if (signals != null) {
-            for (signal in signals!!.signal.filter { it.dynamic == TYesNo.YES }) {
+            for (signal in signals!!.signal.filter { it.dynamic == TYesNo.YES && Regex("[0-9]*-[0-9]*-[0-9]*").matches(it.subtype) }) {
                 // привязываем к тем лэйнам, с которыми совпадает orientation
                 // TODO понять, всегда ли right полосы с "-"
                 if (signal.orientation == "-") {
