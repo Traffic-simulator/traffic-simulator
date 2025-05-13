@@ -164,9 +164,9 @@ class Main : ApplicationAdapter() {
 //        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
 //        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
 
-//        val dto = serializeLayout(layout)
-//        OpenDriveWriter().write(dto, "export.xodr")
-        val dto = OpenDriveReader().read("self_made_town_01.xodr")
+        val dto = serializeLayout(layout)
+        OpenDriveWriter().write(dto, "export.xodr")
+//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
         Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }

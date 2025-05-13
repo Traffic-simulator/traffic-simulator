@@ -31,6 +31,11 @@
                 </right>
             </laneSection>
         </lanes>
+        <signals>
+            <signal s="176.0000000000000000e+00" t="-5.2999999999999998e+00" id="93" name="_Sg93" dynamic="yes" orientation="-" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="9-9-9" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+                <validity fromLane="-3" toLane="3"/>
+            </signal>
+        </signals>
     </road>
     <road id="1" junction="-1" length="8.293954836177603">
         <link>
@@ -62,6 +67,11 @@
                 </right>
             </laneSection>
         </lanes>
+        <signals>
+            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="127" name="_Sg127" dynamic="yes" orientation="+" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="0-9-9" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+                <validity fromLane="-3" toLane="3"/>
+            </signal>
+        </signals>
     </road>
     <road id="5" junction="-1" length="74.27034675007599">
         <link>
@@ -94,6 +104,11 @@
                 </right>
             </laneSection>
         </lanes>
+        <signals>
+            <signal s="0.0000000000000000e+00" t="5.2999999999999998e+00" id="122" name="_Sg122" dynamic="yes" orientation="+" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="9-9-9" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+                <validity fromLane="-3" toLane="3"/>
+            </signal>
+        </signals>
     </road>
     <road id="10" junction="-1" length="9.998332432167329">
         <link>
@@ -380,6 +395,11 @@
                 </right>
             </laneSection>
         </lanes>
+        <signals>
+            <signal s="62.0000000000000000e+00" t="-5.2999999999999998e+00" id="132" name="_Sg132" dynamic="yes" orientation="-" zOffset="-1.5299998819828033e+00" type="1000001" country="OpenDRIVE" countryRevision="2013" subtype="0-9-9" hOffset="0.0000000000000000e+00" pitch="0.0000000000000000e+00" roll="0.0000000000000000e+00" height="3.11" width="0.45">
+                <validity fromLane="-3" toLane="3"/>
+            </signal>
+        </signals>
     </road>
     <road id="58" junction="-1" length="9.412722246708006">
         <link>

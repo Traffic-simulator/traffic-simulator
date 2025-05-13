@@ -49,7 +49,7 @@ class Signal(val tsignal: TRoadSignalsSignal, tRoad: TRoad, lane: Int) {
         stateChangeTimer -= deltaTime
 
         if (stateChangeTimer < 0) {
-            logger.info("TrafficLight@$id on lane $laneId changed color from $state to $nextState")
+            logger.info("TrafficLight@$id on road ${road.id} lane $laneId changed color from $state to $nextState")
             state = nextState
             stateChangeTimer = getNewTimer(state)
 
