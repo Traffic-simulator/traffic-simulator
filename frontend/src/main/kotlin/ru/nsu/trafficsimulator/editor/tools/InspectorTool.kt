@@ -28,11 +28,12 @@ class InspectorTool : IEditingTool {
     private var selectedIntersection: Intersection? = null
     private var lastClickPos: Vec2? = null
 
-    private val incomingLanes = mutableListOf<Sphere>()
-    private val outgoingLanesConnected = mutableListOf<Sphere>()
-    private val outgoingLanesDisconnected = mutableListOf<Sphere>()
-    private var selectedFromRoad: Sphere? = null
-    private var intersectionRoadChanged = false
+    private val incomingLanes = mutableListOf<LaneSphere>()
+
+    private val outgoingLanesSphere = mutableListOf<OutgoingLaneSphere>()
+    private var selectedFromRoad: LaneSphere? = null
+    private var connectLanesChange: ConnectLanesChange? = null
+    private var disconnectLanesChange: DisconnectLanesChange? = null
 
 
     override fun getButtonName(): String = name
@@ -42,7 +43,23 @@ class InspectorTool : IEditingTool {
 
         if (incomingLanes.isNotEmpty()) {
             getIntersectionWithGround(screenPos, camera)?.let { groundPoint ->
-                if (outgoingLanesConnected.isEmpty() && outgoingLanesDisconnected.isEmpty()) {
+                selectedIntersection?.let { intersection ->
+                    if (isNear(groundPoint, intersection, Layout.LANE_WIDTH / 2) { it.position.toVec3() }) {
+                        incomingLanes.clear()
+                        outgoingLanesSphere.clear()
+                        selectedFromRoad = null
+                        connectLanesChange = null
+                        disconnectLanesChange = null
+
+                        drawIncomingConnections(intersection)
+
+                        return true
+                    }
+                }
+
+                if (outgoingLanesSphere.isEmpty()) {
+                    // only incoming lines are displayed
+
                     selectedFromRoad = findNearestObject(groundPoint, incomingLanes, Layout.LANE_WIDTH / 2) {
                         it.model.transform.getTranslation(Vector3()).toVec3()
                     }
@@ -50,57 +67,50 @@ class InspectorTool : IEditingTool {
                     selectedFromRoad?.also {
                         incomingLanes.clear()
                         incomingLanes.add(it)
-                        drawOutgoingConnections(it.intersection, it.road, it.lane)
-                        intersectionRoadChanged = true
+                        drawOutgoingConnections(it.intersection)
 
-                    } ?: cleanUpIntersectionSettingsMenu()
+                    } ?: cleanUpIntersectionRoadsSettings()
 
                     return true
                 } else {
-                    val toDisconnect = findNearestObject(groundPoint, outgoingLanesConnected, Layout.LANE_WIDTH / 2) {
-                        it.model.transform.getTranslation(Vector3()).toVec3()
+                    // one incoming and all outgoing lines are displayed
+
+                    val toSwitch = findNearestObject(groundPoint, outgoingLanesSphere, Layout.LANE_WIDTH / 2) {
+                        it.transform.getTranslation(Vector3()).toVec3()
                     }
-                    val toConnect = if (toDisconnect != null) null else {
-                        findNearestObject(groundPoint, outgoingLanesDisconnected, Layout.LANE_WIDTH / 2) {
-                            it.model.transform.getTranslation(Vector3()).toVec3()
+
+                    toSwitch?.also { toRoad ->
+                        selectedFromRoad?.let { fromRoad ->
+                            selectedIntersection?.let { intersection ->
+                                if (intersection.findConnectingRoad(
+                                        fromRoad.road,
+                                        fromRoad.lane,
+                                        toRoad.road,
+                                        toRoad.lane
+                                    ) == null
+                                ) {
+                                    connectLanesChange = ConnectLanesChange(
+                                        fromRoad.intersection,
+                                        fromRoad.road,
+                                        fromRoad.lane,
+                                        toRoad.road,
+                                        toRoad.lane
+                                    )
+                                } else {
+                                    disconnectLanesChange = DisconnectLanesChange(
+                                        fromRoad.intersection,
+                                        fromRoad.road,
+                                        fromRoad.lane,
+                                        toRoad.road,
+                                        toRoad.lane
+                                    )
+                                }
+                            }
                         }
-                    }
+                    } ?: cleanUpIntersectionRoadsSettings()
 
-                    toDisconnect?.let {
-                        selectedFromRoad?.intersection?.disconnectLanes(
-                            selectedFromRoad?.road!!,
-                            selectedFromRoad?.lane!!,
-                            it.road,
-                            it.lane
-                        )
-                        outgoingLanesConnected.remove(it)
-                        val sphereModel = createSphere(Color.BROWN, 1.0)
-                        val sphereInstance = ModelInstance(sphereModel)
-                        sphereInstance.transform.setToTranslation(it.model.transform.getTranslation(Vector3()))
-                        outgoingLanesDisconnected.add(it.copy(model = sphereInstance))
-                        intersectionRoadChanged = true
-                    }
-
-                    toConnect?.let {
-                        selectedFromRoad?.intersection?.connectLanes(
-                            selectedFromRoad?.road!!,
-                            selectedFromRoad?.lane!!,
-                            it.road,
-                            it.lane
-                        )
-                        outgoingLanesDisconnected.remove(it)
-                        val sphereModel = createSphere(Color.CORAL, 1.0)
-                        val sphereInstance = ModelInstance(sphereModel)
-                        sphereInstance.transform.setToTranslation(it.model.transform.getTranslation(Vector3()))
-                        outgoingLanesConnected.add(it.copy(model = sphereInstance))
-                        intersectionRoadChanged = true
-                    }
-
-                    if (toDisconnect == null && toConnect == null)
-                        cleanUpIntersectionSettingsMenu()
                     return true
                 }
-
             }
         }
 
@@ -127,24 +137,27 @@ class InspectorTool : IEditingTool {
         return
     }
 
-    override fun render(modelBatch: ModelBatch?) {
-        for (sphere in outgoingLanesConnected) {
-            modelBatch!!.render(sphere.model)
-        }
-
-        for (sphere in outgoingLanesDisconnected) {
-            modelBatch!!.render(sphere.model)
+    override fun render(modelBatch: ModelBatch) {
+        selectedFromRoad?.let { fromRoad ->
+            for (sphere in outgoingLanesSphere) {
+                modelBatch.render(sphere.getModel(fromRoad.road, fromRoad.lane))
+            }
         }
 
         for (sphere in incomingLanes) {
-            modelBatch!!.render(sphere.model)
+            modelBatch.render(sphere.model)
         }
         return
     }
 
     override fun runImgui(): IStateChange? {
-        if (intersectionRoadChanged) {
-            return EditIntersectionConnectionChange()
+        connectLanesChange?.let {
+            connectLanesChange = null
+            return it
+        }
+        disconnectLanesChange?.let {
+            disconnectLanesChange = null
+            return it
         }
         if (selectedRoad != null) {
             return runRoadMenu(selectedRoad!!)
@@ -324,7 +337,7 @@ class InspectorTool : IEditingTool {
                 position.y = 1.0
                 sphereInstance.transform.setToTranslation(position.toGdxVec())
                 incomingLanes.add(
-                    Sphere(
+                    LaneSphere(
                         intersection,
                         road,
                         i * road.getIncomingLaneNumber(intersection).sign,
@@ -335,27 +348,14 @@ class InspectorTool : IEditingTool {
         }
     }
 
-    private fun drawOutgoingConnections(intersection: Intersection, fromRoad: Road, fromLane: Int) {
-        outgoingLanesConnected.clear()
+    private fun drawOutgoingConnections(intersection: Intersection) {
+        outgoingLanesSphere.clear()
         for (road in intersection.incomingRoads) {
-            if (road === fromRoad) continue
             for (i in 1..abs(road.getOutgoingLaneNumber(intersection))) {
                 val realLaneNumber = i * road.getOutgoingLaneNumber(intersection).sign
 
-                val connected = intersection.findConnectingRoad(fromRoad, fromLane, road, realLaneNumber) != null
-
-                val sphereModel = createSphere(if (connected) Color.CORAL else Color.BROWN, 1.0)
-                val sphereInstance = ModelInstance(sphereModel)
-                val position = road.getIntersectionPoint(intersection, -(i.toDouble() - 0.5))
-                position.y = 1.0
-                sphereInstance.transform.setToTranslation(position.toGdxVec())
-                (if (connected) outgoingLanesConnected else outgoingLanesDisconnected).add(
-                    Sphere(
-                        intersection,
-                        road,
-                        realLaneNumber,
-                        sphereInstance
-                    )
+                outgoingLanesSphere.add(
+                    OutgoingLaneSphere(intersection, road, realLaneNumber)
                 )
             }
         }
@@ -370,16 +370,52 @@ class InspectorTool : IEditingTool {
         }
     }
 
-    private fun cleanUpIntersectionSettingsMenu() {
+    private fun cleanUpIntersectionRoadsSettings() {
         incomingLanes.clear()
-        outgoingLanesConnected.clear()
-        outgoingLanesDisconnected.clear()
+        outgoingLanesSphere.clear()
         selectedFromRoad = null
         selectedIntersection = null
-        intersectionRoadChanged = false
+        connectLanesChange = null
+        disconnectLanesChange = null
     }
 
     private fun Vector3.toVec3() = Vec3(x, y, z)
 
-    private data class Sphere(val intersection: Intersection, val road: Road, val lane: Int, val model: ModelInstance)
+    private data class LaneSphere(
+        val intersection: Intersection,
+        val road: Road,
+        val lane: Int,
+        val model: ModelInstance
+    )
+
+
+    private data class OutgoingLaneSphere(
+        val intersection: Intersection, val road: Road, val lane: Int
+    ) {
+        private val turnModel: ModelInstance
+        private val offModel: ModelInstance
+
+        val transform
+            get() = turnModel.transform
+
+        init {
+            val turnInstance = ModelInstance(createSphere(Color.CORAL, 1.0))
+            val offInstance = ModelInstance(createSphere(Color.BROWN, 1.0))
+            val position = road.getIntersectionPoint(intersection, -(abs(lane).toDouble() - 0.5))
+            position.y = 1.0
+
+            turnInstance.transform.setToTranslation(position.toGdxVec())
+            offInstance.transform.setToTranslation(position.toGdxVec())
+
+            turnModel = turnInstance
+            offModel = offInstance
+        }
+
+        fun getModel(fromRoad: Road, fromLane: Int): ModelInstance {
+            if (intersection.findConnectingRoad(fromRoad, fromLane, road, lane) == null) {
+                return offModel
+            }
+            return turnModel
+        }
+    }
 }

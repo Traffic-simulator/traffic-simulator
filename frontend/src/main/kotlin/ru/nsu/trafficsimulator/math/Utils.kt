@@ -19,12 +19,16 @@ fun getIntersectionWithGround(screenPos: Vec2, camera: Camera): Vec3? {
     return null
 }
 
-fun <T> findNearestObject(vec3: Vec3, list: List<T>, threshold: Double = Double.MAX_VALUE, toVec3: (T) -> Vec3): T? {
+inline fun <T> findNearestObject(vec3: Vec3, list: List<T>, threshold: Double = Double.MAX_VALUE, toVec3: (T) -> Vec3): T? {
     list.minByOrNull { toVec3(it).distance(vec3) }?.let {
         return if (toVec3(it).distance(vec3) < threshold) it else null
     }
     return null
 }
+
+inline fun <T> isNear(vec3: Vec3, obj: T, threshold: Double, toVec3: (T) -> Vec3) =
+    toVec3(obj).distance(vec3) <= threshold
+
 
 fun findRoad(layout: Layout, point: Vec3): Road? {
     val point2d = point.xzProjection()

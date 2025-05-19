@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
 import kotlin.math.abs
@@ -40,15 +41,16 @@ class Intersection(
         addRoad(road)
     }
 
-    fun disconnectLanes(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int) {
+    fun disconnectLanes(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int): IntersectionRoad? {
         if (incomingRoads.contains(fromRoad) && incomingRoads.contains(toRoad)) {
-            findConnectingRoad(fromRoad, fromLane, toRoad, toLane)?.let {
+            return findConnectingRoad(fromRoad, fromLane, toRoad, toLane)?.also {
                 intersectionRoads.remove(it.id)
             }
         }
+        return null
     }
 
-    fun connectLanes(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int) {
+    fun connectLanes(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int): IntersectionRoad? {
         if (incomingRoads.contains(fromRoad) && incomingRoads.contains(toRoad)) {
             findConnectingRoad(fromRoad, fromLane, toRoad, toLane) ?: run {
                 val geometry = Spline()
@@ -64,8 +66,11 @@ class Intersection(
                 newIntersectionRoad.recalculateGeometry()
 
                 intersectionRoads[newIntersectionRoad.id] = newIntersectionRoad
+
+                return newIntersectionRoad
             }
         }
+        return null
     }
 
     fun findConnectingRoad(fromRoad: Road, fromLane: Int, toRoad: Road, toLane: Int): IntersectionRoad? =
@@ -127,6 +132,32 @@ class Intersection(
     fun recalculateIntersectionRoads(road: Road) = intersectionRoads.forEach { (_, intersectionRoad) ->
         if (intersectionRoad.fromRoad === road || intersectionRoad.toRoad === road) {
             intersectionRoad.recalculateGeometry()
+        }
+    }
+
+    @Deprecated("Only for undo/redo")
+    fun pushIntersectionRoad(intersectionRoad: IntersectionRoad) {
+        if (intersectionRoad.intersection === this
+            && !intersectionRoads.containsKey(intersectionRoad.id)
+            && findConnectingRoad(
+                intersectionRoad.fromRoad,
+                intersectionRoad.laneLinkage.first,
+                intersectionRoad.toRoad,
+                intersectionRoad.laneLinkage.second
+            ) == null
+        ) {
+            intersectionRoads[intersectionRoad.id] = intersectionRoad
+        } else {
+            logger.debug("Cannot push intersection road")
+        }
+    }
+
+    @Deprecated("Only for undo/redo")
+    fun deleteIntersectionRoad(intersectionRoad: IntersectionRoad) {
+        if (intersectionRoads.containsKey(intersectionRoad.id)) {
+            intersectionRoads.remove(intersectionRoad.id)
+        } else {
+            logger.debug("Cannot delete intersection road")
         }
     }
 }
