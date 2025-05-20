@@ -13,24 +13,27 @@ class BackendAPI : ISimulation{
         return null
     }
 
-    override fun getNextFrame(deltaTime: Double): List<ISimulation.VehicleDTO> {
+    override fun updateSimulation(deltaTime: Double) {
+        if (simulator == null)
+            return
+
+        val startNanos = System.nanoTime()
+        simulator!!.update(deltaTime)
+        logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
+    }
+
+    override fun getVehicles(): List<ISimulation.VehicleDTO> {
         if (simulator == null)
             return ArrayList<ISimulation.VehicleDTO>()
 
-        val startNanos = System.nanoTime()
-
-        val vehicles = simulator!!.update(deltaTime)
-        val result = vehicles.map{ vehToDTO(it) }.toList()
-
-        logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
-        return result
+        return simulator!!.vehicles.map{ vehToDTO(it) }.toList()
     }
 
-    override fun getSignalStates(deltaTime: Double): List<ISimulation.SignalDTO> {
+    override fun getSignalStates(): List<ISimulation.SignalDTO> {
         if (simulator == null)
             return ArrayList<ISimulation.SignalDTO>()
 
-        val signals = simulator!!.network.getSignals(deltaTime)
+        val signals = simulator!!.network.getSignals()
 
         return signals.map{ signalToDTO(it)}.toList()
     }
