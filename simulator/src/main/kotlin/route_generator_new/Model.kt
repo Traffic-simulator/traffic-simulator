@@ -2,8 +2,6 @@ package route_generator_new
 
 import route_generator_new.discrete_function.Building
 import route_generator_new.discrete_function.TravelDesireFunction
-import java.util.*
-import kotlin.collections.HashMap
 import kotlin.random.Random
 
 class Model (
@@ -13,7 +11,7 @@ class Model (
     companion object {
         private const val SECONDS_IN_HOUR = 3600;
         private const val HOURS_IN_DAY = 24;
-        private const val maxPlanLength = 3
+        private const val MAX_PLAN_LENGTH = 3
     }
     private val random = Random.Default
     private val homes : Homes;
@@ -151,7 +149,7 @@ class Model (
         val travelPoints = mutableListOf<TravelPoint>();
         var startHome = getRandomNonEmptyHome()
         var startPoint : TravelPoint = TravelPoint(startHome.junctionId, 0.0);
-        var planLength = random.nextInt(maxPlanLength);
+        var planLength = random.nextInt(MAX_PLAN_LENGTH);
         travelPoints.add(startPoint);
         //init nonEmptyBuildingTypesList
         //случай если здания определенного типа просто отсутствуют на карте
