@@ -1,11 +1,15 @@
 package network.junction
 
 import junction_intersection.Intersection
+import mu.KotlinLogging
 import opendrive.TJunction
+import java.util.logging.Logger
 
 
 // TODO: need more smart logic in case of different reasons blocks.
 class Junction(val tjunction: TJunction, val intersections: MutableList<Intersection>) {
+
+    private val logger = KotlinLogging.logger("BACKEND")
 
     // HashMap by incoming roadId store connection
     val id: String = tjunction.id
@@ -43,6 +47,17 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
         }
     }
 
+    /**
+     * Здесь есть проблема, она случается тогда, когда одна траектория заблочена чем-то,
+     * А траектория с такой же входящей дорогой не заблочена.
+     *
+     * В этом случае сзади идущая машина может заблочить траекторию для впереди идущей, и все встанет.
+     *
+     * Есть два решения:
+     *     1) Не блочить траектории с одной incoming road
+     *     2) Игнорировать блокировки если они приходят от машин сзади на этой же дороге (стремно), но в нашей системе где нет двух подряд идущих дорог работать будет.
+     *          Почти будет, так как мы можем заблочить следующий перекресток, находясь на предыдущем...
+     */
     fun tryBlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int): Boolean {
         assert(trajBlockingFactors[connectingRoadId] != null)
 
@@ -50,15 +65,17 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
             var blockingFactorsString: String = ""
             trajBlockingFactors[connectingRoadId]!!.blockingFactors.forEach {
                 assert(it.vehicleId != vehicleId)
-                blockingFactorsString = blockingFactorsString.plus(it.vehicleId.toString() + " ")
+                blockingFactorsString = blockingFactorsString.plus("Veh@" + it.vehicleId.toString() + " ")
             }
 
-            println("veh ${vehicleId} is blocked by ${blockingFactorsString}")
+            blockingFactorsString = blockingFactorsString.trim()
+            logger.debug("Veh@${vehicleId} desired trajectory with roadId@${connectingRoadId} is blocked by ${blockingFactorsString}, will stop before junction")
             return false
         }
 
         // Blocking trajectory
         trajBlockList[connectingRoadId]!!.blockList.forEach { trajBlockingFactors[it.connectingRoad]!!.addBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
+        logger.debug("Veh@${vehicleId} succesfully blocked trajectory with roadId@${connectingRoadId}")
         return true
     }
 
@@ -66,6 +83,15 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
         assert(trajBlockingFactors[connectingRoadId] != null)
 
         trajBlockList[connectingRoadId]!!.blockList.forEach { trajBlockingFactors[it.connectingRoad]!!.removeBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
+        logger.debug("Veh@${vehicleId} unlocks trajectory with roadId@${connectingRoadId}")
+    }
+
+    // Not road specified option, will just check all possible trajectories
+    fun unlockTrajectoryVehicle(vehicleId: Int) {
+
+        trajBlockingFactors.forEach { connectingRoadId, factors ->
+            factors.removeBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId)
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.math
 
+import java.lang.Math.pow
 import java.util.*
 import kotlin.math.*
 
@@ -83,13 +84,79 @@ class Spline {
         }
     }
 
+    fun addSpiral(start: Vec2, startAngle: Double, startCurvature: Double, endCurvature: Double, length: Double) {
+        val maxPart = PI / 2.0
+        val integralPartCount = 100
+        val curvatureK = (endCurvature - startCurvature) / length
+        val getPartLength = { startPartAngle: Double, endPartAngle: Double, startPartCurv: Double ->
+            val D = (startPartCurv / curvatureK).pow(2.0) + (endPartAngle - startPartAngle) / curvatureK
+            val root1 = (-startPartCurv / curvatureK - sqrt(D))
+            val root2 = (-startPartCurv / curvatureK + sqrt(D))
+            if (root1 > 0.0 && (root2 < 0.0 || root1 < root2)) {
+                root1
+            } else if (root2 > 0.0 && (root1 < 0.0 || root2 < root1)) {
+                root2
+            } else {
+                0.0
+            }
+        }
+        val deltaAngle = ((startCurvature + endCurvature) / 2) * length
+        val parts = ceil(abs(deltaAngle) / maxPart).toInt()
+        val step = deltaAngle / parts
+        var curPoint = start
+        var curAngle = startAngle
+        var curCurvature = startCurvature
+        for (i in 0 until parts) {
+            val endAngle = curAngle + step
+
+            var leftCurvature = curCurvature
+            var leftAngle = curAngle
+            var endPoint = curPoint
+            for (j in 0 until integralPartCount) {
+                val rightAngle = leftAngle + step / integralPartCount
+                val partLength = getPartLength(leftAngle, rightAngle, leftCurvature)
+                if (partLength < 1e-6 && j != integralPartCount - 1) {
+                    throw Exception("Part #$j is too small? $partLength $leftAngle $rightAngle $leftCurvature $curvatureK")
+                }
+                val rightCurvature = leftCurvature + curvatureK * partLength
+                if (abs((rightCurvature + leftCurvature) / 2 * partLength + leftAngle - rightAngle) < 1e-6) {
+                    throw Exception("Double-check did not pass")
+                }
+                val avgCurvature = (leftCurvature + rightCurvature) / 2
+
+                if (abs(avgCurvature) < 1e-6) {
+                    throw Exception("Curvature is too small? $avgCurvature")
+                }
+
+                val r = 1 / avgCurvature
+
+                endPoint -= Vec2(
+                    sin(leftAngle) - sin(rightAngle),
+                    -cos(leftAngle) + cos(rightAngle)
+                ) * r
+
+                leftAngle = rightAngle
+                leftCurvature = rightCurvature
+            }
+
+            val partLength = getPartLength(curAngle, endAngle, curCurvature)
+            addSplinePart(
+                curPoint to curPoint + Vec2(cos(curAngle), sin(curAngle)) * partLength,
+                endPoint to endPoint + Vec2(cos(endAngle), sin(endAngle)) * partLength
+            )
+
+            curPoint = endPoint
+            curAngle = endAngle
+            curCurvature += curvatureK * partLength
+        }
+    }
+
     fun getPoint(distance: Double): Vec2 {
         if (distance < 0 || distance > length) {
             throw IllegalArgumentException("Offset must be between 0 and length")
         }
 
         val sp = splineParts.last { it.offset <= distance }
-//        println("Current spline part = ${sp}")
         return sp.getPoint(distance - sp.offset)
     }
 
@@ -102,10 +169,13 @@ class Spline {
         return sp.getDirection(distance - sp.offset)
     }
 
-    fun closestPoint(point: Vec2): Vec2 {
+    /**
+     * @return Pair of closest point and distance from the start of that point
+     */
+    fun closestPoint(point: Vec2): Pair<Vec2, Double> {
         return splineParts
             .map { it.closestPoint(point) }
-            .minBy { closest -> point.distance(closest) }
+            .minBy { (closestPoint, _) -> point.distance(closestPoint) }
     }
 
     fun moveEnd(newPoint: Vec2, newDirection: Vec2) {
@@ -255,7 +325,7 @@ class Spline {
             return Vec2(x.derivativeValue(distance), y.derivativeValue(distance))
         }
 
-        fun closestPoint(point: Vec2): Vec2 {
+        fun closestPoint(point: Vec2): Pair<Vec2, Double> {
             val maxValue = if (normalized) {
                 1.0
             } else {
@@ -297,7 +367,8 @@ class Spline {
                 }
             }
 
-            return Vec2(x.value(bestGuess), y.value(bestGuess))
+            val distanceFromStart = if (normalized) { bestGuess * length } else { bestGuess }
+            return Vec2(x.value(bestGuess), y.value(bestGuess)) to distanceFromStart
         }
 
         override fun toString(): String {
@@ -316,14 +387,15 @@ class Spline {
 }
 
 fun main() {
-    val spline = Spline(Vec2(0.0, 0.0), Vec2(0.0, 1.0), Vec2(1.0, 1.0), Vec2(2.0, 1.0))
+    val spline = Spline()
+    spline.addSpiral(Vec2(0.0, 0.0), 0.0, 0.1, 2.0, 5.0)
     println(spline)
     println(spline.getPoint(spline.length / 2.0))
     println(spline.getDirection(spline.length / 2.0))
 
-    val spline2 = spline.copy(spline.length / 2.0)
+//    val spline2 = spline.copy(spline.length / 2.0)
 
-    println("dir= ${spline.getDirection(spline.length)}")
-    println("dir= ${spline2.getDirection(spline2.length)}")
-    println(spline2)
+//    println("dir= ${spline.getDirection(spline.length)}")
+//    println("dir= ${spline2.getDirection(spline2.length)}")
+//    println(spline2)
 }

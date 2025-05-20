@@ -1,76 +1,155 @@
 package ru.nsu.trafficsimulator.editor
 
-import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
+import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
+import imgui.type.ImInt
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
-import ru.nsu.trafficsimulator.MyCameraController
+import ru.nsu.trafficsimulator.editor.actions.LoadAction
+import ru.nsu.trafficsimulator.editor.actions.SaveAction
+import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.editor.tools.AddRoadTool
+import ru.nsu.trafficsimulator.editor.tools.DeleteRoadTool
+import ru.nsu.trafficsimulator.editor.tools.InspectorTool
+import ru.nsu.trafficsimulator.editor.tools.EditTool
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
-import ru.nsu.trafficsimulator.model_generation.ModelGenerator
+import ru.nsu.trafficsimulator.graphics.ModelGenerator
 
 class Editor {
     companion object {
         var layout: Layout = Layout()
+            set(value) {
+                field = value
+                onLayoutChange(true, true)
+            }
         private var layoutScene: Scene? = null
         var sceneManager: SceneManager? = null
         var camera: Camera? = null
+        private var changes = ArrayList<IStateChange>()
+        private var nextChange = 0
 
-        private val tools = listOf(InspectTool(), AddRoadTool(), DeleteRoadTool())
+        private val actions = listOf(LoadAction(), SaveAction())
+        private val tools = listOf(EditTool(), AddRoadTool(), DeleteRoadTool(), InspectorTool())
+
         private var currentTool = tools[0]
+
+        private val spheres = mutableMapOf<Long, ModelInstance>()
 
         fun init(camera: Camera, sceneManager: SceneManager) {
             this.camera = camera
             this.sceneManager = sceneManager
-            currentTool.init(layout, camera)
+            onLayoutChange(true, true)
         }
 
         fun runImgui() {
             ImGui.begin("Editor")
+            ImGui.labelText("##actions", "Available Actions:")
+            for (action in actions) {
+                if (action.runImgui()) {
+                    if (action.runAction(layout)) {
+                        onLayoutChange(action.isStructuralAction(), true)
+                    }
+                }
+            }
+            if (ImGui.button("Undo")) {
+                if (nextChange > 0) {
+                    nextChange--;
+                    changes[nextChange].revert(layout)
+                    layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
+                    onLayoutChange(changes[nextChange].isStructuralChange(), false)
+                }
+            }
+            if (ImGui.button("Redo")) {
+                if (nextChange < changes.size) {
+                    changes[nextChange].apply(layout)
+                    nextChange++
+                    layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
+                    onLayoutChange(changes[nextChange - 1].isStructuralChange(), false)
+                }
+            }
+
+            ImGui.separator()
+            ImGui.labelText("##tools", "Available Tools:")
             for (tool in tools) {
-                if (ImGui.button(tool.getButtonName())) {
+                if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
                     currentTool = tool
-                    currentTool.init(layout, camera!!)
+                    onLayoutChange(false, true)
                 }
             }
             ImGui.end()
+
+            val change = currentTool.runImgui()
+            if (change != null) {
+                appendChange(change)
+            }
         }
+
 
         fun render(modelBatch: ModelBatch?) {
             currentTool.render(modelBatch)
 
+            for ((_, sphere) in spheres) {
+                modelBatch?.render(sphere)
+            }
         }
 
-        fun createSphereEditorProcessor(camController: MyCameraController): InputProcessor {
+        fun createSphereEditorProcessor(): InputProcessor {
             return object : InputAdapter() {
+                var grabInput: Boolean = false
                 override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    camController.camaraEnabled = !currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
-                    return false
+                    grabInput = currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
+                    return grabInput
                 }
 
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                     val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
                     if (change != null) {
-                        change.apply(layout)
-                        updateLayout()
+                        appendChange(change)
                     }
-                    camController.camaraEnabled = (button == Input.Buttons.LEFT)
-                    return false
+                    val prevGrabInput = grabInput
+                    grabInput = false
+                    return prevGrabInput
                 }
 
                 override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
                     currentTool.handleDrag(Vec2(screenX.toDouble(), screenY.toDouble()))
-
-                    return false
+                    return grabInput
                 }
             }
         }
 
-         fun updateLayout() {
+        private fun appendChange(change: IStateChange) {
+            while (changes.size > nextChange) {
+                changes.removeLast()
+            }
+            changes.add(change)
+            nextChange++
+            change.apply(layout)
+            onLayoutChange(change.isStructuralChange(), false)
+        }
+
+        private fun onLayoutChange(generateLayoutMesh: Boolean, reset: Boolean) {
+            if (generateLayoutMesh) {
+                updateLayout()
+            }
+            currentTool.init(layout, camera!!, reset)
+
+            this.spheres.clear()
+            val model = createSphere(Color.RED)
+            for ((id, intersection) in layout.intersections) {
+                spheres[id] = ModelInstance(model)
+                spheres[id]!!.transform.setToTranslation(intersection.position.toVec3().toGdxVec())
+            }
+        }
+
+        private fun updateLayout() {
+            logger.info("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
             if (layoutScene != null) {
                 sceneManager?.removeScene(layoutScene)
             }

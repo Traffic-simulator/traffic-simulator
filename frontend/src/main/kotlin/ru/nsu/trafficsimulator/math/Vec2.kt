@@ -6,6 +6,8 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 data class Vec2(var x: Double, var y: Double) {
+    constructor(x: Int, y: Int) : this(x.toDouble(), y.toDouble())
+
     fun distance(other: Vec2): Double {
         val dx = x - other.x
         val dy = y - other.y
@@ -35,5 +37,5 @@ data class Vec2(var x: Double, var y: Double) {
      */
     fun angle(): Double = atan2(y, x)
 
-    fun toVec3(): Vec3 = Vec3(x, 0.0, y)
+    fun toVec3(): Vec3 = Vec3(x, 0.0, -y)
 }

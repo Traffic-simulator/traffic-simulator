@@ -1,3 +1,4 @@
+import signals.SignalState
 import vehicle.Direction
 
 interface ISimulation {
@@ -21,6 +22,14 @@ interface ISimulation {
     data class VehicleDTO(val id: Int, val road: opendrive.TRoad, val laneId: Int, val type: VehicleType, val distance: Double, val direction: Direction)
 
     /**
+     * Class for info about signal states in the network.
+     * distFromLaneStart - some kind of distance from the start of the lane
+     * state - just a state
+     * road/laneId - to specify that signal exactly we've got here
+     */
+    data class SignalDTO(val road: opendrive.TRoad, val laneId: Int, val distFromLaneStart: Double, val state: SignalState)
+
+    /**
      * Initialize simulation state with.
      * All information about points of interest, global settings, road rule settings
      * are embedded inside gAdditionalData list with type TUserData as specific elements
@@ -28,11 +37,21 @@ interface ISimulation {
      * TODO: specify userData layout
      * @param layout Layout to initialize simulation
      */
-    fun init(layout: opendrive.OpenDRIVE, spawnDetails: SpawnDetails, seed: Long): Error?
+    fun init(layout: opendrive.OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error?
 
     /**
-     * Calculate next vehicle positions after a set amount of time
+     * Simulate simulation
      * @param deltaTime time interval to simulate
      */
-    fun getNextFrame(deltaTime: Double): List<VehicleDTO>
+    fun updateSimulation(deltaTime: Double)
+
+    /**
+     * Get states of vehicles in simulation
+     */
+    fun getVehicles(): List<VehicleDTO>
+
+    /**
+     * Getter for all signals in the network
+     */
+    fun getSignalStates(): List<SignalDTO>
 }

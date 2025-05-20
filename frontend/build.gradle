@@ -16,9 +16,22 @@ dependencies {
   implementation(project(":api"))
   implementation(project(":simulator"))
 
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.2'
+  testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5:1.8.21'
+
+  // Logging
+  implementation 'io.github.microutils:kotlin-logging-jvm:2.0.11'
+  implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.6'
+
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
     // https://mvnrepository.com/artifact/io.github.spair/imgui-java-natives-linux
     runtimeOnly("io.github.spair:imgui-java-natives-linux:1.87.4")
   }
+}
+
+test {
+  useJUnitPlatform()
 }
