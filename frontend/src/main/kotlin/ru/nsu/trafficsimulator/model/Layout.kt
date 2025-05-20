@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
+const val MIN_ROAD_LENGTH = 1.0
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
@@ -25,6 +26,7 @@ class Layout {
 
         roadIdCount = other.roadIdCount
         intersectionIdCount = other.intersectionIdCount
+        recalculateIdCounters()
     }
 
     fun addRoad(startPosition: Vec3, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
@@ -143,7 +145,7 @@ class Layout {
 
     }
 
-    private fun deleteIntersection(intersection: Intersection) {
+    fun deleteIntersection(intersection: Intersection) {
         for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
@@ -169,6 +171,58 @@ class Layout {
 
         intersections[intersection.id] = intersection
     }
+
+    fun findClosestRoad(point: Vec3, maxDistance: Double = 10.0): Road? {
+        return roads.values.minByOrNull { road ->
+            road.geometry.closestPoint(point.xzProjection()).first.distance(point.xzProjection())
+        }?.takeIf {
+            val (closestPoint, _) = it.geometry.closestPoint(point.xzProjection())
+            closestPoint.distance(point.xzProjection()) <= maxDistance
+        }
+    }
+
+    fun splitRoad(originalRoad: Road, splitGlobal: Double): Pair<Road, Road> {
+        val validSplit = (splitGlobal - originalRoad.startPadding)
+            .coerceIn(MIN_ROAD_LENGTH, originalRoad.length - originalRoad.endPadding - MIN_ROAD_LENGTH)
+
+        val splitPoint = originalRoad.geometry.getPoint(splitGlobal)
+        val newIntersection = addIntersection(splitPoint.toVec3())
+
+        val road1 = Road(
+            id = roadIdCount++,
+            startIntersection = originalRoad.startIntersection,
+            endIntersection = newIntersection,
+            geometry = originalRoad.geometry.copy(
+                startPadding = originalRoad.startPadding,
+                endPadding = originalRoad.length - validSplit
+            )
+        )
+
+        val road2 = Road(
+            id = roadIdCount++,
+            startIntersection = newIntersection,
+            endIntersection = originalRoad.endIntersection,
+            geometry = originalRoad.geometry.copy(
+                startPadding = validSplit,
+                endPadding = originalRoad.endPadding
+            )
+        )
+
+        originalRoad.startIntersection.replaceRoad(originalRoad, road1)
+        originalRoad.endIntersection.replaceRoad(originalRoad, road2)
+
+        roads.remove(originalRoad.id)
+        roads[road1.id] = road1
+        roads[road2.id] = road2
+
+        return road1 to road2
+    }
+
+    fun recalculateIdCounters() {
+        roadIdCount = (roads.keys.maxOrNull() ?: 0L) + 1L
+        intersectionIdCount = (intersections.keys.maxOrNull() ?: 0L) + 1L
+    }
+
 
     companion object {
         const val DEFAULT_INTERSECTION_PADDING = 20.0
