@@ -15,7 +15,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
     // DONE store predecessors and successors id for roads
     // DONE store predecessor and successor for lanes
     val roads: List<Road> = troads.map{ Road(it) }
-    val junctions: List<Junction> = tjunctions.map { Junction(it, intersections) }
+    val junctions: List<Junction> = tjunctions.map { Junction(it, intersections, this) }
 
     // Junctions that have Road in key as an incomingRoad
     val incidentJunctions: HashMap<Road, List<Junction>> = HashMap()
@@ -129,7 +129,8 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
             }
         }
 
-         verbose()
+        junctions.forEach{ it.initTrajectories() }
+        verbose()
     }
 
     fun getRoadById(id: String): Road {

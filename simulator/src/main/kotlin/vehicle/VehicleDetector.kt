@@ -2,6 +2,13 @@ package vehicle
 
 import network.Lane
 
+
+/*
+Currently we have architecture hole, because to get
+closestFrontVehicle we use pathBuilder -> VehicleDetector
+
+closestBackVehicle we use lane -> VehicleDetector
+ */
 class VehicleDetector {
 
     data class VehicleLaneSequence(val vehicle: Vehicle,
