@@ -91,11 +91,11 @@ class Editor {
         }
 
 
-        fun render(modelBatch: ModelBatch?) {
+        fun render(modelBatch: ModelBatch) {
             currentTool.render(modelBatch)
 
             for ((_, sphere) in spheres) {
-                modelBatch?.render(sphere)
+                modelBatch.render(sphere)
             }
         }
 

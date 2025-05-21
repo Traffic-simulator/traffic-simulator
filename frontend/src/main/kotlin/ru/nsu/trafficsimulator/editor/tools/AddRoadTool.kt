@@ -53,7 +53,7 @@ class AddRoadTool : IEditingTool {
         return
     }
 
-    override fun render(modelBatch: ModelBatch?) {
+    override fun render(modelBatch: ModelBatch) {
         return
     }
 

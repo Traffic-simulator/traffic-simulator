@@ -131,7 +131,7 @@ class EditTool : IEditingTool {
         }
     }
 
-    override fun render(modelBatch: ModelBatch?) {
+    override fun render(modelBatch: ModelBatch) {
         if (draggingIntersection != null) {
             modelBatch?.render(sphereForDraggingIntersection)
         }

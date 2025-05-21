@@ -14,9 +14,9 @@ fun createSphere(color: Color, radius: Double = 5.0): Model {
     val modelBuilder = ModelBuilder()
     val material = Material(ColorAttribute.createDiffuse(color))
     val sphere = modelBuilder.createSphere(
-        5.0f,
-        5.0f,
-        5.0f,
+        radius.toFloat(),
+        radius.toFloat(),
+        radius.toFloat(),
         10,
         10,
         material,

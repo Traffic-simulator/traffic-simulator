@@ -29,7 +29,7 @@ interface IEditingTool {
        return null
     }
 
-    fun render(modelBatch: ModelBatch?) {
+    fun render(modelBatch: ModelBatch) {
         return
     }
 
