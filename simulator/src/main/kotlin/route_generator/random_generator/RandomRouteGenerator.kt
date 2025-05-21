@@ -1,13 +1,13 @@
 package route_generator.random_generator
 
-import Waypoint
 import route_generator.IRouteGenerator
 import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
+import route_generator_new.discrete_function.Building
 import kotlin.random.Random
 
-class RandomRouteGenerator(val rnd: Random, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>):
+class RandomRouteGenerator(val rnd: Random, val buildings: List<Building>):
     IRouteGenerator {
     val timer = 0.1
     var spawnTimer = timer
@@ -15,6 +15,9 @@ class RandomRouteGenerator(val rnd: Random, val spawnDetails: ArrayList<Waypoint
     override fun update(dt: Double, creator: VehicleCreationListener, waypointChecker: WaypointSpawnAbilityChecker) {
         spawnTimer += dt
         if (spawnTimer < timer) return
+
+        val spawnDetails = buildings.map { creator.getWaypointByJunction(it.junctionId, true) }
+        val despawnDetails = buildings.map { creator.getWaypointByJunction(it.junctionId, false)}
 
         val availablePositions = spawnDetails.filter { waypointChecker.isFree(it) }
         if (availablePositions.isEmpty()) return

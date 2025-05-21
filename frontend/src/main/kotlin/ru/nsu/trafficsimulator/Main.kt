@@ -26,6 +26,8 @@ import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
+import route_generator_new.BuildingTypes
+import route_generator_new.discrete_function.Building
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
@@ -147,28 +149,11 @@ class Main : ApplicationAdapter() {
     }
 
     fun initializeSimulation(layout: Layout) {
-        val spawnDetails = ArrayList<Waypoint>()
-        val despawnDetails = ArrayList<Waypoint>()
-        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
-
-        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
-
-//        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
-//        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
-
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto, spawnDetails, despawnDetails, 500)
+//        Editor.layout = Deserializer.deserialize(dto)
+        simState.backend.init(dto,500)
     }
 
     val FRAMETIME = 0.01 // It's 1 / FPS, duration of one frame in seconds

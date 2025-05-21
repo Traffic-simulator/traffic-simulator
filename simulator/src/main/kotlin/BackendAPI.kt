@@ -1,6 +1,8 @@
 import mu.KotlinLogging
 import network.signals.Signal
 import opendrive.OpenDRIVE
+import route_generator_new.BuildingTypes
+import route_generator_new.discrete_function.Building
 import vehicle.Vehicle
 
 class BackendAPI : ISimulation{
@@ -8,8 +10,15 @@ class BackendAPI : ISimulation{
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
 
-    override fun init(layout: OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error? {
-        simulator = Simulator(layout, spawnDetails, despawnDetails, seed)
+    override fun init(layout: OpenDRIVE, seed: Long): Error? {
+        // Ruslan TODO: read buildings data from layout
+        val buildings = mutableListOf<Building>()
+        buildings.add(Building(BuildingTypes.HOME, 3600, 3600, "100"))
+        buildings.add(Building(BuildingTypes.WORK, 50, 0, "101"))
+        buildings.add(Building(BuildingTypes.SHOPPING, 50, 0, "102"))
+        buildings.add(Building(BuildingTypes.EDUCATION, 50, 0, "103"))
+
+        simulator = Simulator(layout, buildings, seed)
         return null
     }
 
