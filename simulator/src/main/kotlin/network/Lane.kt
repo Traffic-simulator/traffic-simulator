@@ -1,11 +1,14 @@
 package network
 
 import SimulationConfig
+import heatmap.Segment
 import network.signals.Signal
 import opendrive.TRoadLanesLaneSectionLcrLaneLink
 import opendrive.TRoadLanesLaneSectionLrLane
 import vehicle.Direction
 import vehicle.Vehicle
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 
 // Assuming that vehicle moves to the next_lane after front bumper (position) is > length(previous_lane)
@@ -24,6 +27,13 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     var successor: ArrayList<Pair<Lane, Boolean>>? = null
 
     var signal: Signal? = null
+
+    val length: Double = road.troad.length
+    val lenOfSegment: Double = 10.0
+    var segments: List<Segment> = List(max(length.div(lenOfSegment).roundToInt(), 1)) {
+        index ->
+        Segment()
+    }
 
     override fun addVehicle(vehicle: Vehicle) {
         vehicles.add(vehicle)
