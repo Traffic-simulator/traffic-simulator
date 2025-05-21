@@ -35,6 +35,7 @@
     <road id="1" junction="-1" length="8.293954836177603">
         <link>
             <predecessor elementId="1" elementType="junction"/>
+            <successor elementId="103" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -98,6 +99,7 @@
     <road id="10" junction="-1" length="9.998332432167329">
         <link>
             <predecessor elementId="5" elementType="junction"/>
+            <successor elementId="102" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -257,6 +259,7 @@
     <road id="31" junction="-1" length="16.887759189625253">
         <link>
             <predecessor elementId="18" elementType="junction"/>
+            <successor elementId="100" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -384,6 +387,7 @@
     <road id="58" junction="-1" length="9.412722246708006">
         <link>
             <predecessor elementId="20" elementType="junction"/>
+            <successor elementId="101" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -1730,4 +1734,8 @@
             <laneLink from="-1" to="-1"/>
         </connection>
     </junction>
+    <junction id="100"/>
+    <junction id="101"/>
+    <junction id="102"/>
+    <junction id="103"/>
 </OpenDRIVE>

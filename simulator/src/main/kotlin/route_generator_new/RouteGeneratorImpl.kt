@@ -26,9 +26,8 @@ class RouteGeneratorImpl(
         val spawnRoutes = transformTravelsToRoutes(spawnTravels)//переделываем его в Route'ы
         for (i in 0 until spawnRoutes.size) {
             val route = spawnRoutes[i]
-            val waypoints = getWaypointsByRoute(route)//TODO матвей получит по junctionId wayopoint'ы
-            val startWaypoint = waypoints.first
-            val endWaypoint = waypoints.second
+            val startWaypoint = create.getWaypointByJunction(route.startJunctionId, true)
+            val endWaypoint = create.getWaypointByJunction(route.endJunctionId, false)
             //создаем машинку по waypoint'ам
             val id = create.createVehicle(startWaypoint, endWaypoint, onDespawn)
             //creator возвращает Int?, не понимаю в каких случаях у нас может не заспавниться машинка
@@ -49,12 +48,6 @@ class RouteGeneratorImpl(
             despawnList.add(travel)
             vehicleMap.remove(vehicleId)
         }
-    }
-
-
-    private fun getWaypointsByRoute(route: Route): Pair<Waypoint, Waypoint> {
-        val waypoints : Pair<Waypoint, Waypoint>
-        TODO("Add waypoints to \"waypoints\" first - startWaypoint, second - endWaypoint")
     }
 
     //функция достает из Travel старт от куда спавнить машинку и конец куда она поедет
