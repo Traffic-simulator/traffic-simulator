@@ -9,6 +9,7 @@ import network.Network
 import path_builder.IPathBuilder
 import path_builder.ShortestPathBuilder
 import route_generator.RouteGeneratorDespawnListener
+import signals.SignalState
 import vehicle.model.IDM
 
 class Vehicle(
@@ -19,7 +20,7 @@ class Vehicle(
     val pathBuilder: IPathBuilder,
     val despawnCallback: RouteGeneratorDespawnListener,
     val maxSpeed: Double = 33.0,
-    val maxAcc: Double = 0.73
+    val maxAcc: Double = 2.0
 ) {
 
     private val logger = KotlinLogging.logger("BACKEND")
@@ -60,14 +61,26 @@ class Vehicle(
             "Veh@$vehicleId, RoadId: ${lane.roadId}, LineId: ${lane.laneId}, " +
                 "Position: ${"%.3f".format(position)}, " +
                 "Speed: ${"%.3f".format(speed)}, " +
+                "Acceleration: ${"%.3f".format(acc)}, " +
                 "Direction: ${direction}"
         }
     }
 
+    // Possible problem here: in case of very close junctions vehicle can not get enough time to break before the next one,
+    //  as we check only the closest one.
     fun updateAcceleration() {
         val closestJunction = getClosestJunction()
         var junctionAcc = SimulationConfig.INF
 
+        // Rely on that traffic lights are placed in the end of each lane.
+        // If lane contains red traffic light
+
+        if (lane.signal != null && lane.signal!!.state != SignalState.GREEN) {
+            // Don't block any trajectories...
+            // Stop before this signal
+            junctionAcc = IDM.getStopAcceleration(this, this.speed, lane.road.troad.length - position)
+            logger.debug("Veh@${vehicleId} will stop because of TrafficLight@${lane.signal!!.id}")
+        } else
         if (closestJunction != null && closestJunction.distance < JUNCTION_BLOCK_DISTANCE) {
             val junction = network.getJunctionById(closestJunction.junctionId)
 
@@ -135,6 +148,16 @@ class Vehicle(
             return false
         }
         return true
+    }
+
+    fun processTrafficLight() {
+        // Возможно сейчас данная машина блокирует некоторые траектории.
+        // В качестве тупой реализации просто проверим вообще все
+        val closestJunction = getClosestJunction()
+        if (closestJunction != null && lane.signal != null && lane.signal!!.state != SignalState.GREEN) {
+            val junction = network.getJunctionById(closestJunction.junctionId)
+            junction.unlockTrajectoryVehicle(vehicleId = vehicleId)
+        }
     }
 
     fun isInLaneChange(): Boolean {

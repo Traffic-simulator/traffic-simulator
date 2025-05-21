@@ -27,6 +27,8 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.editor.logger
+import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
@@ -93,10 +95,11 @@ class Main : ApplicationAdapter() {
         )
 
         sceneManager = SceneManager()
-        sceneAsset1 = GLBLoader().load(Gdx.files.internal("racer_big.glb"))
+        sceneAsset1 = GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))
         carModel = sceneAsset1?.scene?.model
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
+        sceneManager?.setShaderProvider(CustomShaderProvider("shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl"))
 
         editorInputProcess = Editor.createSphereEditorProcessor()
         inputMultiplexer.addProcessor(editorInputProcess)
@@ -146,25 +149,25 @@ class Main : ApplicationAdapter() {
     fun initializeSimulation(layout: Layout) {
         val spawnDetails = ArrayList<Waypoint>()
         val despawnDetails = ArrayList<Waypoint>()
-//        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
-//        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
-//
-//        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
-//        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
+        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
 
-        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
-        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
+        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+
+//        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
+//        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
 
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
+        Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
 
@@ -173,7 +176,10 @@ class Main : ApplicationAdapter() {
     override fun render() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator && !simState.isPaused) {
-            updateCars(simState.backend.getNextFrame(FRAMETIME * simState.speed))
+            simState.backend.updateSimulation(FRAMETIME * simState.speed)
+            updateCars(simState.backend.getVehicles())
+            // TODO:
+            // updateSingals(simState.backend.getSingals())
         }
 
         if (tmpInputProcessor != null) {
@@ -212,7 +218,7 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
         while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {

@@ -45,14 +45,18 @@ interface ISimulation {
     fun init(layout: opendrive.OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error?
 
     /**
-     * Calculate next vehicle positions after a set amount of time
+     * Simulate simulation
      * @param deltaTime time interval to simulate
      */
-    fun getNextFrame(deltaTime: Double): List<VehicleDTO>
+    fun updateSimulation(deltaTime: Double)
+
+    /**
+     * Get states of vehicles in simulation
+     */
+    fun getVehicles(): List<VehicleDTO>
 
     /**
      * Getter for all signals in the network
-     * @param deltaTime time interval to simulate
      */
     fun getSignalStates(deltaTime: Double): List<SignalDTO>
 
