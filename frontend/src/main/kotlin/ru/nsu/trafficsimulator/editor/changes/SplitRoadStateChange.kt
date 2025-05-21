@@ -10,7 +10,10 @@ class SplitRoadStateChange(
     private val newIntersection: Intersection
 ) : IStateChange {
 
+    private lateinit var oldIntersections: Pair<Intersection, Intersection>
+
     override fun apply(layout: Layout) {
+        oldIntersections = Pair(originalRoad.startIntersection, originalRoad.endIntersection)
         layout.deleteRoad(originalRoad)
         layout.addIntersection(newIntersection.position.toVec3())
         layout.addRoad(newRoads.first)
@@ -21,6 +24,8 @@ class SplitRoadStateChange(
         layout.deleteRoad(newRoads.first)
         layout.deleteRoad(newRoads.second)
         layout.deleteIntersection(newIntersection)
+        layout.pushIntersection(oldIntersections.first)
+        layout.pushIntersection(oldIntersections.second)
         layout.addRoad(originalRoad)
     }
 

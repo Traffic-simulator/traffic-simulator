@@ -34,12 +34,15 @@ class AddRoadTool : IEditingTool {
         if (targetIntersection == null) {
             val closestRoad = layout!!.findClosestRoad(intersectionPoint)
             if (closestRoad != null) {
-                val (_, distanceOnSpline) = closestRoad.geometry.closestPoint(intersectionPoint.xzProjection())
-                val splitDistanceGlobal = distanceOnSpline + closestRoad.startPadding // Важно!
-                val (road1, road2) = layout!!.splitRoad(closestRoad, splitDistanceGlobal)
+                val (road1, road2) = layout!!.splitRoad(closestRoad, intersectionPoint)
 
                 layout!!.roadIdCount = maxOf(layout!!.roadIdCount, road2.id + 1)
-                val change = SplitRoadStateChange(closestRoad, road1 to road2, road1.endIntersection)
+
+                val change = SplitRoadStateChange(
+                    originalRoad = closestRoad,
+                    newRoads = road1 to road2,
+                    newIntersection = road1.endIntersection
+                )
                 Editor.appendChange(change)
 
                 targetIntersection = road1.endIntersection

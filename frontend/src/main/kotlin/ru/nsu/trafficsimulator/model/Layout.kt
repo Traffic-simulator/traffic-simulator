@@ -13,6 +13,8 @@ class Layout {
 
     var roadIdCount: Long = 0
     var intersectionIdCount: Long = 0
+    private val startDirectionLength = 25.0
+
 
     fun copy(other: Layout) {
         roads.clear()
@@ -181,39 +183,43 @@ class Layout {
         }
     }
 
-    fun splitRoad(originalRoad: Road, splitGlobal: Double): Pair<Road, Road> {
-        val validSplit = (splitGlobal - originalRoad.startPadding)
-            .coerceIn(MIN_ROAD_LENGTH, originalRoad.length - originalRoad.endPadding - MIN_ROAD_LENGTH)
+    fun splitRoad(originalRoad: Road, clickPoint: Vec3): Pair<Road, Road> {
+        val (closestPoint, splitGlobal) = originalRoad.geometry.closestPoint(clickPoint.xzProjection())
 
-        val splitPoint = originalRoad.geometry.getPoint(splitGlobal)
-        val newIntersection = addIntersection(splitPoint.toVec3())
+        val newIntersection = addIntersection(closestPoint.toVec3())
+
+        val firstSpline = originalRoad.geometry.copy(
+            startPadding = originalRoad.startPadding,
+            endPadding = originalRoad.geometry.length - splitGlobal
+        )
+
+        val secondSpline = originalRoad.geometry.copy(
+            startPadding = splitGlobal,
+            endPadding = originalRoad.endPadding
+        )
 
         val road1 = Road(
-            id = roadIdCount++,
+            id =roadIdCount++,
             startIntersection = originalRoad.startIntersection,
             endIntersection = newIntersection,
-            geometry = originalRoad.geometry.copy(
-                startPadding = originalRoad.startPadding,
-                endPadding = originalRoad.length - validSplit
-            )
+            geometry = firstSpline,
         )
 
         val road2 = Road(
             id = roadIdCount++,
             startIntersection = newIntersection,
             endIntersection = originalRoad.endIntersection,
-            geometry = originalRoad.geometry.copy(
-                startPadding = validSplit,
-                endPadding = originalRoad.endPadding
-            )
+            geometry = secondSpline,
         )
 
-        originalRoad.startIntersection.replaceRoad(originalRoad, road1)
-        originalRoad.endIntersection.replaceRoad(originalRoad, road2)
 
-        roads.remove(originalRoad.id)
-        roads[road1.id] = road1
-        roads[road2.id] = road2
+        val road3 = addRoad(road1)
+        val road4 = addRoad(road2)
+
+//        originalRoad.startIntersection.replaceRoad(originalRoad, road1)
+//        originalRoad.endIntersection.replaceRoad(originalRoad, road2)
+
+        deleteRoad(originalRoad)
 
         return road1 to road2
     }
