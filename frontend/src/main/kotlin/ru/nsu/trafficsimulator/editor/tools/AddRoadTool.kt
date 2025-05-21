@@ -4,8 +4,10 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.editor.changes.SplitRoadStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
@@ -27,13 +29,30 @@ class AddRoadTool : IEditingTool {
         if (button != Input.Buttons.LEFT) return false
         val intersectionPoint = getIntersectionWithGround(screenPos, camera!!) ?: return false
 
-        var roadIntersection = findRoadIntersectionAt(intersectionPoint)
-        if (roadIntersection == null) {
-            roadIntersection = layout!!.addIntersection(intersectionPoint)
-        }
-        selectedIntersections[selectedIntersectionCount] = roadIntersection
+        var targetIntersection = findRoadIntersectionAt(intersectionPoint)
 
-        selectedIntersectionCount += 1
+        if (targetIntersection == null) {
+            val closestRoad = layout!!.findClosestRoad(intersectionPoint)
+            if (closestRoad != null) {
+                val (road1, road2) = layout!!.splitRoad(closestRoad, intersectionPoint)
+
+                layout!!.roadIdCount = maxOf(layout!!.roadIdCount, road2.id + 1)
+
+                val change = SplitRoadStateChange(
+                    originalRoad = closestRoad,
+                    newRoads = road1 to road2,
+                    newIntersection = road1.endIntersection
+                )
+                Editor.appendChange(change)
+
+                targetIntersection = road1.endIntersection
+            } else {
+                targetIntersection = layout!!.addIntersection(intersectionPoint)
+            }
+        }
+
+        selectedIntersections[selectedIntersectionCount] = targetIntersection
+        selectedIntersectionCount++
         return true
     }
 

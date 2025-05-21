@@ -35,6 +35,11 @@ data class Intersection(
         addRoad(road)
     }
 
+    fun replaceRoad(oldRoad: Road, newRoad: Road) {
+        incomingRoads.remove(oldRoad)
+        incomingRoads.add(newRoad)
+    }
+
     private fun addIntersectionRoad(fromRoad: Road, toRoad: Road) {
         val incomingLaneNumber = fromRoad.getIncomingLaneNumber(this)
         val outgoingLaneNumber = toRoad.getOutgoingLaneNumber(this)
