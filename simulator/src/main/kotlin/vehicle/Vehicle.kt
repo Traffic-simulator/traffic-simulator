@@ -86,12 +86,20 @@ class Vehicle(
 
             // Быть внимательным, если траектория заблокирована машиной перед нами (то есть мы можем проехать)
             // Не смотря на это заблокироваться от нас она тоже должна.
-            // Can not block if already blocked, perfomance optimization
-            if (junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
-                // Trajectory was succesfully blocked by us, can continue driving
-            } else {
-                // Trajectory was blocked, have to stop before junction
-                junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
+            // Но блочить
+            // TODO: Can not block if already blocked, perfomance optimization
+
+            // Can be deadloack if back vehicles block different trajectory from front.
+            // We can do that only front vehicle can block trajectories.
+            // But it's dangerous in high speeds, that vehicle can not break before junction.
+            // To smooth out it we can process vehicles not by distance but by predicted time to junctions.
+            if (lane.getMaxPositionVehicle()!! == this) {
+                if (junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
+                    // Trajectory was succesfully blocked by us, can continue driving
+                } else {
+                    // Trajectory was blocked, have to stop before junction
+                    junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
+                }
             }
         }
 
@@ -181,6 +189,8 @@ class Vehicle(
 
         logger.info("Veh@$vehicleId changed it's lane from ${lane.laneId} to ${_lane.laneId}")
         laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
+        // TODO: We don't need to traverse all junction, only the closest one...
+        network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
         setNewLane(_lane)
     }
 

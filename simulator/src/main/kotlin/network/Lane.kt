@@ -42,6 +42,21 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
         return result
     }
 
+    fun getMaxPositionVehicle(): Vehicle? {
+        var result: Vehicle? = null
+
+        vehicles.forEach{
+            if (result == null) {
+                result = it
+            }
+            if (result != null && it.position > result!!.position) {
+                result = it
+            }
+        }
+
+        return result
+    }
+
     override fun getPrevVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
         var result: Vehicle? = null
 
