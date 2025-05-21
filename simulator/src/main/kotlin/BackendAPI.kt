@@ -5,7 +5,7 @@ import network.signals.Signal
 import opendrive.OpenDRIVE
 import vehicle.Vehicle
 
-class BackendAPI : ISimulation{
+class BackendAPI : ISimulation {
 
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null

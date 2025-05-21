@@ -58,7 +58,7 @@ interface ISimulation {
     /**
      * Getter for all signals in the network
      */
-    fun getSignalStates(deltaTime: Double): List<SignalDTO>
+    fun getSignalStates(): List<SignalDTO>
 
     /**
      * Getter for all lane-segments DTOs. SegmentDTO assigned to TRoad+laneId.
