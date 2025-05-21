@@ -7,6 +7,7 @@ import opendrive.TRoadLanesLaneSectionLcrLaneLink
 import opendrive.TRoadLanesLaneSectionLrLane
 import vehicle.Direction
 import vehicle.Vehicle
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 
@@ -29,7 +30,10 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
     val length: Double = road.troad.length
     val lenOfSegment: Double = 10.0
-    var segments: List<Segment> = ArrayList(length.div(lenOfSegment).roundToInt())
+    var segments: List<Segment> = List(max(length.div(lenOfSegment).roundToInt(), 1)) {
+        index ->
+        Segment()
+    }
 
     override fun addVehicle(vehicle: Vehicle) {
         vehicles.add(vehicle)

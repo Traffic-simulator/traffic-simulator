@@ -41,7 +41,6 @@ class BackendAPI : ISimulation{
         if (simulator == null)
             return ArrayList<ISimulation.SegmentDTO>()
 
-        simulator!!.updateSegments()
         val lanes = simulator!!.network.getAllLanes()
 
         return lanes.map { segmentToDTO(it) }.toList()

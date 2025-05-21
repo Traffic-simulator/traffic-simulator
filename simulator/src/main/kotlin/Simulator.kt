@@ -1,5 +1,6 @@
 import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
+import mu.KotlinLogging
 import network.Network
 import network.Road
 import opendrive.OpenDRIVE
@@ -19,6 +20,7 @@ import kotlin.random.Random
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>, seed: Long) {
 
     val finder = JunctionIntersectionFinder(openDrive)
+    private val logger = KotlinLogging.logger("SIMULATOR")
 //    val intersections = finder.findIntersection()
     val intersections: MutableList<Intersection> = ArrayList();
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
@@ -50,6 +52,9 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
         // spawn new vehicles
         routeGeneratorAPI.update(dt, createVehicle, isPositionFree)
 
+        // Update segments for heatmap on this cycle
+        updateSegments()
+
         return vehicles
     }
 
@@ -76,7 +81,6 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
     }
 
     fun updateSegments() {
-        // TODO тут бахну пересчет для каждой дороги и каждого лейна
         val roads: List<Road> = network.roads
         for (road in roads) {
             for (lane in road.lanes) {
@@ -84,6 +88,10 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
                     lane.segments[(it.position / lane.lenOfSegment).toInt()].addVehicleSpeed(it)
                 }
                 lane.segments.forEach { it.update() }
+                logger.info{
+                    "RoadId: ${lane.roadId}, LineId: ${lane.laneId}, " +
+                        "Avg by segment: ${"%.3f".format(lane.segments.map { it.currentState }.average())}, "
+                }
             }
         }
     }

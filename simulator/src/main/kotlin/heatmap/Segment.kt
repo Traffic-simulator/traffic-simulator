@@ -1,18 +1,25 @@
 package heatmap
 
 import vehicle.Vehicle
+import kotlin.math.tanh
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 class Segment {
-    val lastStates: ArrayDeque<Double> by dequeLimiter(5)
+    val lastStates: ArrayDeque<Double> by dequeLimiter(5000)
     var currentState: Double = 0.0
-    val currentIterVehicles: MutableList<Double> = mutableListOf()
+    var currentIterVehiclesSum: Double = 0.0
+    var currentIterVehiclesCount: Int = 0
 
     fun update() {
-        val meanSpeed = currentIterVehicles.average()  // можно добавить сигмоиду чтобы было значение от 0 до 1
+        var meanSpeed = 0.0
+        if (currentIterVehiclesCount != 0) {
+            meanSpeed = tanh(currentIterVehiclesSum / currentIterVehiclesCount)
+        }
+
         // чистим машинки для след апдейта
-        currentIterVehicles.clear()
+        currentIterVehiclesSum = 0.0
+        currentIterVehiclesCount = 0
 
         // закидываем новое значение к последним и высчитываем среднее
         lastStates.add(meanSpeed)
@@ -20,7 +27,8 @@ class Segment {
     }
 
     fun addVehicleSpeed(vehicle: Vehicle) {
-        currentIterVehicles.add(vehicle.speed)
+        currentIterVehiclesSum += vehicle.speed
+        currentIterVehiclesCount += 1
     }
 
     fun <E> dequeLimiter(limit: Int): ReadWriteProperty<Any?, ArrayDeque<E>> =
