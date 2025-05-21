@@ -12,7 +12,7 @@ class RandomRouteGenerator(val rnd: Random, val spawnDetails: ArrayList<Waypoint
     val timer = 0.1
     var spawnTimer = timer
 
-    override fun update(dt: Double, creator: VehicleCreationListener, waypointChecker: WaypointSpawnAbilityChecker) {
+    override fun update(dt: Double, create: VehicleCreationListener, waypointChecker: WaypointSpawnAbilityChecker) {
         spawnTimer += dt
         if (spawnTimer < timer) return
 
@@ -20,7 +20,9 @@ class RandomRouteGenerator(val rnd: Random, val spawnDetails: ArrayList<Waypoint
         if (availablePositions.isEmpty()) return
         val fromIdx = rnd.nextInt(availablePositions.size)
         val toIdx = rnd.nextInt(despawnDetails.size)
-        val id = creator.createVehicle(availablePositions[fromIdx], despawnDetails[toIdx], onDespawn)
+        if (!availablePositions[fromIdx].roadId.equals(despawnDetails[toIdx].roadId)) {
+            val id = create.createVehicle(availablePositions[fromIdx], despawnDetails[toIdx], onDespawn)
+        }
 
         spawnTimer = 0.0
     }

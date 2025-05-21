@@ -460,7 +460,7 @@
             </laneSection>
         </lanes>
     </road>
-    <road id="114" junction="-1" length="2.4509077933307877">
+    <road id="114" junction="-1" length="10.4509077933307877">
         <link>
             <predecessor elementId="6" elementType="junction"/>
             <successor elementId="12" elementType="junction"/>
@@ -469,7 +469,7 @@
             <speed max="60" unit="km/h"/>
         </type>
         <planView>
-            <geometry hdg="0.8788509970851012" length="2.4509077933307877" s="0.0" x="213.47618019428896" y="69.47020543887662">
+            <geometry hdg="0.8788509970851012" length="10.4509077933307877" s="0.0" x="213.47618019428896" y="69.47020543887662">
                 <paramPoly3 aU="0.0" aV="0.0" bU="2.4509077933307886" bV="1.1102230246251565E-15" cU="0.0" cV="0.0" dU="0.0" dV="0.0" pRange="normalized"/>
             </geometry>
         </planView>

@@ -4,6 +4,7 @@ class SimulationConfig {
     companion object {
         const val EPS = 0.0001
         const val INF = 1000000.0
+        const val MIN_GAP = 2.0 // meters
 
         // Distance after which vehicle don't see other vehicles
         const val MAX_VALUABLE_DISTANCE = 300.0

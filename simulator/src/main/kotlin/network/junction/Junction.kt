@@ -64,9 +64,7 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
     fun tryBlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int): Boolean {
         assert(trajBlockingFactors[connectingRoadId] != null)
 
-        // TODO:
-        // Даже если есть факторы мешающие проезду, ему нужно заблочить тех,
-        // Кто не блочит его, чтобы сказать им, "Я поеду сразу после всех тех".
+        // TODO: Can not block if already blocked, perfomance optimization
         if (trajBlockingFactors[connectingRoadId]!!.blockingFactors.size != 0) {
             var blockingFactorsString: String = ""
             trajBlockingFactors[connectingRoadId]!!.blockingFactors.forEach {
