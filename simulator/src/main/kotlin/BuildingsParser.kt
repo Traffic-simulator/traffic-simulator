@@ -8,11 +8,13 @@ class BuildingsParser(val openDrive: OpenDRIVE) {
     public fun getBuildings() : List<Building> {
         val buildings: MutableList<Building> = mutableListOf()
         for (junction in openDrive.junction) {
+            if (junction.getGAdditionalData().isEmpty())
+                continue
             val buildingId = junction.id
             lateinit var buildingType : BuildingTypes
             var buildingCapacity : Int = -1
             var buildingCurrentPeople : Int = -1
-            val additionalData = junction.gAdditionalData
+            val additionalData = junction.getGAdditionalData()
 
             for (data in additionalData) {
                 val tUser = data as TUserData
