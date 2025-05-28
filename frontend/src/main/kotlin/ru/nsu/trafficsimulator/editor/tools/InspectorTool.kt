@@ -130,6 +130,14 @@ class InspectorTool : IEditingTool {
     }
 
     override fun handleUp(screenPos: Vec2, button: Int): IStateChange? {
+        connectLanesChange?.let {
+            connectLanesChange = null
+            return it
+        }
+        disconnectLanesChange?.let {
+            disconnectLanesChange = null
+            return it
+        }
         return null
     }
 
@@ -151,14 +159,6 @@ class InspectorTool : IEditingTool {
     }
 
     override fun runImgui(): IStateChange? {
-        connectLanesChange?.let {
-            connectLanesChange = null
-            return it
-        }
-        disconnectLanesChange?.let {
-            disconnectLanesChange = null
-            return it
-        }
         if (selectedRoad != null) {
             return runRoadMenu(selectedRoad!!)
         }
@@ -321,7 +321,7 @@ class InspectorTool : IEditingTool {
         ImGui.end()
 
         if (padding.get() != intersection.padding) {
-            return EditIntersectionStateChange(intersection, padding.get())
+            return IntersectionPaddingStateChange(intersection, padding.get())
         }
 
         return stateChange
