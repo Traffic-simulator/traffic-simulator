@@ -224,9 +224,9 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
     }
 
     intersection.building?.let {
-        tJunction.gAdditionalData.add(createUserData("buildingType", it.type.toString()))
-        tJunction.gAdditionalData.add(createUserData("buildingCapacity", it.capacity.toString()))
-        tJunction.gAdditionalData.add(createUserData("buildingFullness", it.fullness.toString()))
+        tJunction.getGAdditionalData().add(createUserData("buildingType", it.type.toString()))
+        tJunction.getGAdditionalData().add(createUserData("buildingCapacity", it.capacity.toString()))
+        tJunction.getGAdditionalData().add(createUserData("buildingFullness", it.fullness.toString()))
     }
 
     return tJunction
