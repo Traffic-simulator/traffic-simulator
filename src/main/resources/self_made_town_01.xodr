@@ -1735,7 +1735,23 @@
         </connection>
     </junction>
     <junction id="100"/>
-    <junction id="101"/>
-    <junction id="102"/>
-    <junction id="103"/>
+            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="101">
+            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="102">
+            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="103">
+            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
+    </junction>
 </OpenDRIVE>

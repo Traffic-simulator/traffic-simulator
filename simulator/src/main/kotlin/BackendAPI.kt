@@ -12,11 +12,13 @@ class BackendAPI : ISimulation{
 
     override fun init(layout: OpenDRIVE, seed: Long): Error? {
         // Ruslan TODO: read buildings data from layout
-        val buildings = mutableListOf<Building>()
-        buildings.add(Building(BuildingTypes.HOME, 3600, 3600, "100"))
-        buildings.add(Building(BuildingTypes.WORK, 50, 0, "101"))
-        buildings.add(Building(BuildingTypes.SHOPPING, 50, 0, "102"))
-        buildings.add(Building(BuildingTypes.EDUCATION, 50, 0, "103"))
+        val buildingParser : BuildingsParser = BuildingsParser(layout)
+
+        val buildings = buildingParser.getBuildings()
+//        buildings.add(Building(BuildingTypes.HOME, 3600, 3600, "100"))
+//        buildings.add(Building(BuildingTypes.WORK, 50, 0, "101"))
+//        buildings.add(Building(BuildingTypes.SHOPPING, 50, 0, "102"))
+//        buildings.add(Building(BuildingTypes.EDUCATION, 50, 0, "103"))
 
         simulator = Simulator(layout, buildings, seed)
         return null

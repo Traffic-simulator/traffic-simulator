@@ -8,7 +8,10 @@ import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
 import route_generator.random_generator.RandomRouteGenerator
+import route_generator_new.RouteGeneratorImpl
+import route_generator_new.Travel
 import route_generator_new.discrete_function.Building
+import route_generator_new.discrete_function.TravelDesireFunction
 import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.model.MOBIL
@@ -24,7 +27,9 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
     val intersections = finder.findIntersection()
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
-    val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, buildings)
+    //val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, buildings)
+    val travelDesire : TravelDesireFunction = TravelDesireFunction(mutableListOf(0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,))
+    val routeGeneratorAPI: IRouteGenerator = RouteGeneratorImpl(travelDesire, buildings)
     val vehicles: ArrayList<Vehicle> = ArrayList()
 
     fun update(dt: Double): ArrayList<Vehicle> {
