@@ -209,9 +209,11 @@ class Main : ApplicationAdapter() {
         sceneManager?.render()
 
         if (state == ApplicationState.Editor) {
-            modelBatch?.begin(camera)
-            Editor.render(modelBatch)
-            modelBatch?.end()
+            modelBatch?.let {
+                it.begin(camera)
+                Editor.render(it)
+                it.end()
+            }
         }
 
         imGuiGl3.renderDrawData(ImGui.getDrawData())
