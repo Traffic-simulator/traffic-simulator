@@ -11,7 +11,7 @@ class Intersection(
     var position: Vec2,
     padding: Double = 0.0,
     var building: Building? = null,
-    val isMergingIntersection: Boolean = false
+    var isMergingIntersection: Boolean = false
 ) {
     init {
         if (building != null && !isMergingIntersection) {
