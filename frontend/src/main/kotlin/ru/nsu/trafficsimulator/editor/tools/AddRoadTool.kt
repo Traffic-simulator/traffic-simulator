@@ -4,8 +4,10 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.math.Vector3
+import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.editor.changes.SplitRoadStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
@@ -19,6 +21,17 @@ class AddRoadTool : IEditingTool {
 
     private val selectedIntersections = arrayOfNulls<Intersection>(2)
     private var selectedIntersectionCount = 0
+    private var isSpitting = false
+
+    private data class SplitData(
+        val originalRoad: Road,
+        val newRoad1: Road,
+        val newRoad2: Road,
+        val newIntersection: Intersection
+    )
+
+    private var splitData: SplitData? = null
+
     override fun getButtonName(): String {
         return name
     }
@@ -27,16 +40,29 @@ class AddRoadTool : IEditingTool {
         if (button != Input.Buttons.LEFT) return false
         val intersectionPoint = getIntersectionWithGround(screenPos, camera!!) ?: return false
 
-        var roadIntersection = findRoadIntersectionAt(intersectionPoint)
-        if (roadIntersection != null) {
-            if (roadIntersection.isBuilding) return false
-        }
-        if (roadIntersection == null) {
-            roadIntersection = layout!!.addIntersection(intersectionPoint)
-        }
-        selectedIntersections[selectedIntersectionCount] = roadIntersection
+        var targetIntersection = findRoadIntersectionAt(intersectionPoint)
 
-        selectedIntersectionCount += 1
+        if (targetIntersection == null) {
+            val closestRoad = layout!!.findClosestRoad(intersectionPoint)
+            if (closestRoad != null) {
+                isSpitting = true
+                val (road1, road2) = layout!!.splitRoad(closestRoad, intersectionPoint)
+
+                layout!!.roadIdCount = maxOf(layout!!.roadIdCount, road2.id + 1)
+
+                splitData = SplitData(closestRoad, road1, road2, road1.endIntersection)
+
+                targetIntersection = road1.endIntersection
+            } else {
+                targetIntersection = layout!!.addIntersection(intersectionPoint)
+            }
+        }
+        if (targetIntersection != null) {
+            if (targetIntersection.isBuilding) return false
+        }
+
+        selectedIntersections[selectedIntersectionCount] = targetIntersection
+        selectedIntersectionCount++
         return true
     }
 
@@ -49,7 +75,15 @@ class AddRoadTool : IEditingTool {
         val startDirection = selectedIntersections[0]!!.position + dir * startDirectionLength
         val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
 
-        return AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
+
+        val change = AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
+        if (!isSpitting){
+            isSpitting = false
+            return change
+        } else {
+            isSpitting = false
+            return SplitRoadStateChange(change, splitData!!.originalRoad, Pair(splitData!!.newRoad1, splitData!!.newRoad2))
+        }
     }
 
     override fun handleDrag(screenPos: Vec2) {

@@ -121,7 +121,7 @@ class Editor {
             }
         }
 
-        private fun appendChange(change: IStateChange) {
+        fun appendChange(change: IStateChange) {
             while (changes.size > nextChange) {
                 changes.removeLast()
             }

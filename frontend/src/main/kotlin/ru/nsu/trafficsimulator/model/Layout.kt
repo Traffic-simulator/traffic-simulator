@@ -89,16 +89,16 @@ class Layout {
         intersection.recalculateIntersectionRoads()
     }
 
-    fun deleteRoad(road: Road) {
+    fun deleteRoad(road: Road, flag: Boolean =true) {
         road.startIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && flag) {
                 intersections.remove(it.id)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && flag) {
                 intersections.remove(it.id)
             }
         }
@@ -154,6 +154,55 @@ class Layout {
             throw IllegalArgumentException("Intersection id already exists, can't push intersection")
 
         intersections[intersection.id] = intersection
+    }
+
+    fun findClosestRoad(point: Vec3, maxDistance: Double = 10.0): Road? {
+        return roads.values.minByOrNull { road ->
+            road.geometry.closestPoint(point.xzProjection()).first.distance(point.xzProjection())
+        }?.takeIf {
+            val (closestPoint, _) = it.geometry.closestPoint(point.xzProjection())
+            closestPoint.distance(point.xzProjection()) <= maxDistance
+        }
+    }
+
+    fun splitRoad(originalRoad: Road, clickPoint: Vec3): Triple<Road, Road, Intersection> {
+        val (closestPoint, splitGlobal) = originalRoad.geometry.closestPoint(clickPoint.xzProjection())
+
+        val newIntersection = addIntersection(closestPoint.toVec3())
+
+        val firstSpline = originalRoad.geometry.copy(
+            startPadding = originalRoad.startPadding - DEFAULT_INTERSECTION_PADDING,
+            endPadding = originalRoad.geometry.length - splitGlobal
+        )
+
+        val secondSpline = originalRoad.geometry.copy(
+            startPadding = splitGlobal,
+            endPadding = originalRoad.endPadding - DEFAULT_INTERSECTION_PADDING
+        )
+
+        val road1 = Road(
+            id = roadIdCount++,
+            startIntersection = originalRoad.startIntersection,
+            endIntersection = newIntersection,
+            geometry = firstSpline,
+        )
+
+        val road2 = Road(
+            id = roadIdCount++,
+            startIntersection = newIntersection,
+            endIntersection = originalRoad.endIntersection,
+            geometry = secondSpline,
+        )
+
+        deleteRoad(originalRoad, false)
+
+        addRoad(road1)
+        addRoad(road2)
+
+        road1.startIntersection.connectRoad(road1)
+        road2.endIntersection.connectRoad(road2)
+
+        return Triple(road1, road2,  newIntersection)
     }
 
     companion object {
