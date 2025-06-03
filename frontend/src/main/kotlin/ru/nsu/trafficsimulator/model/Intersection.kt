@@ -111,6 +111,9 @@ class Intersection(
             throw IllegalArgumentException("Building cannot have more than one road")
         }
         incomingRoads.add(road)
+        if (hasSignals) {
+            signals[road] = Signal()
+        }
     }
 
     fun removeRoad(road: Road) {

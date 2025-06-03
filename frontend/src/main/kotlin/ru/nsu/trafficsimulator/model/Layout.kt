@@ -27,22 +27,6 @@ class Layout {
         intersectionIdCount = other.intersectionIdCount
     }
 
-    fun addRoad(startPosition: Vec3, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
-        val startIntersection = addIntersection(startPosition)
-        val endIntersection = addIntersection(endPosition)
-        return addRoad(startIntersection, startDirection, endIntersection, endDirection)
-    }
-
-    fun addRoad(startIntersection: Intersection, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
-        val endIntersection = addIntersection(endPosition)
-        return addRoad(startIntersection, startDirection, endIntersection, endDirection)
-    }
-
-    fun addRoad(startPosition: Vec3, startDirection: Vec3, endIntersection: Intersection, endDirection: Vec3): Road {
-        val startIntersection = addIntersection(startPosition)
-        return addRoad(startIntersection, startDirection, endIntersection, endDirection)
-    }
-
     fun addRoad(
         startIntersection: Intersection,
         startDirection: Vec3,
@@ -87,7 +71,8 @@ class Layout {
     fun addBuilding(
         intersection: Intersection, intersectionDirection: Vec3,
         buildingPosition: Vec3, buildingDirection: Vec3,
-        building : Building): Road {
+        building: Building
+    ): Road {
         val buildingIntersection = addIntersection(buildingPosition, building)
         return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
     }
@@ -122,7 +107,8 @@ class Layout {
 
     fun addIntersection(position: Vec3, building: Building? = null): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newIntersection = Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building)
+        val newIntersection =
+            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
