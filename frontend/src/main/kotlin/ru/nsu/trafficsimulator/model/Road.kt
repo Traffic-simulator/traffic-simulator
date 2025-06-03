@@ -35,6 +35,20 @@ class Road(
         return geometry.getDirection(startPadding + distance).toVec3()
     }
 
+    fun reconnectIntersection(prevIntersection: Intersection, newIntersection: Intersection) {
+        if (prevIntersection === startIntersection) {
+            startIntersection.removeRoad(this)
+            startIntersection = newIntersection
+            newIntersection.connectRoad(this)
+        } else if (prevIntersection === endIntersection) {
+            endIntersection.removeRoad(this)
+            endIntersection = newIntersection
+            newIntersection.connectRoad(this)
+        } else {
+            throw IllegalArgumentException("Strange prevIntersection")
+        }
+    }
+
     fun getIntersectionPoint(intersection: Intersection, laneOffset: Int): Vec3 =
         getIntersectionPoint(intersection, laneOffset.toDouble())
 

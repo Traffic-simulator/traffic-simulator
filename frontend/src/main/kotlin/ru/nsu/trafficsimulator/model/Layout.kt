@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
+import kotlin.math.max
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
@@ -153,6 +154,7 @@ class Layout {
             }
         }
 
+        roadIdCount = max(roadIdCount, road.id + 1)
         roads[road.id] = road
     }
 
@@ -168,6 +170,7 @@ class Layout {
                 throw IllegalArgumentException("Intersection id already exists, can't push intersection")
             }
 
+        intersectionIdCount = max(intersectionIdCount, intersection.id + 1)
         intersections[intersection.id] = intersection
     }
 
