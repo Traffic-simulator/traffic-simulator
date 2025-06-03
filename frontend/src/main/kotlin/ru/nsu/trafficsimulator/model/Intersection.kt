@@ -31,7 +31,9 @@ class Intersection(
     }
 
     fun connectRoad(road: Road) {
-        removeRoad(road)
+        if (!isBuilding) {
+            removeRoad(road)
+        }
         for (incomingRoad in incomingRoads) {
             if (incomingRoad !== road) {
                 addIntersectionRoad(road, incomingRoad)

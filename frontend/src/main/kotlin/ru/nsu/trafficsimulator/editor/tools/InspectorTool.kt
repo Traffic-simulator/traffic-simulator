@@ -11,6 +11,14 @@ import imgui.type.ImInt
 import ru.nsu.trafficsimulator.editor.changes.*
 import ru.nsu.trafficsimulator.editor.createSphere
 import ru.nsu.trafficsimulator.math.*
+import ru.nsu.trafficsimulator.editor.changes.EditBuildingStateChange
+import ru.nsu.trafficsimulator.editor.changes.EditRoadStateChange
+import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.math.findRoad
+import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
+import ru.nsu.trafficsimulator.math.getIntersectionWithGround
+import ru.nsu.trafficsimulator.model.BuildingType
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
@@ -161,9 +169,12 @@ class InspectorTool : IEditingTool {
     override fun runImgui(): IStateChange? {
         if (selectedRoad != null) {
             return runRoadMenu(selectedRoad!!)
-        }
-        if (selectedIntersection != null) {
-            return runIntersectionMenu(selectedIntersection!!)
+        } else if (selectedIntersection != null) {
+            return if (selectedIntersection!!.isBuilding) {
+                runBuildingMenu(selectedIntersection!!)
+            } else {
+                runIntersectionMenu(selectedIntersection!!)
+            }
         }
         return null
     }
@@ -219,6 +230,52 @@ class InspectorTool : IEditingTool {
 
         if (leftLaneCnt.get() != road.leftLane || rightLaneCnt.get() != road.rightLane) {
             return EditRoadStateChange(road, leftLaneCnt.get(), rightLaneCnt.get())
+        }
+
+        return null
+    }
+
+    private fun runBuildingMenu(intersection: Intersection): IStateChange? {
+        if (lastClickPos != null) {
+            ImGui.setNextWindowPos(lastClickPos!!.x.toFloat(), lastClickPos!!.y.toFloat())
+            lastClickPos = null
+        }
+
+        ImGui.begin("Building settings")
+        val buildingCapacity = ImInt(intersection.building!!.capacity)
+        val types = arrayOf(
+            "Home",
+            "Shopping",
+            "Education",
+            "Work",
+            "Entertainment"
+        )
+        val selectedType = ImInt(intersection.building!!.type.ordinal)
+        if (ImGui.beginTable("##Building", 2)) {
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Building capacity")
+            ImGui.tableSetColumnIndex(1)
+            if (ImGui.inputInt("##capacity", buildingCapacity)) {
+                buildingCapacity.set(buildingCapacity.get().coerceIn(0, 1000))
+            }
+
+            ImGui.tableNextRow()
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text("Building type")
+            ImGui.tableSetColumnIndex(1)
+            ImGui.combo("##type", selectedType, types)
+
+            ImGui.endTable()
+        }
+        ImGui.end()
+
+        if (buildingCapacity.get() != intersection.building!!.capacity || types[selectedType.get()].uppercase() != intersection.building!!.type.toString()) {
+            return EditBuildingStateChange(
+                intersection,
+                buildingCapacity.get(),
+                types[selectedType.get()].uppercase()
+            )
         }
 
         return null
