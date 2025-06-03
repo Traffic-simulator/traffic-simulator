@@ -102,22 +102,22 @@ class Layout {
         road.startIntersection.let {
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0) {
-                intersections.remove(it.id)
+                deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0) {
-                intersections.remove(it.id)
+                deleteIntersection(it)
             }
         }
         roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3, building: Building? = null): Intersection {
+    fun addIntersection(position: Vec3, building: Building? = null, isMerging: Boolean = false): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection =
-            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building)
+            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building, isMerging)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -139,6 +139,10 @@ class Layout {
     }
 
     private fun deleteIntersection(intersection: Intersection) {
+        if (intersection.isMergingIntersection) {
+            return
+        }
+
         for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
@@ -148,9 +152,15 @@ class Layout {
     /**
      * Only for adding a road without any additional actions.
      */
-    fun pushRoad(road: Road) {
-        if (roads.containsKey(road.id))
-            throw IllegalArgumentException("Road id already exists, can't push road")
+    fun pushRoad(road: Road, onConflictChangeId: Boolean = false) {
+        if (roads.containsKey(road.id)) {
+            if (onConflictChangeId) {
+                road.id = roadIdCount++
+                roads[road.id] = road
+            } else {
+                throw IllegalArgumentException("Road id already exists, can't push road")
+            }
+        }
 
         roads[road.id] = road
     }
@@ -158,9 +168,14 @@ class Layout {
     /**
      * Only for adding a road without any additional actions.
      */
-    fun pushIntersection(intersection: Intersection) {
+    fun pushIntersection(intersection: Intersection, onConflictChangeId: Boolean = false) {
         if (intersections.containsKey(intersection.id))
-            throw IllegalArgumentException("Intersection id already exists, can't push intersection")
+            if (onConflictChangeId) {
+                intersection.id = intersectionIdCount++
+                intersections[intersection.id] = intersection
+            } else {
+                throw IllegalArgumentException("Intersection id already exists, can't push intersection")
+            }
 
         intersections[intersection.id] = intersection
     }

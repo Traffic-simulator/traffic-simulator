@@ -229,6 +229,10 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
         tJunction.getGAdditionalData().add(createUserData("buildingFullness", it.fullness.toString()))
     }
 
+    if (intersection.isMergingIntersection) {
+        tJunction.gAdditionalData.add(createUserData("mergingIntersection", "true"))
+    }
+
     return tJunction
 }
 

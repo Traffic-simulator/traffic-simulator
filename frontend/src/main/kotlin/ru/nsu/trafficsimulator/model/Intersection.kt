@@ -7,8 +7,18 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 class Intersection(
-    val id: Long, var position: Vec2, padding: Double = 0.0, var building: Building? = null
+    var id: Long,
+    var position: Vec2,
+    padding: Double = 0.0,
+    var building: Building? = null,
+    val isMergingIntersection: Boolean = false
 ) {
+    init {
+        if (building != null && !isMergingIntersection) {
+            throw IllegalArgumentException("Intersection is building and mergingIntersection simultaneously!")
+        }
+    }
+
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: MutableMap<Long, IntersectionRoad> = HashMap()
     var signals: HashMap<Road, Signal> = HashMap()
@@ -31,6 +41,12 @@ class Intersection(
     }
 
     fun connectRoad(road: Road) {
+        removeRoad(road)
+
+        if (isMergingIntersection && incomingRoads.size > 0) {
+            throw IllegalArgumentException("Merging intersection can has only one road!")
+        }
+
         if (!isBuilding) {
             removeRoad(road)
         }
