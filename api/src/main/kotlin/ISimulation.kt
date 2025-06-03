@@ -30,6 +30,11 @@ interface ISimulation {
     data class SignalDTO(val road: opendrive.TRoad, val laneId: Int, val distFromLaneStart: Double, val state: SignalState)
 
     /**
+     * Class to create heatmap for lanes.
+     */
+    data class SegmentDTO(val road: opendrive.TRoad, val laneId: Int, val segmentLen: Double, val segments: List<Double>)
+
+    /**
      * Initialize simulation state with.
      * All information about points of interest, global settings, road rule settings
      * are embedded inside gAdditionalData list with type TUserData as specific elements
@@ -40,14 +45,23 @@ interface ISimulation {
     fun init(layout: opendrive.OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error?
 
     /**
-     * Calculate next vehicle positions after a set amount of time
+     * Simulate simulation
      * @param deltaTime time interval to simulate
      */
-    fun getNextFrame(deltaTime: Double): List<VehicleDTO>
+    fun updateSimulation(deltaTime: Double)
+
+    /**
+     * Get states of vehicles in simulation
+     */
+    fun getVehicles(): List<VehicleDTO>
 
     /**
      * Getter for all signals in the network
-     * @param deltaTime time interval to simulate
      */
-    fun getSignalStates(deltaTime: Double): List<SignalDTO>
+    fun getSignalStates(): List<SignalDTO>
+
+    /**
+     * Getter for all lane-segments DTOs. SegmentDTO assigned to TRoad+laneId.
+     */
+    fun getSegments(): List<SegmentDTO>
 }

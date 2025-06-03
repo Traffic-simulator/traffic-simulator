@@ -1,9 +1,11 @@
 import mu.KotlinLogging
+import network.Lane
+import heatmap.Segment
 import network.signals.Signal
 import opendrive.OpenDRIVE
 import vehicle.Vehicle
 
-class BackendAPI : ISimulation{
+class BackendAPI : ISimulation {
 
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
@@ -13,26 +15,38 @@ class BackendAPI : ISimulation{
         return null
     }
 
-    override fun getNextFrame(deltaTime: Double): List<ISimulation.VehicleDTO> {
+    override fun updateSimulation(deltaTime: Double) {
+        if (simulator == null)
+            return
+
+        val startNanos = System.nanoTime()
+        simulator!!.update(deltaTime)
+        logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
+    }
+
+    override fun getVehicles(): List<ISimulation.VehicleDTO> {
         if (simulator == null)
             return ArrayList<ISimulation.VehicleDTO>()
 
-        val startNanos = System.nanoTime()
-
-        val vehicles = simulator!!.update(deltaTime)
-        val result = vehicles.map{ vehToDTO(it) }.toList()
-
-        logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
-        return result
+        return simulator!!.vehicles.map{ vehToDTO(it) }.toList()
     }
 
-    override fun getSignalStates(deltaTime: Double): List<ISimulation.SignalDTO> {
+    override fun getSignalStates(): List<ISimulation.SignalDTO> {
         if (simulator == null)
             return ArrayList<ISimulation.SignalDTO>()
 
-        val signals = simulator!!.network.getSignals(deltaTime)
+        val signals = simulator!!.network.getSignals()
 
         return signals.map{ signalToDTO(it)}.toList()
+    }
+
+    override fun getSegments(): List<ISimulation.SegmentDTO> {
+        if (simulator == null)
+            return ArrayList<ISimulation.SegmentDTO>()
+
+        val lanes = simulator!!.network.getAllLanes()
+
+        return lanes.map { segmentToDTO(it) }.toList()
     }
 
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
@@ -51,6 +65,15 @@ class BackendAPI : ISimulation{
             signal.laneId,
             signal.t,
             signal.state
+        )
+    }
+
+    fun segmentToDTO(lane: Lane) : ISimulation.SegmentDTO {
+        return ISimulation.SegmentDTO(
+            lane.road.troad,
+            lane.laneId,
+            lane.lenOfSegment,
+            lane.segments.map { it.currentState }
         )
     }
 }

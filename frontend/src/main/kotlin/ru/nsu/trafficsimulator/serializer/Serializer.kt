@@ -72,7 +72,7 @@ private fun serializeRoad(road: Road): TRoad {
         if (road.startIntersection.hasSignals) {
             val trafficLight = road.startIntersection.signals[road]!!
             signal.add(TRoadSignalsSignal().apply {
-                orientation = "-"
+                orientation = "+"
                 s = 0.0
                 dynamic = TYesNo.YES
                 subtype = "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
@@ -82,7 +82,7 @@ private fun serializeRoad(road: Road): TRoad {
         if (road.endIntersection.hasSignals) {
             val trafficLight = road.endIntersection.signals[road]!!
             signal.add(TRoadSignalsSignal().apply {
-                orientation = "+"
+                orientation = "-"
                 s = road.geometry.length
                 dynamic = TYesNo.YES
                 subtype = "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
@@ -224,9 +224,9 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
     }
 
     intersection.building?.let {
-        tJunction.gAdditionalData.add(createUserData("buildingType", it.type.toString()))
-        tJunction.gAdditionalData.add(createUserData("buildingCapacity", it.capacity.toString()))
-        tJunction.gAdditionalData.add(createUserData("buildingFullness", it.fullness.toString()))
+        tJunction.getGAdditionalData().add(createUserData("buildingType", it.type.toString()))
+        tJunction.getGAdditionalData().add(createUserData("buildingCapacity", it.capacity.toString()))
+        tJunction.getGAdditionalData().add(createUserData("buildingFullness", it.fullness.toString()))
     }
 
     return tJunction

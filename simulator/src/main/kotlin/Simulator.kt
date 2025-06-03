@@ -1,6 +1,8 @@
 import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
+import mu.KotlinLogging
 import network.Network
+import network.Road
 import opendrive.OpenDRIVE
 import route_generator.IRouteGenerator
 import route_generator.RouteGeneratorDespawnListener
@@ -18,16 +20,28 @@ import kotlin.random.Random
 class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>, seed: Long) {
 
     val finder = JunctionIntersectionFinder(openDrive)
-//    val intersections = finder.findIntersection()
-    val intersections: MutableList<Intersection> = ArrayList();
+    private val logger = KotlinLogging.logger("SIMULATOR")
+    val intersections = finder.findIntersection()
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
     val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, spawnDetails, despawnDetails)
     val vehicles: ArrayList<Vehicle> = ArrayList()
 
     fun update(dt: Double): ArrayList<Vehicle> {
+        /*
+            Traffic Lights logic:
+                1) First of all we need to unlock all trajectories that was blocked by vehicles for which RED is appeared
+                2) Secondly we have to say to each vehicle on lines with RED to don't pretend to any trajectories.
+                    To do that we can just check lane signal for each vehicle
+                        and in case of RED, RED_YELLOW or YELLOW don't block any trajectories and stop
+         */
+        network.updateSignals(dt)
 
-        processNonmandatoryLaneChanges()
+        // Unlock trajectories blocked by vehicles with not GREEN traffic lights
+        vehicles.forEach{ it.processTrafficLight() }
+
+        // Not working for now
+        // processNonmandatoryLaneChanges()
 
         // Process vehicles in sorted order due to junction blocking logic
         // Have to sort not by position, but by distance to the closest junction...
@@ -49,6 +63,9 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
         // spawn new vehicles
         routeGeneratorAPI.update(dt, createVehicle, isPositionFree)
 
+        // Update segments for heatmap on this cycle
+        updateSegments()
+
         return vehicles
     }
 
@@ -69,6 +86,22 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
                     it.pathBuilder.removePath(it)
                     it.performLaneChange(toLane)
                     return@forEach
+                }
+            }
+        }
+    }
+
+    fun updateSegments() {
+        val roads: List<Road> = network.roads
+        for (road in roads) {
+            for (lane in road.lanes) {
+                lane.vehicles.forEach {
+                    lane.segments[(it.position / lane.lenOfSegment).toInt()].addVehicleSpeed(it)
+                }
+                lane.segments.forEach { it.update() }
+                logger.info{
+                    "RoadId: ${lane.roadId}, LineId: ${lane.laneId}, " +
+                        "Avg by segment: ${"%.3f".format(lane.segments.map { it.currentState }.average())}, "
                 }
             }
         }

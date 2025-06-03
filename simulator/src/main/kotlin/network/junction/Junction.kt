@@ -61,8 +61,6 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
     fun tryBlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int): Boolean {
         assert(trajBlockingFactors[connectingRoadId] != null)
 
-        // Даже если есть факторы мешающие проезду, ему нужно заблочить тех,
-        // Кто не блочит его, чтобы сказать им, "Я поеду сразу после всех тех".
         if (trajBlockingFactors[connectingRoadId]!!.blockingFactors.size != 0) {
             var blockingFactorsString: String = ""
             trajBlockingFactors[connectingRoadId]!!.blockingFactors.forEach {
@@ -86,6 +84,14 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
 
         trajBlockList[connectingRoadId]!!.blockList.forEach { trajBlockingFactors[it.connectingRoad]!!.removeBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
         logger.debug("Veh@${vehicleId} unlocks trajectory with roadId@${connectingRoadId}")
+    }
+
+    // Not road specified option, will just check all possible trajectories
+    fun unlockTrajectoryVehicle(vehicleId: Int) {
+
+        trajBlockingFactors.forEach { connectingRoadId, factors ->
+            factors.removeBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId)
+        }
     }
 
 }

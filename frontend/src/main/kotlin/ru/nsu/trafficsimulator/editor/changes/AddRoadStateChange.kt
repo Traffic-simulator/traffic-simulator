@@ -6,7 +6,12 @@ import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.IntersectionRoad
 import ru.nsu.trafficsimulator.model.Road
 
-class AddRoadStateChange(private val start: Intersection, private val startDir: Vec3, private val end: Intersection, private val endDir: Vec3) : IStateChange {
+class AddRoadStateChange(
+    private val start: Intersection,
+    private val startDir: Vec3,
+    private val end: Intersection,
+    private val endDir: Vec3
+) : IStateChange {
     private var affectedIntersectionRoads: List<IntersectionRoad> = emptyList()
     private var newRoad: Road? = null
 

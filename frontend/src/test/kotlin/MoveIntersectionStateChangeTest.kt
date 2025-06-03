@@ -54,7 +54,7 @@ class MoveIntersectionStateChangeTest {
         val intersection = Intersection(1, Vec2(0.0, 0.0))
         layout.intersections[intersection.id] = intersection
 
-        val otherIntersection = Intersection(2, Vec2(10.0, 0.0))
+        val otherIntersection = Intersection(2, Vec2(50.0, 0.0))
         layout.intersections[otherIntersection.id] = otherIntersection
         val road = layout.addRoad(
             intersection,
@@ -64,7 +64,7 @@ class MoveIntersectionStateChangeTest {
         )
 
         val initialConnections = intersection.intersectionRoads.size
-        val newPos = Vec3(5.0, 0.0, 0.0)
+        val newPos = Vec3(30.0, 0.0, 0.0)
         val change = MoveIntersectionStateChange(intersection, newPos)
 
         change.apply(layout)

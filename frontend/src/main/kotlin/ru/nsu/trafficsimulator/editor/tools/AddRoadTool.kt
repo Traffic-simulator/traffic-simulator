@@ -57,6 +57,10 @@ class AddRoadTool : IEditingTool {
                 targetIntersection = layout!!.addIntersection(intersectionPoint)
             }
         }
+        if (targetIntersection != null) {
+            if (targetIntersection.isBuilding) return false
+        }
+        selectedIntersections[selectedIntersectionCount] = targetIntersection
 
         selectedIntersections[selectedIntersectionCount] = targetIntersection
         selectedIntersectionCount++

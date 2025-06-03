@@ -30,9 +30,4 @@ class TrajectoryBlockingFactors {
         // TODO: need smarter logic
         blockingFactors = blockingFactors.filter{ it.reason != reason || it.vehicleId != vehicleId }.toMutableList()
     }
-
-//    fun update(deltaTime: double) {
-//
-//    }
-
 }
