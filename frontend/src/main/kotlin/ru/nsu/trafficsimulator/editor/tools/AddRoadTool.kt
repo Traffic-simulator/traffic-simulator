@@ -21,6 +21,17 @@ class AddRoadTool : IEditingTool {
 
     private val selectedIntersections = arrayOfNulls<Intersection>(2)
     private var selectedIntersectionCount = 0
+    private var isSpitting = false
+
+    private data class SplitData(
+        val originalRoad: Road,
+        val newRoad1: Road,
+        val newRoad2: Road,
+        val newIntersection: Intersection
+    )
+
+    private var splitData: SplitData? = null
+
     override fun getButtonName(): String {
         return name
     }
@@ -34,16 +45,12 @@ class AddRoadTool : IEditingTool {
         if (targetIntersection == null) {
             val closestRoad = layout!!.findClosestRoad(intersectionPoint)
             if (closestRoad != null) {
+                isSpitting = true
                 val (road1, road2) = layout!!.splitRoad(closestRoad, intersectionPoint)
 
                 layout!!.roadIdCount = maxOf(layout!!.roadIdCount, road2.id + 1)
 
-                val change = SplitRoadStateChange(
-                    originalRoad = closestRoad,
-                    newRoads = road1 to road2,
-                    newIntersection = road1.endIntersection
-                )
-                Editor.appendChange(change)
+                splitData = SplitData(closestRoad, road1, road2, road1.endIntersection)
 
                 targetIntersection = road1.endIntersection
             } else {
@@ -65,7 +72,15 @@ class AddRoadTool : IEditingTool {
         val startDirection = selectedIntersections[0]!!.position + dir * startDirectionLength
         val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
 
-        return AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
+
+        val change = AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
+        if (!isSpitting){
+            isSpitting = false
+            return change
+        } else {
+            isSpitting = false
+            return SplitRoadStateChange(change, splitData!!.originalRoad, Pair(splitData!!.newRoad1, splitData!!.newRoad2))
+        }
     }
 
     override fun handleDrag(screenPos: Vec2) {

@@ -3,7 +3,6 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
-const val MIN_ROAD_LENGTH = 1.0
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
@@ -13,8 +12,6 @@ class Layout {
 
     var roadIdCount: Long = 0
     var intersectionIdCount: Long = 0
-    private val startDirectionLength = 25.0
-
 
     fun copy(other: Layout) {
         roads.clear()
@@ -28,7 +25,6 @@ class Layout {
 
         roadIdCount = other.roadIdCount
         intersectionIdCount = other.intersectionIdCount
-        recalculateIdCounters()
     }
 
     fun addRoad(startPosition: Vec3, startDirection: Vec3, endPosition: Vec3, endDirection: Vec3): Road {
@@ -91,7 +87,8 @@ class Layout {
     fun addBuilding(
         intersection: Intersection, intersectionDirection: Vec3,
         buildingPosition: Vec3, buildingDirection: Vec3,
-        building : Building): Road {
+        building: Building
+    ): Road {
         val buildingIntersection = addIntersection(buildingPosition, building)
         return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
     }
@@ -108,16 +105,16 @@ class Layout {
         intersection.recalculateIntersectionRoads()
     }
 
-    fun deleteRoad(road: Road) {
+    fun deleteRoad(road: Road, flag: Boolean =true) {
         road.startIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && flag) {
                 intersections.remove(it.id)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && flag) {
                 intersections.remove(it.id)
             }
         }
@@ -126,7 +123,8 @@ class Layout {
 
     fun addIntersection(position: Vec3, building: Building? = null): Intersection {
         val newIntersectionId = intersectionIdCount++
-        val newIntersection = Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building)
+        val newIntersection =
+            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -147,7 +145,7 @@ class Layout {
 
     }
 
-    fun deleteIntersection(intersection: Intersection) {
+    private fun deleteIntersection(intersection: Intersection) {
         for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
@@ -183,23 +181,23 @@ class Layout {
         }
     }
 
-    fun splitRoad(originalRoad: Road, clickPoint: Vec3): Pair<Road, Road> {
+    fun splitRoad(originalRoad: Road, clickPoint: Vec3): Triple<Road, Road, Intersection> {
         val (closestPoint, splitGlobal) = originalRoad.geometry.closestPoint(clickPoint.xzProjection())
 
         val newIntersection = addIntersection(closestPoint.toVec3())
 
         val firstSpline = originalRoad.geometry.copy(
-            startPadding = originalRoad.startPadding,
+            startPadding = originalRoad.startPadding - DEFAULT_INTERSECTION_PADDING,
             endPadding = originalRoad.geometry.length - splitGlobal
         )
 
         val secondSpline = originalRoad.geometry.copy(
             startPadding = splitGlobal,
-            endPadding = originalRoad.endPadding
+            endPadding = originalRoad.endPadding - DEFAULT_INTERSECTION_PADDING
         )
 
         val road1 = Road(
-            id =roadIdCount++,
+            id = roadIdCount++,
             startIntersection = originalRoad.startIntersection,
             endIntersection = newIntersection,
             geometry = firstSpline,
@@ -212,23 +210,16 @@ class Layout {
             geometry = secondSpline,
         )
 
+        deleteRoad(originalRoad, false)
 
-        val road3 = addRoad(road1)
-        val road4 = addRoad(road2)
+        addRoad(road1)
+        addRoad(road2)
 
-//        originalRoad.startIntersection.replaceRoad(originalRoad, road1)
-//        originalRoad.endIntersection.replaceRoad(originalRoad, road2)
+        road1.startIntersection.connectRoad(road1)
+        road2.endIntersection.connectRoad(road2)
 
-        deleteRoad(originalRoad)
-
-        return road1 to road2
+        return Triple(road1, road2,  newIntersection)
     }
-
-    fun recalculateIdCounters() {
-        roadIdCount = (roads.keys.maxOrNull() ?: 0L) + 1L
-        intersectionIdCount = (intersections.keys.maxOrNull() ?: 0L) + 1L
-    }
-
 
     companion object {
         const val DEFAULT_INTERSECTION_PADDING = 20.0

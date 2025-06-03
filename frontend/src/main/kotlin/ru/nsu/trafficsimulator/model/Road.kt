@@ -22,19 +22,11 @@ class Road(
         get() = geometry.length - startPadding - endPadding
 
     fun getPoint(distance: Double): Vec3 {
-        require(distance in 0.0..length) {
-            "Distance $distance out of range [0, $length]"
+        if (distance < 0 || distance > length) {
+            throw IllegalArgumentException("distance must be between 0 and length")
         }
-        val adjustedDistance = distance + startPadding
-        return geometry.getPoint(adjustedDistance).toVec3()
+        return geometry.getPoint(startPadding + distance).toVec3()
     }
-
-//    fun getPoint(distance: Double): Vec3 {
-//        if (distance < 0 || distance > length) {
-//            throw IllegalArgumentException("distance must be between 0 and length")
-//        }
-//        return geometry.getPoint(startPadding + distance).toVec3()
-//    }
 
     fun getDirection(distance: Double): Vec3 {
         if (distance < 0 || distance > length) {
