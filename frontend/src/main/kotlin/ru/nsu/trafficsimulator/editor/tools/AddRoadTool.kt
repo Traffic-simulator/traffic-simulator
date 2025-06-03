@@ -60,7 +60,6 @@ class AddRoadTool : IEditingTool {
         if (targetIntersection != null) {
             if (targetIntersection.isBuilding) return false
         }
-        selectedIntersections[selectedIntersectionCount] = targetIntersection
 
         selectedIntersections[selectedIntersectionCount] = targetIntersection
         selectedIntersectionCount++
@@ -91,7 +90,7 @@ class AddRoadTool : IEditingTool {
         return
     }
 
-    override fun render(modelBatch: ModelBatch?) {
+    override fun render(modelBatch: ModelBatch) {
         return
     }
 
