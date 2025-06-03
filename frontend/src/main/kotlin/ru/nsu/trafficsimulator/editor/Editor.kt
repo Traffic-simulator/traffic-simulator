@@ -20,6 +20,7 @@ import ru.nsu.trafficsimulator.editor.tools.EditTool
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.graphics.ModelGenerator
+import ru.nsu.trafficsimulator.math.Vec3
 
 class Editor {
     companion object {
@@ -44,6 +45,7 @@ class Editor {
         fun init(camera: Camera, sceneManager: SceneManager) {
             this.camera = camera
             this.sceneManager = sceneManager
+            layout.addIntersection(Vec3(0.0, 0.0, 0.0), isMerging = true)
             onLayoutChange(true, true)
         }
 

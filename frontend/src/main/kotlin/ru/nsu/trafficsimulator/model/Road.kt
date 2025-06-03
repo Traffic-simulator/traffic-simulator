@@ -5,7 +5,7 @@ import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDING
 
 class Road(
-    val id: Long,
+    var id: Long,
     var startIntersection: Intersection,
     var endIntersection: Intersection,
     var leftLane: Int = 1,
