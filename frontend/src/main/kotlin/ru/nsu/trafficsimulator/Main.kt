@@ -32,6 +32,7 @@ import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
+import ru.nsu.trafficsimulator.model.Road
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
@@ -62,6 +63,9 @@ class Main : ApplicationAdapter() {
 
     private var buildingModel: Model? = null
     private var buildingScenes = mutableListOf<Scene>()
+
+    private var trafficLightModel: Model? = null
+    private var trafficLights = mutableMapOf<Pair<Road, Boolean>, Scene>()
 
     private var simState: SimulationState = SimulationState(BackendAPI())
     private val carInstances = mutableMapOf<Int, Scene>()
@@ -105,6 +109,9 @@ class Main : ApplicationAdapter() {
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
         sceneManager?.setShaderProvider(CustomShaderProvider("shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl"))
+
+        trafficLightModel = GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
+
 
         editorInputProcess = Editor.createSphereEditorProcessor()
         inputMultiplexer.addProcessor(editorInputProcess)
@@ -154,17 +161,17 @@ class Main : ApplicationAdapter() {
     fun initializeSimulation(layout: Layout) {
         val spawnDetails = ArrayList<Waypoint>()
         val despawnDetails = ArrayList<Waypoint>()
-        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
-        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
-
-        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
-        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
+//        spawnDetails.add(Waypoint("58", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("31", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("1", "1", Direction.BACKWARD))
+//        spawnDetails.add(Waypoint("10", "1", Direction.BACKWARD))
+//
+//        despawnDetails.add(Waypoint("58", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("31", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("1", "-1", Direction.FORWARD))
+//        despawnDetails.add(Waypoint("10", "-1", Direction.FORWARD))
 
 //        spawnDetails.add(Waypoint("0", "1", Direction.BACKWARD))
 //        despawnDetails.add(Waypoint("0", "-1", Direction.FORWARD))
@@ -172,7 +179,7 @@ class Main : ApplicationAdapter() {
         val dto = serializeLayout(layout)
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-        Editor.layout = Deserializer.deserialize(dto)
+//        Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
 
@@ -202,8 +209,7 @@ class Main : ApplicationAdapter() {
         if (state == ApplicationState.Simulator && !simState.isPaused) {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
             updateCars(simState.backend.getVehicles())
-            // TODO:
-            // updateSingals(simState.backend.getSingals())
+            updateSignals(simState.backend.getSignalStates())
         }
 
         if (tmpInputProcessor != null) {
@@ -268,8 +274,8 @@ class Main : ApplicationAdapter() {
                 inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
                 inputMultiplexer.removeProcessor(editorInputProcess)
+                initializeSimulation(Editor.layout)
             }
-            initializeSimulation(Editor.layout)
         }
         if (state == ApplicationState.Simulator) {
             if (ImGui.button("||")) {
@@ -305,7 +311,6 @@ class Main : ApplicationAdapter() {
     }
 
     private fun updateCars(vehicleData: List<ISimulation.VehicleDTO>) {
-
         for (vehicle in vehicleData) {
             val vehicleId = vehicle.id
             val carRoad = vehicle.road
@@ -348,6 +353,28 @@ class Main : ApplicationAdapter() {
         for (key in removedKeys) {
             sceneManager?.removeScene(carInstances[key])
             carInstances.remove(key)
+        }
+    }
+
+    private fun updateSignals(signalData: List<ISimulation.SignalDTO>) {
+        for (signal in signalData) {
+            val roadId = signal.road.id.toLong()
+            if (!Editor.layout.roads.containsKey(roadId)) {
+                logger.warn { "Failed to find road with id from SignalDTO" }
+                continue
+            }
+            val road = Editor.layout.roads[roadId]!!
+
+            val (intersection, isStart) = if (abs(signal.distFromLaneStart - 1.0) < 1e-3) {
+                road.endIntersection to false
+            } else if (abs(signal.distFromLaneStart) < 1e-3) {
+                road.startIntersection to true
+            } else {
+                logger.warn { "distFromLaneStart was ${signal.distFromLaneStart} which is inconclusive" }
+                continue
+            }
+
+            road.endPadding
         }
     }
 }

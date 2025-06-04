@@ -97,13 +97,13 @@ class Deserializer {
 
                 if (signal.orientation == "+") {
                     if (abs(signal.s - road.geometry.length) > 1e-2) {
-                        logger.error("Invalid traffic light: it's on at the end: ${signal.s} <-> ${road.geometry.length}")
+                        logger.error("Invalid traffic light: it's not at the end: ${signal.s} <-> ${road.geometry.length}")
                         return@forEach
                     }
                     endIntersection.signals[road] = trafficLight
                 } else {
                     if (abs(signal.s) > 1e-2) {
-                        logger.error("Invalid traffic light: it's on at the start: ${signal.s} <-> 0.0")
+                        logger.error("Invalid traffic light: it's not at the start: ${signal.s} <-> 0.0")
                         return@forEach
                     }
                     startIntersection.signals[road] = trafficLight
