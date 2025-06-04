@@ -2,12 +2,13 @@ package network.junction
 
 import junction_intersection.Intersection
 import mu.KotlinLogging
+import network.Network
 import opendrive.TJunction
 import java.util.logging.Logger
 
 
 // TODO: need more smart logic in case of different reasons blocks.
-class Junction(val tjunction: TJunction, val intersections: MutableList<Intersection>) {
+class Junction(val tjunction: TJunction, val intersections: MutableList<Intersection>, val network: Network) {
 
     private val logger = KotlinLogging.logger("BACKEND")
 
@@ -39,10 +40,12 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
                 connections[con.incomingRoad]?.add(Connection(con))
             }
         }
+    }
 
+    fun initTrajectories() {
         // Initializing TrajectoryBlockList
         for (con in tjunction.connection) {
-            trajBlockList[con.connectingRoad] = TrajectoryBlockList(con, tjunction.connection, intersections)
+            trajBlockList[con.connectingRoad] = TrajectoryBlockList(con, tjunction.connection, intersections, network)
             trajBlockingFactors[con.connectingRoad] = TrajectoryBlockingFactors()
         }
     }
@@ -61,10 +64,14 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
     fun tryBlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int): Boolean {
         assert(trajBlockingFactors[connectingRoadId] != null)
 
+        // TODO: Can not block if already blocked, perfomance optimization
         if (trajBlockingFactors[connectingRoadId]!!.blockingFactors.size != 0) {
             var blockingFactorsString: String = ""
             trajBlockingFactors[connectingRoadId]!!.blockingFactors.forEach {
-                assert(it.vehicleId != vehicleId)
+
+                if (it.vehicleId == vehicleId) {
+                    assert(it.vehicleId != vehicleId)
+                }
                 blockingFactorsString = blockingFactorsString.plus("Veh@" + it.vehicleId.toString() + " ")
             }
 
@@ -88,7 +95,6 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
 
     // Not road specified option, will just check all possible trajectories
     fun unlockTrajectoryVehicle(vehicleId: Int) {
-
         trajBlockingFactors.forEach { connectingRoadId, factors ->
             factors.removeBlockingFactor(TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId)
         }
