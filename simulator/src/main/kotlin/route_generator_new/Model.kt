@@ -172,7 +172,7 @@ class Model (
             var type = listOfNonEmptyBuildingTypes.get(random.nextInt(listOfNonEmptyBuildingTypes.size));
             var buildingDictionaryByType = buildingsMapByType[type]!!;
             var building = buildingDictionaryByType.values.random();//TODO переделать через сидированный рандом
-            var currentPoint = TravelPoint(building.junctionId, 60.0);//TODO переделать
+            var currentPoint = TravelPoint(building.junctionId, 10.0);//TODO переделать
 
             travelPoints.add(currentPoint);
         }

@@ -17,6 +17,7 @@ class BuildingsParser(val openDrive: OpenDRIVE) {
             for (data in additionalData) {
                 val tUser = data as TUserData
                 when (tUser.code) {
+
                     "buildingType" -> buildingType = BuildingTypes.valueOf(tUser.value)
                     "buildingCapacity" -> buildingCapacity = tUser.value.toInt()
                     "buildingFullness" -> buildingCurrentPeople = tUser.value.toInt()
@@ -25,8 +26,9 @@ class BuildingsParser(val openDrive: OpenDRIVE) {
                     }
                 }
             }
+
             if (buildingCapacity == -1 || buildingCurrentPeople == -1) {
-                throw Exception("buildingCapacity or buildingCurrentPeople has incorrect value")
+                continue
             }
             buildings.add(Building(buildingType, buildingCapacity, buildingCurrentPeople, buildingId))
         }

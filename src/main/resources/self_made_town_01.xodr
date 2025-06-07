@@ -1734,23 +1734,23 @@
             <laneLink from="-1" to="-1"/>
         </connection>
     </junction>
-    <junction id="100"/>
+    <junction id="100">
             <userData code="buildingType" value="HOME"/>
             <userData code="buildingCapacity" value="100"/>
             <userData code="buildingFullness" value="100"/>
     </junction>
     <junction id="101">
-            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingType" value="EDUCATION"/>
             <userData code="buildingCapacity" value="100"/>
             <userData code="buildingFullness" value="100"/>
     </junction>
     <junction id="102">
-            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingType" value="WORK"/>
             <userData code="buildingCapacity" value="100"/>
             <userData code="buildingFullness" value="100"/>
     </junction>
     <junction id="103">
-            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingType" value="SHOPPING"/>
             <userData code="buildingCapacity" value="100"/>
             <userData code="buildingFullness" value="100"/>
     </junction>

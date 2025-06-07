@@ -59,8 +59,16 @@ class RouteGeneratorImpl(
             val startTravelPoint = travel.getIthPoint(currentPosition)
             val startJunctionId = startTravelPoint.junctionId
 
-            val endTravelPoint = travel.getIthPoint(currentPosition + 1)
-            val endJunctionId = endTravelPoint.junctionId
+            var endTravelPoint: TravelPoint
+            var endJunctionId: String
+            if (currentPosition + 1 == travel.getPlanLength()) {
+                endTravelPoint = travel.getIthPoint(currentPosition)
+                endJunctionId = endTravelPoint.junctionId
+            } else {
+                endTravelPoint = travel.getIthPoint(currentPosition + 1)
+                endJunctionId = endTravelPoint.junctionId
+            }
+
 
             val route = Route(startJunctionId, endJunctionId)
             routes.add(route)

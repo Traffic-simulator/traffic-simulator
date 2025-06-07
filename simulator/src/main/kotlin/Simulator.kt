@@ -31,7 +31,7 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
     //val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, buildings)
-    val travelDesire : TravelDesireFunction = TravelDesireFunction(mutableListOf(0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,0.1, 0.1,))
+    val travelDesire : TravelDesireFunction = TravelDesireFunction(mutableListOf(10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0))
     val routeGeneratorAPI: IRouteGenerator = RouteGeneratorImpl(travelDesire, buildings)
     val vehicles: ArrayList<Vehicle> = ArrayList()
 
@@ -104,7 +104,12 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
         for (road in roads) {
             for (lane in road.lanes) {
                 lane.vehicles.forEach {
-                    lane.segments[(it.position / lane.lenOfSegment).toInt()].addVehicleSpeed(it)
+                    val segmentIndex = (it.position / lane.lenOfSegment).toInt()
+                    if (segmentIndex < lane.segments.size) {
+                        lane.segments[segmentIndex].addVehicleSpeed(it)
+                    } else {
+                        lane.segments.last().addVehicleSpeed(it)
+                    }
                 }
                 lane.segments.forEach { it.update() }
                 logger.info{
@@ -115,7 +120,6 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
         }
     }
 
-    private val isPositionFree = object: WaypointSpawnAbilityChecker {
     private val isPositionFree = object : WaypointSpawnAbilityChecker {
         override fun isFree(waypoint: Waypoint): Boolean {
             val lane = network.getLaneById(waypoint.roadId, waypoint.laneId)
