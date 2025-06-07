@@ -21,6 +21,7 @@ class RouteGeneratorImpl(
         create: VehicleCreationListener,
         isPositionFree: WaypointSpawnAbilityChecker
     ) {
+        // TODO: use isPoistionFree please
         val spawnTravels = model.call(dt, despawnList)//получаем список travel'ов на спавн
         despawnList.clear()
         val spawnRoutes = transformTravelsToRoutes(spawnTravels)//переделываем его в Route'ы
