@@ -1,11 +1,13 @@
 import mu.KotlinLogging
+import network.Lane
+import heatmap.Segment
 import network.signals.Signal
 import opendrive.OpenDRIVE
 import route_generator_new.BuildingTypes
 import route_generator_new.discrete_function.Building
 import vehicle.Vehicle
 
-class BackendAPI : ISimulation{
+class BackendAPI : ISimulation {
 
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
@@ -49,6 +51,15 @@ class BackendAPI : ISimulation{
         return signals.map{ signalToDTO(it)}.toList()
     }
 
+    override fun getSegments(): List<ISimulation.SegmentDTO> {
+        if (simulator == null)
+            return ArrayList<ISimulation.SegmentDTO>()
+
+        val lanes = simulator!!.network.getAllLanes()
+
+        return lanes.map { segmentToDTO(it) }.toList()
+    }
+
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
         return ISimulation.VehicleDTO(
             vehicle.vehicleId,
@@ -65,6 +76,15 @@ class BackendAPI : ISimulation{
             signal.laneId,
             signal.t,
             signal.state
+        )
+    }
+
+    fun segmentToDTO(lane: Lane) : ISimulation.SegmentDTO {
+        return ISimulation.SegmentDTO(
+            lane.road.troad,
+            lane.laneId,
+            lane.lenOfSegment,
+            lane.segments.map { it.currentState }
         )
     }
 }
