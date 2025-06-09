@@ -16,6 +16,7 @@ import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.graphics.ModelGenerator
 import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.LayoutMerger
 import ru.nsu.trafficsimulator.serializer.Deserializer
