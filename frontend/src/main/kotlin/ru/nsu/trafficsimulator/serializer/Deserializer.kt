@@ -9,6 +9,8 @@ import ru.nsu.trafficsimulator.model.*
 import kotlin.math.abs
 import kotlin.math.max
 
+private val INVALID_INTERSECTION_POSITION = Vec2(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)
+
 class Deserializer {
     companion object {
         fun deserialize(openDRIVE: OpenDRIVE): Layout {
@@ -51,7 +53,7 @@ class Deserializer {
                 }
             } ?: run {
                 // Position and padding will be calculated later
-                idToIntersection[nextId] = Intersection(nextId, Vec2(0.0, 0.0))
+                idToIntersection[nextId] = Intersection(nextId, INVALID_INTERSECTION_POSITION)
                 idToIntersection[nextId++]!!
             }
             val endIntersection = tRoad.link?.successor?.let {
@@ -149,7 +151,6 @@ class Deserializer {
         }
 
         private fun deserializeIntersection(junction: TJunction): Intersection {
-            val intersection = Intersection(junction.id.toLong(), Vec2(0.0, 0.0))
             val userParameters: MutableMap<String, String> = mutableMapOf()
             junction.getGAdditionalData().forEach { data ->
                 val userData = data as TUserData
@@ -158,9 +159,17 @@ class Deserializer {
 
             val intersection = Intersection(
                 junction.id.toLong(),
-                Vec2(0.0, 0.0),
+                position = INVALID_INTERSECTION_POSITION,
                 isMergingIntersection = userParameters["mergingIntersection"] == "true"
             )
+
+            userParameters["position"]?.let {
+                intersection.position = parseVec2(it)
+            }
+
+            userParameters["padding"]?.let {
+                intersection.padding = it.toDouble()
+            }
 
             if (userParameters.containsKey("buildingType")) {
                 intersection.building = Building(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
@@ -206,12 +215,15 @@ class Deserializer {
 
         private fun recalculateIntersectionPosition(layout: Layout) {
             for (intersection in layout.intersections.values) {
+                if (intersection.position != INVALID_INTERSECTION_POSITION) {
+                    continue
+                }
                 var pos = Vec2(0.0, 0.0)
                 for (road in intersection.incomingRoads) {
-                    if (road.startIntersection == intersection) {
-                        pos += road.geometry.getPoint(0.0)
+                    pos += if (road.startIntersection == intersection) {
+                        road.geometry.getPoint(0.0)
                     } else {
-                        pos += road.geometry.getPoint(road.geometry.length)
+                        road.geometry.getPoint(road.geometry.length)
                     }
                 }
                 intersection.position = pos / intersection.incomingRoads.size.toDouble()
@@ -262,4 +274,20 @@ class Deserializer {
             }
         }
     }
+}
+
+private fun parseVec2(str: String): Vec2 {
+    val parts = str.replace("(", "")
+        .replace(")", "")
+        .split(";")
+    if (parts.size != 2) {
+        throw IllegalArgumentException("Vec2 must have 2 parts.")
+    }
+    return Vec2(parts[0].toDouble(), parts[1].toDouble())
+}
+
+private fun parseSpline(str: String): Spline {
+    val result = Spline()
+
+    return result
 }

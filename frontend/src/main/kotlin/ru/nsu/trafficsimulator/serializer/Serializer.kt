@@ -7,7 +7,9 @@ import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.IntersectionRoad
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
+import java.util.Scanner
 import kotlin.math.cos
+import kotlin.math.sign
 import kotlin.math.sin
 
 const val MAX_SPEED = "60"
@@ -135,6 +137,7 @@ private fun serializeRoad(road: Road): TRoad {
             right.lane.add(rightLane)
         }
     })
+    tRoad.addUserData("realGeometry", road.geometry.splineParts[0].toString())
 
     return tRoad
 }
@@ -222,15 +225,17 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
 
         })
     }
+    tJunction.addUserData("position", "(${intersection.position.x};${intersection.position.y})")
+    tJunction.addUserData("padding", intersection.padding.toString())
 
     intersection.building?.let {
-        tJunction.getGAdditionalData().add(createUserData("buildingType", it.type.toString()))
-        tJunction.getGAdditionalData().add(createUserData("buildingCapacity", it.capacity.toString()))
-        tJunction.getGAdditionalData().add(createUserData("buildingFullness", it.fullness.toString()))
+        tJunction.addUserData("buildingType", it.type.toString())
+        tJunction.addUserData("buildingCapacity", it.capacity.toString())
+        tJunction.addUserData("buildingFullness", it.fullness.toString())
     }
 
     if (intersection.isMergingIntersection) {
-        tJunction.gAdditionalData.add(createUserData("mergingIntersection", "true"))
+        tJunction.addUserData("mergingIntersection", "true")
     }
 
     return tJunction
@@ -278,4 +283,11 @@ fun createUserData(key: String, value: String) = TUserData().apply {
     this.code = key
     this.value = value
 }
+
+private fun TJunction.addUserData(key: String, value: String) =
+    this.getGAdditionalData().add(createUserData(key, value))
+
+private fun TRoad.addUserData(key: String, value: String) =
+    this.getGAdditionalData().add(createUserData(key, value))
+
 
