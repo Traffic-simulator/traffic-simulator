@@ -164,6 +164,7 @@ class Editor {
             sceneManager?.addScene(layoutScene)
 
             // Update traffic lights
+            val visited = mutableSetOf<Pair<Road, Boolean>>()
             for ((id, intersection) in layout.intersections) {
                 if (!intersection.hasSignals) {
                     continue
@@ -172,10 +173,10 @@ class Editor {
                     val isStart = road.startIntersection == intersection
                     val distFromStart = if (isStart) { 0.0 } else { road.length }
                     val key = road to isStart
+                    visited.add(key)
                     if (!trafficLights.containsKey(key)) {
                         val trafficLight = Scene(trafficLightModel)
                         trafficLights[key] = trafficLight
-
                         sceneManager?.addScene(trafficLights[key])
                     }
                     val scene = trafficLights[key]!!
@@ -195,6 +196,17 @@ class Editor {
                         .rotateTowardTarget(targetPos.toGdxVec(), Vec3.UP.toGdxVec())
                     scene.modelInstance.transform.set(newTransform)
                 }
+            }
+
+            val toRemove = mutableSetOf<Pair<Road, Boolean>>()
+            for ((key, scene) in trafficLights) {
+                if (!visited.contains(key)) {
+                    toRemove.add(key)
+                    sceneManager?.removeScene(scene)
+                }
+            }
+            for (key in toRemove) {
+                trafficLights.remove(key)
             }
         }
     }
