@@ -48,8 +48,7 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
         // Unlock trajectories blocked by vehicles with not GREEN traffic lights
         vehicles.forEach { it.processTrafficLight() }
 
-        // Not working for now
-        // processNonmandatoryLaneChanges()
+        processNonmandatoryLaneChanges()
 
         // Process vehicles in sorted order due to junction blocking logic
         // Have to sort not by position, but by distance to the closest junction...
