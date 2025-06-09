@@ -40,6 +40,12 @@ class Deserializer {
 
 
         private fun deserializeRoad(tRoad: TRoad, idToIntersection: MutableMap<Long, Intersection>): Road {
+            val userParameters: MutableMap<String, String> = mutableMapOf()
+            tRoad.getGAdditionalData().forEach { data ->
+                val userData = data as TUserData
+                userParameters[userData.code] = userData.value
+            }
+
             val id = tRoad.id.toLong()
 
             var nextId = idToIntersection.keys.max() + 1
@@ -72,7 +78,19 @@ class Deserializer {
             val leftLane = tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
             val rightLane = tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
 
-            val spline = planeViewToSpline(tRoad.planView)
+            val spline: Spline =
+                if (userParameters.containsKey("startSpline") && userParameters.containsKey("endSpline")
+                    && userParameters.containsKey("startDirectionSpline") && userParameters.containsKey("endDirectionSpline")
+                ) {
+                    val start = parseVec2(userParameters["startSpline"]!!)
+                    val end = parseVec2(userParameters["endSpline"]!!)
+                    val startDirection = parseVec2(userParameters["startDirectionSpline"]!!)
+                    val endDirection = parseVec2(userParameters["endDirectionSpline"]!!)
+                    val s = Spline()
+                    s.addSplinePart(start to start + startDirection, end to end + endDirection)
+                    s
+                } else planeViewToSpline(tRoad.planView)
+
 
             val road = Road(
                 id,
@@ -284,10 +302,4 @@ private fun parseVec2(str: String): Vec2 {
         throw IllegalArgumentException("Vec2 must have 2 parts.")
     }
     return Vec2(parts[0].toDouble(), parts[1].toDouble())
-}
-
-private fun parseSpline(str: String): Spline {
-    val result = Spline()
-
-    return result
 }

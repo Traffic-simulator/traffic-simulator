@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator.serializer
 import opendrive.*
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
+import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.IntersectionRoad
 import ru.nsu.trafficsimulator.model.Layout
@@ -137,7 +138,10 @@ private fun serializeRoad(road: Road): TRoad {
             right.lane.add(rightLane)
         }
     })
-    tRoad.addUserData("realGeometry", road.geometry.splineParts[0].toString())
+    tRoad.addUserData("startSpline", serializeVec2(road.geometry.getPoint(0.0)))
+    tRoad.addUserData("endSpline", serializeVec2(road.geometry.getPoint(road.geometry.length)))
+    tRoad.addUserData("startDirectionSpline", serializeVec2(road.geometry.getDirection(0.0)))
+    tRoad.addUserData("endDirectionSpline", serializeVec2(road.geometry.getDirection(road.geometry.length)))
 
     return tRoad
 }
@@ -225,7 +229,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
 
         })
     }
-    tJunction.addUserData("position", "(${intersection.position.x};${intersection.position.y})")
+    tJunction.addUserData("position", serializeVec2(intersection.position))
     tJunction.addUserData("padding", intersection.padding.toString())
 
     intersection.building?.let {
@@ -283,6 +287,8 @@ fun createUserData(key: String, value: String) = TUserData().apply {
     this.code = key
     this.value = value
 }
+
+private fun serializeVec2(vec2: Vec2) = "(${vec2.x};${vec2.y})"
 
 private fun TJunction.addUserData(key: String, value: String) =
     this.getGAdditionalData().add(createUserData(key, value))
