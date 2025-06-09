@@ -38,6 +38,7 @@ import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
 import java.lang.Math.clamp
+import java.time.LocalTime
 import kotlin.math.*
 
 
@@ -158,7 +159,7 @@ class Main : ApplicationAdapter() {
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto,500)
+        simState.backend.init(dto, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
     }
 
     private fun initializeBuildings(layout: Layout) {
@@ -187,6 +188,7 @@ class Main : ApplicationAdapter() {
         if (state == ApplicationState.Simulator && !simState.isPaused) {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
             updateCars(simState.backend.getVehicles())
+            println(simState.backend.getSimulationTime())
             // TODO:
             // updateSingals(simState.backend.getSingals())
         }

@@ -11,17 +11,17 @@ import jakarta.validation.constraints.NotNull
  */
 class TravelDesireFunction {
 
-    private val function: MutableList<Double>;
+    private val function: List<Double>;
     companion object {
         const val NUMBER_OF_SECTIONS: Int = 24
     }
 
-    constructor(function: @NotNull MutableList<Double>) {
+    constructor(function: @NotNull List<Double>) {
         validateFunction(function)
         this.function = function
     }
 
-    private fun validateFunction(function: MutableList<Double>) {
+    private fun validateFunction(function: List<Double>) {
         require(function.isNotEmpty()) { "Function function cannot be empty." }
         require(function.size == NUMBER_OF_SECTIONS) { "Function size must be is $NUMBER_OF_SECTIONS" }
         for (y in function) {

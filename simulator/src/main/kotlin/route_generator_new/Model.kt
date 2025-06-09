@@ -6,7 +6,8 @@ import kotlin.random.Random
 
 class Model (
     private val travelDesireFunction: TravelDesireFunction,
-    private val buildings: List<Building>) {
+    private var currentTime: Double, // in seconds from 00:00
+    buildings: List<Building>) {
 
     companion object {
         private const val SECONDS_IN_HOUR = 3600;
@@ -15,7 +16,6 @@ class Model (
     }
     private val random = Random.Default
     private val homes : Homes;
-    private var currentTime : Double
     private var meanOfTravelDesire: Double; //мат ожидание того сколько людей хотят поехать куда-нибудь
     private val buildingsMap = mutableMapOf<String, Building>()
     private val buildingsMapByType = mutableMapOf<BuildingTypes, MutableMap<String, Building>>()
@@ -25,7 +25,6 @@ class Model (
 
 
     init {
-        currentTime = 0.0
         meanOfTravelDesire = 0.0
         homes = Homes(buildings)
 

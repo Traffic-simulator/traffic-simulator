@@ -1,29 +1,22 @@
 import mu.KotlinLogging
 import network.Lane
-import heatmap.Segment
 import network.signals.Signal
 import opendrive.OpenDRIVE
-import route_generator_new.BuildingTypes
-import route_generator_new.discrete_function.Building
 import vehicle.Vehicle
+import java.time.LocalTime
 
 class BackendAPI : ISimulation {
 
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
 
-    override fun init(layout: OpenDRIVE, seed: Long): Error? {
-        // Ruslan TODO: read buildings data from layout
-        val buildingParser : BuildingsParser = BuildingsParser(layout)
-
-        val buildings = buildingParser.getBuildings()
-//        buildings.add(Building(BuildingTypes.HOME, 3600, 3600, "100"))
-//        buildings.add(Building(BuildingTypes.WORK, 50, 0, "101"))
-//        buildings.add(Building(BuildingTypes.SHOPPING, 50, 0, "102"))
-//        buildings.add(Building(BuildingTypes.EDUCATION, 50, 0, "103"))
-
-        simulator = Simulator(layout, buildings, seed)
+    override fun init(layout: OpenDRIVE, startingTime: LocalTime, seed: Long): Error? {
+        simulator = Simulator(layout, startingTime, seed)
         return null
+    }
+
+    override fun initRegion(layout: OpenDRIVE, regionId: Int, startingTime: LocalTime, seed: Long): Error? {
+        TODO("Not yet implemented")
     }
 
     override fun updateSimulation(deltaTime: Double) {
@@ -60,6 +53,12 @@ class BackendAPI : ISimulation {
         return lanes.map { segmentToDTO(it) }.toList()
     }
 
+    private val SECONDS_IN_DAY = 60 * 60 * 24
+
+    override fun getSimulationTime(): LocalTime {
+        return LocalTime.ofSecondOfDay(simulator!!.currentTime.toLong() % SECONDS_IN_DAY)
+    }
+
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
         return ISimulation.VehicleDTO(
             vehicle.vehicleId,
@@ -67,7 +66,11 @@ class BackendAPI : ISimulation {
             vehicle.lane.laneId,
             ISimulation.VehicleType.PassengerCar,
             vehicle.position,
-            vehicle.direction)
+            vehicle.direction,
+            vehicle.speed,
+            "Road id: ${vehicle.source.roadId}", // Maybe later will use not road ids
+            "Road id: ${vehicle.destination.roadId}"
+        )
     }
 
     fun signalToDTO(signal: Signal) : ISimulation.SignalDTO {

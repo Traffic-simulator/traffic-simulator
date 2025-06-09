@@ -11,9 +11,10 @@ import javax.swing.ListModel
 
 class RouteGeneratorImpl(
     private val travelDesireFunction: TravelDesireFunction,
+    private val startingTime: Double,     // In seconds
     private val buildings: List<Building>) : IRouteGenerator {
 
-    private val model : Model = Model(travelDesireFunction, buildings);
+    private val model : Model = Model(travelDesireFunction, startingTime, buildings);
     private var despawnList = mutableListOf<Travel>()
     private var vehicleMap = HashMap<Int, Travel>()
     override fun update(

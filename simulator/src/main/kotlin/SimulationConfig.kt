@@ -1,3 +1,5 @@
+import route_generator_new.discrete_function.TravelDesireFunction
+
 class SimulationConfig {
 
     // TODO: move to some kind of real config
@@ -15,5 +17,13 @@ class SimulationConfig {
         // Distance when vehicle can see other vehicles on junction, junction traffic lights
         // TODO: it would be good to depend on speed
         const val JUNCTION_BLOCK_DISTANCE = 50.0
+
+        val defaultTravelDesireDistribution =
+            TravelDesireFunction(listOf(
+                10.0, 10.0, 10.0, 10.0, 10.0, 10.0, // 00:00 - 06:00
+                10.0, 10.0, 10.0, 10.0, 10.0, 10.0, // 06:00 - 12:00
+                10.0, 10.0, 10.0, 10.0, 10.0, 10.0, // 12:00 - 18:00
+                10.0, 10.0, 10.0, 10.0, 10.0, 10.0  // 18:00 - 00:00
+            ))
     }
 }
