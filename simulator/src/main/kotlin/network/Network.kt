@@ -142,6 +142,12 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
         return road.lanes.filter { it.laneId.toString() == laneId }.take(1)[0]
     }
 
+    fun getAllLanes(): List<Lane> {
+        val lanes = ArrayList<Lane>()
+        roads.forEach { lanes.addAll(it.lanes) }
+
+        return lanes
+    }
 
     fun getLanesFromConnection(
         currentLane: Lane,

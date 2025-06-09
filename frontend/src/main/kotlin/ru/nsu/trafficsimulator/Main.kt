@@ -60,6 +60,9 @@ class Main : ApplicationAdapter() {
     private var modelInstance1: ModelInstance? = null
     private var modelBatch: ModelBatch? = null
 
+    private var buildingModel: Model? = null
+    private var buildingScenes = mutableListOf<Scene>()
+
     private var simState: SimulationState = SimulationState(BackendAPI())
     private val carInstances = mutableMapOf<Int, Scene>()
     private var state = ApplicationState.Editor
@@ -96,6 +99,8 @@ class Main : ApplicationAdapter() {
 
         sceneManager = SceneManager()
         sceneAsset1 = GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))
+        val buildingAsset = GLBLoader().load(Gdx.files.internal("models/building.glb"))
+        buildingModel = buildingAsset?.scene?.model
         carModel = sceneAsset1?.scene?.model
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
@@ -183,6 +188,25 @@ class Main : ApplicationAdapter() {
         simState.backend.init(dto, spawnDetails, despawnDetails, 500)
     }
 
+    private fun initializeBuildings(layout: Layout) {
+        buildingScenes.forEach { sceneManager?.removeScene(it) }
+        buildingScenes.clear()
+
+        layout.intersections.values.forEach { intersection ->
+            if (intersection.isBuilding) {
+                val buildingScene = Scene(buildingModel)
+
+                val center = intersection.position.toVec3()
+                buildingScene.modelInstance.transform
+                    .setToTranslation(center.toGdxVec())
+                    .scale(0.7f, 0.7f, 0.7f)
+
+                sceneManager?.addScene(buildingScene)
+                buildingScenes.add(buildingScene)
+            }
+        }
+    }
+
     val FRAMETIME = 0.01 // It's 1 / FPS, duration of one frame in seconds
 
     override fun render() {
@@ -203,6 +227,7 @@ class Main : ApplicationAdapter() {
         ImGui.newFrame()
 
         renderSimulationMenu()
+        initializeBuildings(Editor.layout)
 
         if (state == ApplicationState.Editor) {
             Editor.runImgui()
@@ -221,9 +246,11 @@ class Main : ApplicationAdapter() {
         sceneManager?.render()
 
         if (state == ApplicationState.Editor) {
-            modelBatch?.begin(camera)
-            Editor.render(modelBatch)
-            modelBatch?.end()
+            modelBatch?.let {
+                it.begin(camera)
+                Editor.render(it)
+                it.end()
+            }
         }
 
         imGuiGl3.renderDrawData(ImGui.getDrawData())
@@ -239,7 +266,11 @@ class Main : ApplicationAdapter() {
 
     private fun renderSimulationMenu() {
         ImGui.begin("Simulation Controls")
-        val startStopText = if (state == ApplicationState.Editor) { "Start" } else { "Stop" }
+        val startStopText = if (state == ApplicationState.Editor) {
+            "Start"
+        } else {
+            "Stop"
+        }
         if (ImGui.button(startStopText)) {
             state = when (state) {
                 ApplicationState.Editor -> ApplicationState.Simulator
@@ -275,6 +306,7 @@ class Main : ApplicationAdapter() {
     override fun dispose() {
         image?.dispose()
         carModel?.dispose()
+        buildingModel?.dispose()
         imGuiGl3.shutdown()
         imGuiGlfw.shutdown()
         ImGui.destroyContext()
@@ -298,9 +330,19 @@ class Main : ApplicationAdapter() {
             val carInstance = carInstances[vehicleId]!!
 
             val spline = Deserializer.planeViewToSpline(carRoad.planView)
-            val pointOnSpline = clamp(if (vehicle.direction == Direction.BACKWARD) { spline.length - vehicle.distance } else { vehicle.distance }, 0.0, spline.length)
+            val pointOnSpline = clamp(
+                if (vehicle.direction == Direction.BACKWARD) {
+                    spline.length - vehicle.distance
+                } else {
+                    vehicle.distance
+                }, 0.0, spline.length
+            )
             val pos = spline.getPoint(pointOnSpline)
-            val dir = spline.getDirection(pointOnSpline).normalized() * if (vehicle.direction == Direction.BACKWARD) { -1.0 } else { 1.0 }
+            val dir = spline.getDirection(pointOnSpline).normalized() * if (vehicle.direction == Direction.BACKWARD) {
+                -1.0
+            } else {
+                1.0
+            }
             val right = dir.toVec3().cross(Vec3.UP).normalized()
             val angle = acos(dir.x) * sign(dir.y)
             val laneOffset = (abs(vehicle.laneId) - 0.5)
