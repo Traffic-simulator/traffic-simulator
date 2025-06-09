@@ -35,6 +35,7 @@
     <road id="1" junction="-1" length="8.293954836177603">
         <link>
             <predecessor elementId="1" elementType="junction"/>
+            <successor elementId="103" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -98,6 +99,7 @@
     <road id="10" junction="-1" length="9.998332432167329">
         <link>
             <predecessor elementId="5" elementType="junction"/>
+            <successor elementId="102" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -257,6 +259,7 @@
     <road id="31" junction="-1" length="16.887759189625253">
         <link>
             <predecessor elementId="18" elementType="junction"/>
+            <successor elementId="100" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -384,6 +387,7 @@
     <road id="58" junction="-1" length="9.412722246708006">
         <link>
             <predecessor elementId="20" elementType="junction"/>
+            <successor elementId="101" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
             <speed max="60" unit="km/h"/>
@@ -1729,5 +1733,25 @@
         <connection connectingRoad="44" contactPoint="start" id="5" incomingRoad="39">
             <laneLink from="-1" to="-1"/>
         </connection>
+    </junction>
+    <junction id="100">
+            <userData code="buildingType" value="HOME"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="101">
+            <userData code="buildingType" value="EDUCATION"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="102">
+            <userData code="buildingType" value="WORK"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="103">
+            <userData code="buildingType" value="SHOPPING"/>
+            <userData code="buildingCapacity" value="100"/>
+            <userData code="buildingFullness" value="100"/>
     </junction>
 </OpenDRIVE>

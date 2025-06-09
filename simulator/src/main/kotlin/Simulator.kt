@@ -2,6 +2,7 @@ import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import mu.KotlinLogging
 import network.Network
+import opendrive.ERoadLinkElementType
 import network.Road
 import opendrive.OpenDRIVE
 import route_generator.IRouteGenerator
@@ -9,6 +10,11 @@ import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
 import route_generator.random_generator.RandomRouteGenerator
+import route_generator_new.RouteGeneratorImpl
+import route_generator_new.Travel
+import route_generator_new.discrete_function.Building
+import route_generator_new.discrete_function.TravelDesireFunction
+import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.model.MOBIL
 import kotlin.collections.ArrayList
@@ -17,14 +23,16 @@ import kotlin.random.Random
 
 // Route - source point and destination point.
 // Path - all concrete roads and lanes that vehicle will go
-class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val despawnDetails: ArrayList<Waypoint>, seed: Long) {
+class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long) {
 
     val finder = JunctionIntersectionFinder(openDrive)
     private val logger = KotlinLogging.logger("SIMULATOR")
     val intersections = finder.findIntersection()
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
-    val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, spawnDetails, despawnDetails)
+    //val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, buildings)
+    val travelDesire : TravelDesireFunction = TravelDesireFunction(mutableListOf(10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0))
+    val routeGeneratorAPI: IRouteGenerator = RouteGeneratorImpl(travelDesire, buildings)
     val vehicles: ArrayList<Vehicle> = ArrayList()
 
     fun update(dt: Double): ArrayList<Vehicle> {
@@ -38,13 +46,13 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
         network.updateSignals(dt)
 
         // Unlock trajectories blocked by vehicles with not GREEN traffic lights
-        vehicles.forEach{ it.processTrafficLight() }
+        vehicles.forEach { it.processTrafficLight() }
 
         processNonmandatoryLaneChanges()
 
         // Process vehicles in sorted order due to junction blocking logic
         // Have to sort not by position, but by distance to the closest junction...
-        val sortedVehicles = vehicles.sortedBy   { it.distToClosestJunction() }
+        val sortedVehicles = vehicles.sortedBy { it.distToClosestJunction() }
 
         // Compute accelerations of all vehicles, needs refactor to be done in parallel
         sortedVehicles.forEach { it ->
@@ -95,7 +103,12 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
         for (road in roads) {
             for (lane in road.lanes) {
                 lane.vehicles.forEach {
-                    lane.segments[(it.position / lane.lenOfSegment).toInt()].addVehicleSpeed(it)
+                    val segmentIndex = (it.position / lane.lenOfSegment).toInt()
+                    if (segmentIndex < lane.segments.size) {
+                        lane.segments[segmentIndex].addVehicleSpeed(it)
+                    } else {
+                        lane.segments.last().addVehicleSpeed(it)
+                    }
                 }
                 lane.segments.forEach { it.update() }
                 logger.info{
@@ -106,7 +119,7 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
         }
     }
 
-    private val isPositionFree = object: WaypointSpawnAbilityChecker {
+    private val isPositionFree = object : WaypointSpawnAbilityChecker {
         override fun isFree(waypoint: Waypoint): Boolean {
             val lane = network.getLaneById(waypoint.roadId, waypoint.laneId)
 
@@ -118,7 +131,7 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
         }
     }
 
-    private val createVehicle = object: VehicleCreationListener {
+    private val createVehicle = object : VehicleCreationListener {
         override fun createVehicle(
             source: Waypoint,
             destination: Waypoint,
@@ -131,10 +144,50 @@ class Simulator(openDrive: OpenDRIVE, val spawnDetails: ArrayList<Waypoint>, val
                 destination,
                 onDespawn,
                 rnd.nextInt(5, 9) * 4.0,
-                rnd.nextDouble(1.5, 2.0))
+                rnd.nextDouble(1.5, 2.0)
+            )
             vehicles.add(nw)
             return nw.vehicleId
         }
-    }
 
+        // TODO: this logic is closer to network
+        override fun getWaypointByJunction(junctionId: String, isStart: Boolean): Waypoint {
+            val predecessors = network.roads.stream().filter {
+                it.predecessor!!.getElementType().equals(ERoadLinkElementType.JUNCTION)
+                    && it.predecessor!!.getElementId().equals(junctionId)
+            }.toList()
+            val successors = network.roads.stream().filter {
+                it.successor!!.getElementType().equals(ERoadLinkElementType.JUNCTION)
+                    && it.successor!!.getElementId().equals(junctionId)
+            }.toList()
+
+            if (predecessors.size + successors.size != 1) {
+                throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId")
+            }
+
+            if (predecessors.size == 1) {
+                val road = network.getRoadById(predecessors[0].id)
+                val lanes = road.lanes.filter { it.laneId == (if (isStart) -1 else 1) }.toList()
+                if (lanes.size != 1) {
+                    throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId, don't have lane -1")
+                }
+                return Waypoint(
+                    road.id,
+                    lanes.get(0).laneId.toString(),
+                    if (isStart) Direction.FORWARD else Direction.BACKWARD
+                )
+            }
+
+            val road = network.getRoadById(successors[0].id)
+            val lanes = road.lanes.filter { it.laneId == (if (isStart) 1 else -1) }.toList()
+            if (lanes.size != 1) {
+                throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId, don't have lane 1")
+            }
+            return Waypoint(
+                road.id,
+                lanes.get(0).laneId.toString(),
+                if (isStart) Direction.BACKWARD else Direction.FORWARD
+            )
+        }
+    }
 }
