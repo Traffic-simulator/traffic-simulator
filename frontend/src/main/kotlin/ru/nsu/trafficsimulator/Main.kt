@@ -125,6 +125,7 @@ class Main : ApplicationAdapter() {
 
         // Add ground
         val modelBuilder = ModelBuilder()
+        PBRColorAttribute.createSpecular()
         val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
         modelBuilder.begin()
         val meshPartBuilder = modelBuilder.part(

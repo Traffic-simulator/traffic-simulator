@@ -49,6 +49,13 @@ class Editor {
         private var trafficLights = mutableMapOf<Pair<Road, Boolean>, Scene>()
 
         fun init(camera: Camera, sceneManager: SceneManager) {
+            for (material in trafficLightModel.materials) {
+                for (attribute in material) {
+                    // TODO: convert BaseColorFactor, Metallic, Roughness, SpecularFactor and specularColorHDR into PBR attributes
+                    print("$attribute, ")
+                }
+                println()
+            }
             this.camera = camera
             this.sceneManager = sceneManager
             onLayoutChange(true, true)
