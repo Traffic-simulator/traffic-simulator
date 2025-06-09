@@ -20,6 +20,7 @@ import ru.nsu.trafficsimulator.model.Road
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
+import kotlin.math.min
 
 class ModelGenerator {
     companion object {
@@ -192,15 +193,19 @@ class ModelGenerator {
             val intersectionSdf = { local: Vec2 ->
                 val point = intersection.position + local
                 var minDist = intersectionBoxSize * intersectionBoxSize
-                var laneCount = 1
                 for ((_, road) in intersection.intersectionRoads) {
-                    val dist = (road.geometry.closestPoint(point).first - point).length()
-                    if (abs(dist) < abs(minDist)) {
-                        minDist = dist
-                        laneCount = 1
+                    val (closestPoint, pointOffset) = road.geometry.closestPoint(point)
+                    val direction = road.geometry.getDirection(pointOffset).normalized()
+                    val toRight = direction.toVec3().cross(Vec3.UP)
+                    val laneCount = if ((point - closestPoint).toVec3().dot(toRight) > 0.0) {
+                        road.lane
+                    } else {
+                        0
                     }
+                    val dist = (closestPoint - point).length() - laneCount * LANE_WIDTH
+                    minDist = min(minDist, dist)
                 }
-                minDist - LANE_WIDTH * laneCount
+                minDist
             }
             val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
                 meshPartBuilder.rect(
