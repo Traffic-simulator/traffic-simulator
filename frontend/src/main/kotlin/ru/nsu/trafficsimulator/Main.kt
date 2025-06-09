@@ -64,9 +64,6 @@ class Main : ApplicationAdapter() {
     private var buildingModel: Model? = null
     private var buildingScenes = mutableListOf<Scene>()
 
-    private var trafficLightModel: Model? = null
-    private var trafficLights = mutableMapOf<Pair<Road, Boolean>, Scene>()
-
     private var simState: SimulationState = SimulationState(BackendAPI())
     private val carInstances = mutableMapOf<Int, Scene>()
     private var state = ApplicationState.Editor
@@ -109,9 +106,6 @@ class Main : ApplicationAdapter() {
         sceneManager?.setCamera(camera)
         sceneManager?.environment = environment
         sceneManager?.setShaderProvider(CustomShaderProvider("shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl"))
-
-        trafficLightModel = GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
-
 
         editorInputProcess = Editor.createSphereEditorProcessor()
         inputMultiplexer.addProcessor(editorInputProcess)
@@ -357,24 +351,24 @@ class Main : ApplicationAdapter() {
     }
 
     private fun updateSignals(signalData: List<ISimulation.SignalDTO>) {
-        for (signal in signalData) {
-            val roadId = signal.road.id.toLong()
-            if (!Editor.layout.roads.containsKey(roadId)) {
-                logger.warn { "Failed to find road with id from SignalDTO" }
-                continue
-            }
-            val road = Editor.layout.roads[roadId]!!
-
-            val (intersection, isStart) = if (abs(signal.distFromLaneStart - 1.0) < 1e-3) {
-                road.endIntersection to false
-            } else if (abs(signal.distFromLaneStart) < 1e-3) {
-                road.startIntersection to true
-            } else {
-                logger.warn { "distFromLaneStart was ${signal.distFromLaneStart} which is inconclusive" }
-                continue
-            }
-
-            road.endPadding
-        }
+//        println(signalData)
+//        for (signal in signalData) {
+//            val roadId = signal.road.id.toLong()
+//            if (!Editor.layout.roads.containsKey(roadId)) {
+//                logger.warn { "Failed to find road with id from SignalDTO" }
+//                continue
+//            }
+//            val road = Editor.layout.roads[roadId]!!
+//
+//            val (intersection, isStart) = if (abs(signal.distFromLaneStart - road.length) < 1e-3) {
+//                road.endIntersection to false
+//            } else if (abs(signal.distFromLaneStart) < 1e-3) {
+//                road.startIntersection to true
+//            } else {
+//                logger.warn { "distFromLaneStart was ${signal.distFromLaneStart} which is inconclusive" }
+//                continue
+//            }
+//
+//        }
     }
 }

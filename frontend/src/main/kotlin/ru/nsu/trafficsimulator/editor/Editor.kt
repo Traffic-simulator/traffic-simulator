@@ -1,13 +1,17 @@
 package ru.nsu.trafficsimulator.editor
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.math.Matrix4
 import imgui.ImGui
 import imgui.type.ImInt
+import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.editor.actions.LoadAction
@@ -17,6 +21,9 @@ import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.graphics.ModelGenerator
+import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
+import kotlin.math.sign
 
 class Editor {
     companion object {
@@ -37,6 +44,9 @@ class Editor {
         private var currentTool = tools[0]
 
         private val spheres = mutableMapOf<Long, ModelInstance>()
+
+        private var trafficLightModel: Model = GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
+        private var trafficLights = mutableMapOf<Pair<Road, Boolean>, Scene>()
 
         fun init(camera: Camera, sceneManager: SceneManager) {
             this.camera = camera
@@ -152,6 +162,40 @@ class Editor {
             }
             layoutScene = Scene(ModelGenerator.createLayoutModel(layout))
             sceneManager?.addScene(layoutScene)
+
+            // Update traffic lights
+            for ((id, intersection) in layout.intersections) {
+                if (!intersection.hasSignals) {
+                    continue
+                }
+                for (road in intersection.incomingRoads) {
+                    val isStart = road.startIntersection == intersection
+                    val distFromStart = if (isStart) { 0.0 } else { road.length }
+                    val key = road to isStart
+                    if (!trafficLights.containsKey(key)) {
+                        val trafficLight = Scene(trafficLightModel)
+                        trafficLights[key] = trafficLight
+
+                        sceneManager?.addScene(trafficLights[key])
+                    }
+                    val scene = trafficLights[key]!!
+                    val centerPos = road.getPoint(distFromStart)
+                    val roadDirection = road.getDirection(distFromStart)
+                    val laneId = if (isStart) { -road.leftLane } else { road.rightLane }.toDouble()
+                    val offsetLen = if (isStart) {
+                        road.leftLane
+                    } else {
+                        road.rightLane
+                    }.toDouble() * LANE_WIDTH + LANE_WIDTH / 2
+                    val offset = roadDirection.cross(Vec3.UP).normalized() * laneId.sign * offsetLen
+                    val position = centerPos + offset
+                    val targetPos = centerPos + roadDirection * laneId.sign
+                    val newTransform = Matrix4()
+                        .setTranslation(position.toGdxVec())
+                        .rotateTowardTarget(targetPos.toGdxVec(), Vec3.UP.toGdxVec())
+                    scene.modelInstance.transform.set(newTransform)
+                }
+            }
         }
     }
 }
