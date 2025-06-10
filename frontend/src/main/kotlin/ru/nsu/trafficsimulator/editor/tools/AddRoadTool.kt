@@ -10,6 +10,7 @@ import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.changes.SplitRoadStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
 
@@ -43,7 +44,7 @@ class AddRoadTool : IEditingTool {
         var targetIntersection = findRoadIntersectionAt(intersectionPoint)
 
         if (targetIntersection == null) {
-            val closestRoad = layout!!.findClosestRoad(intersectionPoint)
+            val closestRoad = layout?.let { findRoad(it, intersectionPoint) }
             if (closestRoad != null) {
                 isSpitting = true
                 val (road1, road2) = layout!!.splitRoad(closestRoad, intersectionPoint)
@@ -75,10 +76,8 @@ class AddRoadTool : IEditingTool {
         val startDirection = selectedIntersections[0]!!.position + dir * startDirectionLength
         val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
 
-
         val change = AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
         if (!isSpitting){
-            isSpitting = false
             return change
         } else {
             isSpitting = false

@@ -21,12 +21,17 @@ class SplitRoadStateChange(
     }
 
     override fun revert(layout: Layout) {
-        addRoadStateChange.revert(layout)
         layout.deleteRoad(newRoads.first)
         layout.deleteRoad(newRoads.second)
-        layout.pushIntersection(oldIntersections.first)
-        layout.pushIntersection(oldIntersections.second)
         layout.addRoad(originalRoad)
+        if (!layout.intersections.contains(oldIntersections.first.id)) {
+            layout.pushIntersection(oldIntersections.first)
+        }
+        if (!layout.intersections.contains(oldIntersections.second.id)) {
+            layout.pushIntersection(oldIntersections.second)
+        }
+        addRoadStateChange.revert(layout)
+
     }
 
     override fun isStructuralChange(): Boolean = true
