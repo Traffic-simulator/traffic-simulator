@@ -2,9 +2,7 @@ package ru.nsu.trafficsimulator
 
 import BackendAPI
 import ISimulation
-import OpenDriveReader
 import OpenDriveWriter
-import Waypoint
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -26,10 +24,7 @@ import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
-import route_generator_new.BuildingTypes
-import route_generator_new.discrete_function.Building
 import ru.nsu.trafficsimulator.editor.Editor
-import ru.nsu.trafficsimulator.editor.logger
 import ru.nsu.trafficsimulator.graphics.CustomShaderProvider
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
@@ -38,7 +33,10 @@ import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import vehicle.Direction
 import java.lang.Math.clamp
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.*
 
 
@@ -156,7 +154,10 @@ class Main : ApplicationAdapter() {
 
     fun initializeSimulation(layout: Layout) {
         val dto = serializeLayout(layout)
-        OpenDriveWriter().write(dto, "export.xodr")
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy_HH.mm.ss")
+        val formattedDateTime = currentDateTime.format(formatter)
+        OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, null, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
