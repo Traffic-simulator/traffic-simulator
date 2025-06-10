@@ -4,6 +4,7 @@ class SimulationConfig {
     companion object {
         const val EPS = 0.0001
         const val INF = 1000000.0
+        const val MIN_GAP = 2.0 // meters
 
         // Distance after which vehicle don't see other vehicles
         const val MAX_VALUABLE_DISTANCE = 300.0
@@ -13,6 +14,6 @@ class SimulationConfig {
 
         // Distance when vehicle can see other vehicles on junction, junction traffic lights
         // TODO: it would be good to depend on speed
-        const val JUNCTION_BLOCK_DISTANCE = 80.0
+        const val JUNCTION_BLOCK_DISTANCE = 50.0
     }
 }

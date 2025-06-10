@@ -2,6 +2,7 @@ package vehicle
 
 import SimulationConfig
 import SimulationConfig.Companion.JUNCTION_BLOCK_DISTANCE
+import SimulationConfig.Companion.MIN_GAP
 import Waypoint
 import mu.KotlinLogging
 import network.Lane
@@ -84,14 +85,26 @@ class Vehicle(
         if (closestJunction != null && closestJunction.distance < JUNCTION_BLOCK_DISTANCE) {
             val junction = network.getJunctionById(closestJunction.junctionId)
 
-            // Быть внимательным, если траектория заблокирована машиной перед нами (то есть мы можем проехать)
-            // Не смотря на это заблокироваться от нас она тоже должна.
-            // Can not block if already blocked, perfomance optimization
-            if (junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
-                // Trajectory was succesfully blocked by us, can continue driving
-            } else {
-                // Trajectory was blocked, have to stop before junction
-                junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
+            // We can do that only front vehicle can block trajectories.
+            // But it's dangerous in high speeds, that vehicle can not break before junction.
+            // To smooth out it we can process vehicles not by distance but by predicted time to junctions.
+            if (lane.getMaxPositionVehicle()!! == this) {
+
+                // If Vehicle will get stuck on junction road it have to stop before junction to do not block it.
+                val laneAfterJunction: Lane = getClosestLaneAfterJunction()!!
+                if (lane.roadId == "16" && lane.laneId == 1) {
+                    println(laneAfterJunction.roadId + " " + laneAfterJunction.laneId)
+                }
+                val minPosVeh = laneAfterJunction.getMinPositionVehicle()
+                val hasFreePlace: Boolean = minPosVeh == null || minPosVeh.position > 2 * MIN_GAP + minPosVeh.length
+
+                if (hasFreePlace && junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
+                    // Trajectory was succesfully blocked by us, can continue driving
+                } else {
+                    // Trajectory was blocked, have to stop before junction
+                    junction.unlockTrajectoryVehicle(vehicleId)
+                    junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
+                }
             }
         }
 
@@ -119,6 +132,27 @@ class Vehicle(
             return null
         }
         return ClosestJunction(tmp_lane.first.road.junction, accDist, tmp_lane.first.roadId)
+    }
+
+    private fun getClosestLaneAfterJunction(): Lane? {
+        var tmp_lane: Pair<Lane, Boolean>? = pathBuilder.getNextPathLane(this)
+        var tmp_dir: Direction = direction
+
+        while (tmp_lane != null && tmp_lane.first.road.junction == "-1") {
+            tmp_dir = tmp_dir.opposite(tmp_lane.second)
+
+            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
+        }
+        if (tmp_lane == null) {
+            return null
+        }
+        tmp_dir = tmp_dir.opposite(tmp_lane.second)
+        tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
+
+        if (tmp_lane == null) {
+            return null
+        }
+        return tmp_lane.first
     }
 
     private fun moveToNextLane(): Boolean {
@@ -179,7 +213,10 @@ class Vehicle(
     fun performLaneChange(_lane: Lane) {
         if (_lane == this.lane) return
 
+        logger.info("Veh@$vehicleId changed it's lane from ${lane.laneId} to ${_lane.laneId}")
         laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
+        // TODO: We don't need to traverse all junction, only the closest one...
+        network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
         setNewLane(_lane)
     }
 

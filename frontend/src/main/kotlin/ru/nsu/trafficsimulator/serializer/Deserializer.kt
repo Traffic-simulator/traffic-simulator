@@ -95,7 +95,7 @@ class Deserializer {
                 trafficLight.redTimeSecs = nums[1].toInt()
                 trafficLight.greenTimeSecs = nums[2].toInt()
 
-                if (signal.orientation == "+") {
+                if (signal.orientation == "-") {
                     if (abs(signal.s - road.geometry.length) > 1e-2) {
                         logger.error("Invalid traffic light: it's not at the end: ${signal.s} <-> ${road.geometry.length}")
                         return@forEach

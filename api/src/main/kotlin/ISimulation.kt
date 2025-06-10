@@ -42,7 +42,7 @@ interface ISimulation {
      * TODO: specify userData layout
      * @param layout Layout to initialize simulation
      */
-    fun init(layout: opendrive.OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error?
+    fun init(layout: opendrive.OpenDRIVE, seed: Long): Error?
 
     /**
      * Simulate simulation
