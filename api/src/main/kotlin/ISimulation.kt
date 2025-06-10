@@ -54,22 +54,9 @@ interface ISimulation {
      * @param layout Layout to initialize simulation
      */
     fun init(layout: opendrive.OpenDRIVE,
+             regionId: Int?,
              startingTime: LocalTime,
              seed: Long): Error?
-
-    /**
-     * Initialize simulation state with.
-     * All information about points of interest, global settings, road rule settings
-     * are embedded inside gAdditionalData list with type TUserData as specific elements
-     * This method should not throw but return error as a return value
-     * TODO: specify userData layout
-     * @param layout Layout to initialize simulation
-     */
-    fun initRegion(
-         layout: opendrive.OpenDRIVE,
-         regionId: Int,
-         startingTime: LocalTime,
-         seed: Long): Error?
 
     /**
      * Simulate simulation

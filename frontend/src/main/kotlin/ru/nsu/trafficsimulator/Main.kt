@@ -159,7 +159,7 @@ class Main : ApplicationAdapter() {
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
+        simState.backend.init(dto, null, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
     }
 
     private fun initializeBuildings(layout: Layout) {

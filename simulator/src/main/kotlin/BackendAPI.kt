@@ -10,14 +10,11 @@ class BackendAPI : ISimulation {
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
 
-    override fun init(layout: OpenDRIVE, startingTime: LocalTime, seed: Long): Error? {
+    override fun init(layout: OpenDRIVE, regionId: Int?, startingTime: LocalTime, seed: Long): Error? {
         simulator = Simulator(layout, startingTime, seed)
         return null
     }
 
-    override fun initRegion(layout: OpenDRIVE, regionId: Int, startingTime: LocalTime, seed: Long): Error? {
-        TODO("Not yet implemented")
-    }
 
     override fun updateSimulation(deltaTime: Double) {
         if (simulator == null)
