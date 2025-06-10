@@ -22,6 +22,7 @@ import imgui.glfw.ImGuiImplGlfw
 import mu.KotlinLogging
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
+import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneManager
@@ -35,6 +36,7 @@ import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
+import signals.SignalState
 import vehicle.Direction
 import java.lang.Math.clamp
 import kotlin.math.*
@@ -111,7 +113,7 @@ class Main : ApplicationAdapter() {
         inputMultiplexer.addProcessor(editorInputProcess)
 
         val camController = CameraInputController(camera!!)
-        camController.scrollFactor = -0.5f
+        camController.scrollFactor = -0.2f
         camController.rotateAngle = 180f
         camController.translateUnits = 130f
         camController.target = camera!!.position
@@ -125,8 +127,12 @@ class Main : ApplicationAdapter() {
 
         // Add ground
         val modelBuilder = ModelBuilder()
-        PBRColorAttribute.createSpecular()
         val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
+        print("Ground: ")
+        for (attribute in groundMaterial) {
+            print("$attribute, ")
+        }
+        println()
         modelBuilder.begin()
         val meshPartBuilder = modelBuilder.part(
             "Ground",
@@ -352,24 +358,55 @@ class Main : ApplicationAdapter() {
     }
 
     private fun updateSignals(signalData: List<ISimulation.SignalDTO>) {
-//        println(signalData)
-//        for (signal in signalData) {
-//            val roadId = signal.road.id.toLong()
-//            if (!Editor.layout.roads.containsKey(roadId)) {
-//                logger.warn { "Failed to find road with id from SignalDTO" }
-//                continue
-//            }
-//            val road = Editor.layout.roads[roadId]!!
-//
-//            val (intersection, isStart) = if (abs(signal.distFromLaneStart - road.length) < 1e-3) {
-//                road.endIntersection to false
-//            } else if (abs(signal.distFromLaneStart) < 1e-3) {
-//                road.startIntersection to true
-//            } else {
-//                logger.warn { "distFromLaneStart was ${signal.distFromLaneStart} which is inconclusive" }
-//                continue
-//            }
-//
-//        }
+        println(signalData)
+        for ((key, signalScene) in Editor.trafficLights) {
+            val signalModel = signalScene.modelInstance
+            for (material in signalModel.materials) {
+                material.remove(PBRColorAttribute.Emissive)
+                material.remove(PBRFloatAttribute.EmissiveIntensity)
+            }
+        }
+        for (signal in signalData) {
+            val roadId = signal.road.id.toLong()
+            if (!Editor.layout.roads.containsKey(roadId)) {
+                logger.warn { "Failed to find road with id from SignalDTO" }
+                continue
+            }
+            val road = Editor.layout.roads[roadId]!!
+
+            val (intersection, isStart) = if (abs(signal.distFromLaneStart - road.length) < 1e-3) {
+                road.endIntersection to false
+            } else if (abs(signal.distFromLaneStart) < 1e-3) {
+                road.startIntersection to true
+            } else {
+                logger.warn { "distFromLaneStart was ${signal.distFromLaneStart} which is inconclusive" }
+                continue
+            }
+
+            val signalModel = Editor.trafficLights[road to isStart]!!.modelInstance
+
+            val lightNames = when (signal.state) {
+                SignalState.RED -> setOf("light-red")
+                SignalState.GREEN -> setOf("color-green")
+                SignalState.YELLOW -> setOf("light-yellow")
+                SignalState.RED_YELLOW -> setOf("light-yellow", "light-red")
+            }
+
+            for (lightName in lightNames) {
+                for (material in signalModel.materials) {
+                    if (!lightNames.contains(material.id)) {
+                        continue
+                    }
+                    var color: Color? = null
+                    for (attribute in material) {
+                        if (attribute.type == PBRColorAttribute.BaseColorFactor) {
+                            color = (attribute as PBRColorAttribute).color
+                        }
+                    }
+                    material.set(PBRColorAttribute.createEmissive(color))
+                    material.set(PBRFloatAttribute.createEmissiveIntensity(1.0f))
+                }
+            }
+        }
     }
 }

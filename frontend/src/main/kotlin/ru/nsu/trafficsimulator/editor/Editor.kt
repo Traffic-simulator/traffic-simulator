@@ -5,13 +5,15 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.math.Matrix4
 import imgui.ImGui
-import imgui.type.ImInt
 import net.mgsx.gltf.loaders.glb.GLBLoader
+import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
+import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.editor.actions.LoadAction
@@ -46,15 +48,27 @@ class Editor {
         private val spheres = mutableMapOf<Long, ModelInstance>()
 
         private var trafficLightModel: Model = GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
-        private var trafficLights = mutableMapOf<Pair<Road, Boolean>, Scene>()
+        var trafficLights = mutableMapOf<Pair<Road, Boolean>, Scene>()
 
         fun init(camera: Camera, sceneManager: SceneManager) {
+            val validAttributes = setOf(
+                PBRColorAttribute.BaseColorFactor,
+                PBRFloatAttribute.Metallic,
+                PBRFloatAttribute.Roughness
+            )
             for (material in trafficLightModel.materials) {
+                val toRemove = mutableSetOf<Long>()
                 for (attribute in material) {
-                    // TODO: convert BaseColorFactor, Metallic, Roughness, SpecularFactor and specularColorHDR into PBR attributes
-                    print("$attribute, ")
+                    if (!validAttributes.contains(attribute.type)) {
+                        toRemove.add(attribute.type)
+                    }
+                    if (attribute.type == PBRColorAttribute.BaseColorFactor) {
+                        val colorAttr = attribute as PBRColorAttribute
+                    }
                 }
-                println()
+                for (attribute in toRemove) {
+                    material.remove(attribute)
+                }
             }
             this.camera = camera
             this.sceneManager = sceneManager
