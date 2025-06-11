@@ -24,3 +24,5 @@ fun createSphere(color: Color, radius: Double = 5.0): Model {
     )
     return sphere
 }
+
+data class Holder<T>(var obj: T? = null)
