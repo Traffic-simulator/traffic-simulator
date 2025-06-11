@@ -81,6 +81,7 @@ class Main : ApplicationAdapter() {
     }
 
     override fun render() {
+        // Update
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator && !simState.isPaused) {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
@@ -93,7 +94,7 @@ class Main : ApplicationAdapter() {
             tmpInputProcessor = null
         }
 
-        // UI
+        // Prepare UI
         imGuiGl3.newFrame()
         imGuiGlfw.newFrame()
         ImGui.newFrame()
@@ -109,7 +110,7 @@ class Main : ApplicationAdapter() {
             Gdx.input.inputProcessor = null
         }
 
-        // 3D
+        // Actual Render
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT or GL20.GL_DEPTH_BUFFER_BIT)
@@ -155,7 +156,8 @@ class Main : ApplicationAdapter() {
             }
         }
         if (state == ApplicationState.Simulator) {
-            if (ImGui.button("||")) {
+            val pauseLabel = if (simState.isPaused) { "|>" } else { "||" }
+            if (ImGui.button(pauseLabel)) {
                 simState.isPaused = !simState.isPaused
             }
             ImGui.sameLine()
