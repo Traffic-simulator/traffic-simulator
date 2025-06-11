@@ -1,10 +1,7 @@
 package ru.nsu.trafficsimulator.graphics
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.PerspectiveCamera
-import com.badlogic.gdx.graphics.VertexAttributes
+import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.Environment
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
@@ -18,6 +15,7 @@ import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute
 import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneManager
+import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
@@ -35,7 +33,15 @@ class Visualizer(private var layout: Layout) {
     private val sceneManager = SceneManager()
     private val camera: PerspectiveCamera
 
-    private val carModel = GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))!!.scene.model
+    private val carModels = listOf(
+        GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))!!.scene.model,
+        GLBLoader().load(Gdx.files.internal("models/Ambulance.glb"))!!.scene.model,
+        GLBLoader().load(Gdx.files.internal("models/Mazda RX-7.glb"))!!.scene.model,
+        GLBLoader().load(Gdx.files.internal("models/Convertible.glb"))!!.scene.model,
+        GLBLoader().load(Gdx.files.internal("models/cartoon banana car.glb"))!!.scene.model,
+        GLBLoader().load(Gdx.files.internal("models/Jeep.glb"))!!.scene.model,
+        GLBLoader().load(Gdx.files.internal("models/Car.glb"))!!.scene.model,
+    )
     private val buildingModel = GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model
     private var trafficLightModel: Model = GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
 
@@ -60,6 +66,17 @@ class Visualizer(private var layout: Layout) {
             )
         )
         sceneManager.environment = environment
+
+        sceneManager.skyBox = SceneSkybox(
+            Cubemap(
+                Gdx.files.internal("skybox/right.png"),
+                Gdx.files.internal("skybox/left.png"),
+                Gdx.files.internal("skybox/top.png"),
+                Gdx.files.internal("skybox/bottom.png"),
+                Gdx.files.internal("skybox/front.png"),
+                Gdx.files.internal("skybox/back.png"),
+            )
+        )
 
         camera = PerspectiveCamera(66f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         camera.position?.set(170f, 20f, -170f)
@@ -119,6 +136,7 @@ class Visualizer(private var layout: Layout) {
 
             // Если машина не добавлена, создаем новую ModelInstance
             if (!carInstances.containsKey(vehicleId)) {
+                val carModel = carModels.random()
                 carInstances[vehicleId] = Scene(carModel)
                 sceneManager.addScene(carInstances[vehicleId])
             }
@@ -227,7 +245,9 @@ class Visualizer(private var layout: Layout) {
     }
 
     fun dispose() {
-        carModel.dispose()
+        for (carModel in carModels) {
+            carModel.dispose()
+        }
         buildingModel.dispose()
         trafficLightModel.dispose()
     }

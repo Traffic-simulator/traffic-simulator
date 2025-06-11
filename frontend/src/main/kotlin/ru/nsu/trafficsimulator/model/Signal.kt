@@ -30,8 +30,8 @@ class Signal {
         }
 
         private const val DEFAULT_RED_OFFSET_ON_START: Int = 0
-        private const val DEFAULT_RED_TIME: Int = 10
-        private const val DEFAULT_GREEN_TIME: Int = 10
+        private const val DEFAULT_RED_TIME: Int = 20
+        private const val DEFAULT_GREEN_TIME: Int = 20
         private const val MIN_SIGNAL_TIME: Int = 5
     }
 }
