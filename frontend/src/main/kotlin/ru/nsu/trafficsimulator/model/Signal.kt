@@ -1,6 +1,5 @@
 package ru.nsu.trafficsimulator.model
 
-import ru.nsu.trafficsimulator.editor.logger
 import kotlin.math.max
 
 class Signal {

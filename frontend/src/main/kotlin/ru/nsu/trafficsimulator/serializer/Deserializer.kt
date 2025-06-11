@@ -1,7 +1,7 @@
 package ru.nsu.trafficsimulator.serializer
 
 import opendrive.*
-import ru.nsu.trafficsimulator.editor.logger
+import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2

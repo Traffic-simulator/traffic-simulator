@@ -1,6 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
-import ru.nsu.trafficsimulator.editor.logger
+import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
 
