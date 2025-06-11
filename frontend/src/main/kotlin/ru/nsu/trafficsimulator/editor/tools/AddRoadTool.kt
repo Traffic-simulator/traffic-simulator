@@ -22,8 +22,6 @@ class AddRoadTool : IEditingTool {
     private var existingStartIntersection: Intersection? = null
     private var startPosition: Vec3? = null
 
-    private val selectedIntersections = arrayOfNulls<Intersection>(2)
-    private var selectedIntersectionCount = 0
     override fun getButtonName(): String {
         return name
     }
@@ -57,7 +55,7 @@ class AddRoadTool : IEditingTool {
 
                 return AddRoadStateChange(
                     startPosition to startDirection,
-                    existingEndIntersection,
+                    existingStartIntersection,
                     endPosition to endDirection,
                     existingEndIntersection
                 )
@@ -81,7 +79,6 @@ class AddRoadTool : IEditingTool {
     override fun init(layout: Layout, camera: Camera, reset: Boolean) {
         this.layout = layout
         this.camera = camera
-        selectedIntersectionCount = 0
     }
 
     private fun findRoadIntersectionAt(point: Vec3): Intersection? {

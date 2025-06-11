@@ -127,7 +127,11 @@ class Editor {
             }
             changes.add(change)
             nextChange++
-            change.apply(layout)
+            try {
+                change.apply(layout)
+            } catch (e: Exception) {
+                logger.warn { "Can't apply change: $change due to: ${e.message}" }
+            }
             onLayoutChange(change.isStructuralChange(), false)
         }
 

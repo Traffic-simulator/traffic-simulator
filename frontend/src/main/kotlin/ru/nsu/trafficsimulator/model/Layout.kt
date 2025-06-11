@@ -166,7 +166,7 @@ class Layout {
     }
 
     companion object {
-        const val DEFAULT_INTERSECTION_PADDING = 20.0
+        const val DEFAULT_INTERSECTION_PADDING = 10.0
         const val LANE_WIDTH = 4.0
     }
 }

@@ -10,7 +10,6 @@ import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDI
 class AddIntersectionStateChange(
     val position: Vec3,
     val building: Building? = null,
-    val isMerging: Boolean = false,
     val holder: Holder<Intersection>? = null
 ) : IStateChange {
     var newIntersection: Intersection? = null
@@ -20,7 +19,7 @@ class AddIntersectionStateChange(
         val intersection =
             Intersection(
                 intersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING,
-                building, isMerging
+                building
             )
         layout.intersections[intersectionId] = intersection
 

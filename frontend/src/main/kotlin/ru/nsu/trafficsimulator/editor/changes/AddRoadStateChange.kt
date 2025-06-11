@@ -18,6 +18,10 @@ class AddRoadStateChange(
     private var endStateChange: AddIntersectionStateChange? = null
 
     override fun apply(layout: Layout) {
+        if (newRoad != null) {
+            return
+        }
+
         val realStartIntersection: Intersection = if (startIntersection == null) {
             val startHolder = Holder<Intersection>()
             startStateChange = AddIntersectionStateChange(startPoint.first, holder = startHolder)
@@ -34,6 +38,13 @@ class AddRoadStateChange(
             endHolder.obj!!
         } else {
             endIntersection
+        }
+
+        if (realStartIntersection.position.distance(realEndIntersection.position) <
+            realStartIntersection.padding + realEndIntersection.padding) {
+            endStateChange?.revert(layout)
+            startStateChange?.revert(layout)
+            throw IllegalArgumentException("StartPadding + EndPadding > road.length")
         }
 
         newRoad = layout.addRoad(
