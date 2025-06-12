@@ -15,18 +15,16 @@ class Model (
     }
     private val random = Random.Default
     private val homes : Homes;
-    private var currentTime : Double
-    private var meanOfTravelDesire: Double; //мат ожидание того сколько людей хотят поехать куда-нибудь
+    private var currentTime : Double = 0.0
+    private var meanOfTravelDesire: Double = 0.0; //мат ожидание того сколько людей хотят поехать куда-нибудь
     private val buildingsMap = mutableMapOf<String, Building>()
     private val buildingsMapByType = mutableMapOf<BuildingTypes, MutableMap<String, Building>>()
 
-    //приоритетеная очередь по delay
+    //приоритетная очередь по delay
     private val travelQueue: TravelQueue = TravelQueue()
 
 
     init {
-        currentTime = 0.0
-        meanOfTravelDesire = 0.0
         homes = Homes(buildings)
 
         for (type in BuildingTypes.entries) {

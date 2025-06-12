@@ -10,18 +10,37 @@ import route_generator_new.discrete_function.TravelDesireFunction
 import javax.swing.ListModel
 
 class RouteGeneratorImpl(
-    private val travelDesireFunction: TravelDesireFunction,
+    private val config: ModelConfig,
     private val buildings: List<Building>) : IRouteGenerator {
 
-    private val model : Model = Model(travelDesireFunction, buildings);
+    private val model : Model = Model(config.desireFunction, buildings);
     private var despawnList = mutableListOf<Travel>()
     private var vehicleMap = HashMap<Int, Travel>()
+
+    private var needToSpawnRoutes = mutableListOf<Triple<Waypoint, Waypoint, Travel>>() // 1st - start | 2nd - end | 3rd - travel
     override fun update(
         dt: Double,
         create: VehicleCreationListener,
         isPositionFree: WaypointSpawnAbilityChecker
     ) {
-        // TODO: use isPoistionFree please
+        val needToSpawnRoutesVar = mutableListOf<Triple<Waypoint, Waypoint, Travel>>()
+        //создаем машинки, которые должны были создать в прошлые разы, но линии были заняты
+        for (i in 0 until needToSpawnRoutes.size) {
+            val route = needToSpawnRoutes[i]
+            if (isPositionFree.isFree(route.first)) {
+                val id = create.createVehicle(route.first, route.second, onDespawn)
+                if (id == null) {
+                    throw Exception("creator can't create a vehicle")
+                }
+                vehicleMap[id] = route.third
+            } else {
+                //если не получилось, то перекидываем на следующие разы
+                needToSpawnRoutesVar.add(route)
+            }
+        }
+        needToSpawnRoutes = needToSpawnRoutesVar
+        needToSpawnRoutesVar.clear()
+
         val spawnTravels = model.call(dt, despawnList)//получаем список travel'ов на спавн
         despawnList.clear()
         val spawnRoutes = transformTravelsToRoutes(spawnTravels)//переделываем его в Route'ы
@@ -30,12 +49,17 @@ class RouteGeneratorImpl(
             val startWaypoint = create.getWaypointByJunction(route.startJunctionId, true)
             val endWaypoint = create.getWaypointByJunction(route.endJunctionId, false)
             //создаем машинку по waypoint'ам
-            val id = create.createVehicle(startWaypoint, endWaypoint, onDespawn)
-            //creator возвращает Int?, не понимаю в каких случаях у нас может не заспавниться машинка
-            if (id == null) {
-                throw Exception("creator can't create a vehicle")
+            val travel = spawnTravels[i]
+            if (isPositionFree.isFree(startWaypoint)) {
+                val id = create.createVehicle(startWaypoint, endWaypoint, onDespawn)
+                //creator возвращает Int?, не понимаю в каких случаях у нас может не заспавниться машинка
+                if (id == null) {
+                    throw Exception("creator can't create a vehicle")
+                }
+                vehicleMap[id] = travel
+            } else {
+                needToSpawnRoutes.add(Triple(startWaypoint, endWaypoint, travel))
             }
-            vehicleMap.put(id, spawnTravels[i])
         }
 
     }
