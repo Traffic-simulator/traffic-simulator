@@ -7,45 +7,45 @@ class Travel (
     private var isOnWay : Boolean = false
     private var isSkipLastPoint : Boolean = false
     private var homeId : String = plan[0].junctionId
-    public var startTrialTime : Double = currentTime + plan[currentPosition].durationStop
+    var startTrialTime : Double = currentTime + plan[currentPosition].durationStop
 
-    public fun startTrial(currentTime : Double) {
+    fun startTrial(currentTime : Double) {
         if (startTrialTime > currentTime) {
             throw Exception("Duration of stop dont reached")
         }
         isOnWay = true
     }
 
-    public fun stopTrial(currentTime : Double) {
+    fun stopTrial(currentTime : Double) {
         isSkipLastPoint = false
         isOnWay = false
         currentPosition++
         startTrialTime = currentTime + plan[currentPosition].durationStop
     }
 
-    public fun skipPoint() {
+    fun skipPoint() {
         isSkipLastPoint = true
         isOnWay = false
         currentPosition++
     }
 
-    public fun getIthPoint(i : Int) : TravelPoint{
+    fun getIthPoint(i : Int) : TravelPoint{
         return plan[i]
     }
 
-    public fun getPlanLength() : Int {
+    fun getPlanLength() : Int {
         return planLength
     }
 
-    public fun getCurrentPosition() : Int {
+    fun getCurrentPosition() : Int {
         return currentPosition
     }
 
-    public fun getHomeId() : String {
+    fun getHomeId() : String {
         return homeId
     }
 
-    public fun getIsSkipPoint() : Boolean {
+    fun getIsSkipPoint() : Boolean {
         return isSkipLastPoint
     }
 

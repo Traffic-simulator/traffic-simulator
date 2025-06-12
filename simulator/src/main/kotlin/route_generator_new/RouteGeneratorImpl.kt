@@ -6,8 +6,6 @@ import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
 import route_generator_new.discrete_function.Building
-import route_generator_new.discrete_function.TravelDesireFunction
-import javax.swing.ListModel
 
 class RouteGeneratorImpl(
     private val startingTime: Double,     // In seconds

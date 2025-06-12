@@ -1,6 +1,5 @@
 package route_generator_new
 
-import route_generator_new.discrete_function.Building
 import route_generator_new.discrete_function.TravelDesireFunction
 
 class ModelConfig {
