@@ -1,6 +1,5 @@
 package ru.nsu.trafficsimulator.editor.changes
 
-import ru.nsu.trafficsimulator.editor.Holder
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
@@ -23,19 +22,15 @@ class AddRoadStateChange(
         }
 
         val realStartIntersection: Intersection = if (startIntersection == null) {
-            val startHolder = Holder<Intersection>()
-            startStateChange = AddIntersectionStateChange(startPoint.first, holder = startHolder)
-            startStateChange?.apply(layout)
-            startHolder.obj!!
+            startStateChange = AddIntersectionStateChange(startPoint.first)
+            startStateChange?.apply(layout)!!
         } else {
             startIntersection
         }
 
         val realEndIntersection: Intersection = if (endIntersection == null) {
-            val endHolder = Holder<Intersection>()
-            endStateChange = AddIntersectionStateChange(endPoint.first, holder = endHolder)
-            endStateChange?.apply(layout)
-            endHolder.obj!!
+            endStateChange = AddIntersectionStateChange(endPoint.first)
+            endStateChange?.apply(layout)!!
         } else {
             endIntersection
         }
