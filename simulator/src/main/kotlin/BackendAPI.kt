@@ -2,6 +2,7 @@ import mu.KotlinLogging
 import network.Lane
 import network.signals.Signal
 import opendrive.OpenDRIVE
+import route_generator_new.ModelConfig
 import vehicle.Vehicle
 import java.time.LocalTime
 

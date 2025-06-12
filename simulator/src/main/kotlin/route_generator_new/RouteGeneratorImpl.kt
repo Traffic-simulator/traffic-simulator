@@ -10,11 +10,10 @@ import route_generator_new.discrete_function.TravelDesireFunction
 import javax.swing.ListModel
 
 class RouteGeneratorImpl(
-    private val travelDesireFunction: TravelDesireFunction,
     private val startingTime: Double,     // In seconds
     private val buildings: List<Building>) : IRouteGenerator {
 
-    private val model : Model = Model(travelDesireFunction, startingTime, buildings);
+    private val model : Model = Model(startingTime, buildings)
     private var despawnList = mutableListOf<Travel>()
     private var vehicleMap = HashMap<Int, Travel>()
 
@@ -40,7 +39,6 @@ class RouteGeneratorImpl(
             }
         }
         needToSpawnRoutes = needToSpawnRoutesVar
-        needToSpawnRoutesVar.clear()
 
         val spawnTravels = model.call(dt, despawnList)//получаем список travel'ов на спавн
         despawnList.clear()
@@ -61,7 +59,6 @@ class RouteGeneratorImpl(
             } else {
                 needToSpawnRoutes.add(Triple(startWaypoint, endWaypoint, travel))
             }
-            vehicleMap.put(id, spawnTravels[i])
         }
 
     }

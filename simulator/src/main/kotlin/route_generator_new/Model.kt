@@ -1,11 +1,9 @@
 package route_generator_new
 
 import route_generator_new.discrete_function.Building
-import route_generator_new.discrete_function.TravelDesireFunction
 import kotlin.random.Random
 
 class Model (
-    private val travelDesireFunction: TravelDesireFunction,
     private var currentTime: Double, // in seconds from 00:00
     buildings: List<Building>) {
 
@@ -14,6 +12,7 @@ class Model (
         private const val HOURS_IN_DAY = 24;
         private const val MAX_PLAN_LENGTH = 3
     }
+    private val travelDesireFunction = ModelConfig.defaultTravelDesireDistribution
     private val random = Random.Default
     private val homes : Homes;
     private var meanOfTravelDesire: Double; //мат ожидание того сколько людей хотят поехать куда-нибудь
@@ -171,12 +170,19 @@ class Model (
             var type = listOfNonEmptyBuildingTypes.get(random.nextInt(listOfNonEmptyBuildingTypes.size));
             var buildingDictionaryByType = buildingsMapByType[type]!!;
             var building = buildingDictionaryByType.values.random();//TODO переделать через сидированный рандом
-            var currentPoint = TravelPoint(building.junctionId, 10.0);//TODO переделать
+            var currentPoint = TravelPoint(building.junctionId, getStayTime(type));//TODO переделать
 
             travelPoints.add(currentPoint);
         }
 
         travelPoints.add(startPoint);
         return Travel(travelPoints, currentTime);
+    }
+
+    private fun getStayTime(type: BuildingTypes) : Double {
+        val borders = ModelConfig.stayTimeMap[type]!!
+        val from = borders.first
+        val to = borders.second
+        return random.nextDouble(from, to + 1)
     }
 }

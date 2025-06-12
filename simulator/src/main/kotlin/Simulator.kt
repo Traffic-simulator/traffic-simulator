@@ -28,7 +28,7 @@ import kotlin.random.Random
 class Simulator(openDrive: OpenDRIVE,
                 startingTime: LocalTime,
                 seed: Long,
-                travelDesire: TravelDesireFunction = SimulationConfig.defaultTravelDesireDistribution) {
+) {
 
     val finder = JunctionIntersectionFinder(openDrive)
     private val logger = KotlinLogging.logger("SIMULATOR")
@@ -39,11 +39,10 @@ class Simulator(openDrive: OpenDRIVE,
     val vehicles: ArrayList<Vehicle> = ArrayList()
     val buildings: List<Building>
     var currentTime: Double = startingTime.toSecondOfDay().toDouble()
-
     init {
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
-        routeGeneratorAPI = RouteGeneratorImpl(travelDesire, currentTime, buildings)
+        routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings)
     }
 
     fun update(dt: Double): ArrayList<Vehicle> {
