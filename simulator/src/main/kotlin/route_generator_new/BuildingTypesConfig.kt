@@ -14,7 +14,7 @@ class BuildingTypesConfig {
             val functionWork = mutableListOf(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
             function.put(BuildingTypes.WORK, BuildingTypePriorityFunction(functionShopping))
             val functionEntertainments= mutableListOf(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
-            function.put(BuildingTypes.ENTERTAINMENTS, BuildingTypePriorityFunction(functionShopping))
+            function.put(BuildingTypes.ENTERTAINMENT, BuildingTypePriorityFunction(functionShopping))
         }
     }
 }

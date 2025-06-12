@@ -5,5 +5,5 @@ enum class BuildingTypes {
     SHOPPING,
     EDUCATION,
     WORK,
-    ENTERTAINMENTS
+    ENTERTAINMENT
 }

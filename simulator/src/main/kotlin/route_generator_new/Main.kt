@@ -29,7 +29,7 @@ fun main() {
     buildings.add(Building(BuildingTypes.WORK, 50, 0, "2"))
     buildings.add(Building(BuildingTypes.SHOPPING, 50, 0, "3"))
     buildings.add(Building(BuildingTypes.EDUCATION, 50, 0, "4"))
-    buildings.add(Building(BuildingTypes.ENTERTAINMENTS, 50, 0, "5"))
+    buildings.add(Building(BuildingTypes.ENTERTAINMENT, 50, 0, "5"))
 
     var currentTime = 0.0
     val endTime = 1000.0
