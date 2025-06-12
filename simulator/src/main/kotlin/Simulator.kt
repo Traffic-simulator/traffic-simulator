@@ -10,6 +10,7 @@ import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
 import route_generator.random_generator.RandomRouteGenerator
+import route_generator_new.ModelConfig
 import route_generator_new.RouteGeneratorImpl
 import route_generator_new.Travel
 import route_generator_new.discrete_function.Building
