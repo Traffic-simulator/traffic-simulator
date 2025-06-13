@@ -17,15 +17,14 @@ import imgui.glfw.ImGuiImplGlfw
 import mu.KotlinLogging
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
+import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.serializeLayout
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.PrintWriter
-import java.net.ServerSocket
-import java.net.Socket
+import ru.nsu.trafficsimulator.server.Server
 
 val logger = KotlinLogging.logger("FRONTEND")
+
+const val PORT = 8080
 
 class Main : ApplicationAdapter() {
     private enum class ApplicationState {
@@ -83,7 +82,7 @@ class Main : ApplicationAdapter() {
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto,500)
+        simState.backend.init(dto, 500)
     }
 
     override fun render() {
@@ -164,7 +163,11 @@ class Main : ApplicationAdapter() {
             }
         }
         if (state == ApplicationState.Simulator) {
-            val pauseLabel = if (simState.isPaused) { "|>" } else { "||" }
+            val pauseLabel = if (simState.isPaused) {
+                "|>"
+            } else {
+                "||"
+            }
             if (ImGui.button(pauseLabel)) {
                 simState.isPaused = !simState.isPaused
             }
@@ -187,30 +190,13 @@ class Main : ApplicationAdapter() {
     private fun renderClientServerMenu() {
         ImGui.begin("ClientServer Menu")
         if (ImGui.button("Host")) {
-            val serverSocket = ServerSocket(9999)
+            val hostLayout = hostLayout()
 
-            var clientCounter = 0;
-            println("Сервер запущен и ожидает подключения...")
-
-            while (true) {
-                val clientSocket: Socket = serverSocket.accept()
-
-                if (clientCounter == 4) {
-                    clientSocket.close()
-                }
-
-                println("Клиент подключен: ${clientSocket.inetAddress.hostAddress}")
-                clientCounter++
-
-
-                Thread {
-                    handleClient(clientSocket)
-                }.start()
-
-            }
+            val server = Server(PORT, hostLayout)
+            server.start()
         }
         if (ImGui.button("Client")) {
-            logger.error("I am client")
+            logger.error("I am client") // TODO
         }
         ImGui.end()
     }
@@ -227,23 +213,14 @@ class Main : ApplicationAdapter() {
         visualizer.onResize(width, height)
     }
 
-    fun handleClient(clientSocket: Socket) {
-        clientSocket.use { client ->
+    private fun hostLayout(): Layout {
+        // TODO add merging settings
+        val result = Layout()
+        result.addIntersection(Vec3(150.0, 0.0, 0.0))
+        result.addIntersection(Vec3(-150.0, 0.0, 0.0))
+        result.addIntersection(Vec3(0.0, 0.0, 150.0))
+        result.addIntersection(Vec3(0.0, 0.0, -150.0))
 
-
-            BufferedReader(InputStreamReader(clientSocket.getInputStream())).use { reader ->
-                PrintWriter(clientSocket.getOutputStream(), true).use { writer ->
-                    var message: String?
-                    while (reader.readLine().also { message = it } != null) {
-                        println("Получено сообщение: $message")
-                        writer.println("Эхо: $message")
-                    }
-                }
-
-                println("Ждем некст")
-                reader.readLine()
-            }
-            println("Клиент отключен: ${clientSocket.inetAddress.hostAddress}")
-        }
+        return result
     }
 }

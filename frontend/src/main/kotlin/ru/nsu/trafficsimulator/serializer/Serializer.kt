@@ -12,8 +12,10 @@ import kotlin.math.sin
 
 const val MAX_SPEED = "60"
 
-fun serializeLayout(layout: Layout): OpenDRIVE {
+fun serializeLayout(layout: Layout, districtId : Int = 0): OpenDRIVE {
     val openDrive = OpenDRIVE()
+
+    // TODO save districtId to xodr
 
     var irId = layout.roads.values.maxBy { it.id }.id + 1
     for (intersection in layout.intersections.values) {
