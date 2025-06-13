@@ -47,15 +47,17 @@ class Intersection(
     }
 
     fun connectRoad(road: Road) {
+        if (incomingRoads.isNotEmpty()) {
+            if (isMerging) {
+                throw IllegalArgumentException("Merging intersection can has only one road!")
+            }
+            if (isBuilding) {
+                throw IllegalArgumentException("Building intersection can has only one road!")
+            }
+        }
+
         removeRoad(road)
 
-        if (isMerging && incomingRoads.size > 0) {
-            throw IllegalArgumentException("Merging intersection can has only one road!")
-        }
-
-        if (!isBuilding) {
-            removeRoad(road)
-        }
         for (incomingRoad in incomingRoads) {
             if (incomingRoad !== road) {
                 addIntersectionRoad(road, incomingRoad)
