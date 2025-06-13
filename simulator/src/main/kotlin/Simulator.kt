@@ -71,7 +71,7 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
         routeGeneratorAPI.update(dt, createVehicle, isPositionFree)
 
         // Update segments for heatmap on this cycle
-        updateSegments()
+//        updateSegments()
 
         return vehicles
     }

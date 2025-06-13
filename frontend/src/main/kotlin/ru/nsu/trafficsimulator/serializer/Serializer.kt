@@ -83,7 +83,7 @@ private fun serializeRoad(road: Road): TRoad {
             val trafficLight = road.endIntersection.signals[road]!!
             signal.add(TRoadSignalsSignal().apply {
                 orientation = "-"
-                s = road.geometry.length
+                s = road.length
                 dynamic = TYesNo.YES
                 subtype = "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
             })

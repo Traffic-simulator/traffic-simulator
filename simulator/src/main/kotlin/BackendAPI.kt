@@ -74,7 +74,7 @@ class BackendAPI : ISimulation {
         return ISimulation.SignalDTO(
             signal.road,
             signal.laneId,
-            signal.t,
+            signal.s,
             signal.state
         )
     }
