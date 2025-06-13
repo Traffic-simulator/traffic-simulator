@@ -2,19 +2,19 @@ package ru.nsu.trafficsimulator.graphics
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.VertexAttribute
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
-import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import ktx.math.unaryMinus
-import net.mgsx.gltf.data.material.GLTFpbrMetallicRoughness
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute
-import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Intersection
+import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
 import kotlin.math.abs
@@ -30,18 +30,14 @@ class ModelGenerator {
         private val TO_INTERSECTION_HEIGHT = Vec3.UP * INTERSECTION_HEIGHT
         private const val INTERSECTION_SAMPLES_PER_SIDE = 40
 
-        // Function to create a color with uncapped values
-        private fun colorOf(r: Float, g: Float, b: Float, a: Float): Color {
-            val res = Color()
-            res.r = r
-            res.g = g
-            res.b = b
-            res.a = a
-            return res
-        }
+        private val ROAD_MATERIAL = Material(
+            RoadMaterialAttribute(),
+            PBRFloatAttribute(PBRFloatAttribute.Metallic, 0.0f),
+            PBRFloatAttribute(PBRFloatAttribute.Roughness, 1.0f),
+        )
 
         fun createLayoutModel(layout: Layout): Model {
-            val modelBuilder = ModelBuilder()
+            val modelBuilder = RoadModelBuilder()
             modelBuilder.begin()
             TO_ROAD_HEIGHT.y += 0.01
             for (road in layout.roads.values) {
@@ -53,27 +49,44 @@ class ModelGenerator {
                 addIntersectionToModel(intersection, modelBuilder)
             }
             val model = modelBuilder.end()
+//            val mesh = model.meshes.first()
             return model
+        }
+
+        fun createAttributes(): VertexAttributes {
+            val attributes = arrayOf(
+                VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
+                VertexAttribute(VertexAttributes.Usage.ColorUnpacked, 4, ShaderProgram.COLOR_ATTRIBUTE),
+                VertexAttribute(VertexAttributes.Usage.Normal, 3, ShaderProgram.NORMAL_ATTRIBUTE),
+                VertexAttribute(VertexAttributes.Usage.Generic, 1, GL20.GL_FLOAT, false, "a_Heatmap"),
+            )
+            return VertexAttributes(*attributes)
+        }
+
+        // Function to create a color with uncapped values
+        private fun colorOf(r: Float, g: Float, b: Float, a: Float): Color {
+            val res = Color()
+            res.r = r
+            res.g = g
+            res.b = b
+            res.a = a
+            return res
         }
 
         // Unpacked color in models below is used to convey information about lanes
         // And is used to create road markings
-        fun addRoadToModel(road: Road, modelBuilder: ModelBuilder) {
+        private fun addRoadToModel(road: Road, modelBuilder: ModelBuilder) {
             val node = modelBuilder.node()
             node.translation.set(0.0f, 0.0f, 0.0f)
             val meshPartBuilder = modelBuilder.part(
                 "road${road.id}",
                 GL20.GL_TRIANGLES,
-                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.ColorUnpacked).toLong(),
-                Material(
-                    RoadMaterialAttribute(),
-                    PBRFloatAttribute(PBRFloatAttribute.Metallic, 0.0f),
-                    PBRFloatAttribute(PBRFloatAttribute.Roughness, 1.0f),
-                )
+                createAttributes(),
+                ROAD_MATERIAL
             )
 
-            val hasStart = road.startIntersection.intersectionRoads.size > 0
-            val hasEnd = road.endIntersection.intersectionRoads.size > 0
+            val hasStart = road.startIntersection.intersectionRoads.isNotEmpty()
+            val hasEnd = road.endIntersection.intersectionRoads.isNotEmpty()
             val length = road.geometry.length - if (hasStart) { road.startIntersection.padding } else { 0.0 } - if (hasEnd) { road.endIntersection.padding } else { 0.0 }
 
             val start = if (hasStart) { road.startIntersection.padding } else { 0.0 }
@@ -173,7 +186,11 @@ class ModelGenerator {
             )
         }
 
-        fun addIntersectionToModel(intersection: Intersection, modelBuilder: ModelBuilder) {
+        private fun addIntersectionToModel(intersection: Intersection, modelBuilder: ModelBuilder) {
+            if (intersection.intersectionRoads.isEmpty()) {
+                return
+            }
+
             val intersectionBoxSize = max(intersection.padding * 2.0 * 1.1, 40.0)
             val cellSize = intersectionBoxSize / (INTERSECTION_SAMPLES_PER_SIDE - 1).toDouble()
 
@@ -182,12 +199,8 @@ class ModelGenerator {
             val meshPartBuilder = modelBuilder.part(
                 "intersection${intersection.id}",
                 GL20.GL_TRIANGLES,
-                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal or VertexAttributes.Usage.ColorUnpacked).toLong(),
-                Material(
-                    RoadMaterialAttribute(),
-                    PBRFloatAttribute(PBRFloatAttribute.Metallic, 0.0f),
-                    PBRFloatAttribute(PBRFloatAttribute.Roughness, 1.0f),
-                )
+                createAttributes(),
+                ROAD_MATERIAL
             )
             val intersectionSdf = { local: Vec2 ->
                 val point = intersection.position + local
