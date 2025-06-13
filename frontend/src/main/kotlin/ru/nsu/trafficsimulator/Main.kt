@@ -8,7 +8,8 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.math.MathUtils.clamp
 import imgui.ImGui
@@ -21,6 +22,11 @@ import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.serializeLayout
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.net.ServerSocket
+import java.net.Socket
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -121,6 +127,8 @@ class Main : ApplicationAdapter() {
         ImGui.newFrame()
 
         renderSimulationMenu()
+
+        renderClientServerMenu()
 
         if (state == ApplicationState.Editor) {
             Editor.runImgui()
@@ -231,6 +239,37 @@ class Main : ApplicationAdapter() {
         ImGui.end()
     }
 
+    private fun renderClientServerMenu() {
+        ImGui.begin("ClientServer Menu")
+        if (ImGui.button("Host")) {
+            val serverSocket = ServerSocket(9999)
+
+            var clientCounter = 0;
+            println("Сервер запущен и ожидает подключения...")
+
+            while (true) {
+                val clientSocket: Socket = serverSocket.accept()
+
+                if (clientCounter == 4) {
+                    clientSocket.close()
+                }
+
+                println("Клиент подключен: ${clientSocket.inetAddress.hostAddress}")
+                clientCounter++
+
+
+                Thread {
+                    handleClient(clientSocket)
+                }.start()
+
+            }
+        }
+        if (ImGui.button("Client")) {
+            logger.error("I am client")
+        }
+        ImGui.end()
+    }
+
     override fun dispose() {
         image?.dispose()
         visualizer.dispose()
@@ -241,5 +280,25 @@ class Main : ApplicationAdapter() {
 
     override fun resize(width: Int, height: Int) {
         visualizer.onResize(width, height)
+    }
+
+    fun handleClient(clientSocket: Socket) {
+        clientSocket.use { client ->
+
+
+            BufferedReader(InputStreamReader(clientSocket.getInputStream())).use { reader ->
+                PrintWriter(clientSocket.getOutputStream(), true).use { writer ->
+                    var message: String?
+                    while (reader.readLine().also { message = it } != null) {
+                        println("Получено сообщение: $message")
+                        writer.println("Эхо: $message")
+                    }
+                }
+
+                println("Ждем некст")
+                reader.readLine()
+            }
+            println("Клиент отключен: ${clientSocket.inetAddress.hostAddress}")
+        }
     }
 }
