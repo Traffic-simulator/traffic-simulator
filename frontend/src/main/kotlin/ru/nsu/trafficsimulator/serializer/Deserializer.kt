@@ -178,7 +178,7 @@ class Deserializer {
             val intersection = Intersection(
                 junction.id.toLong(),
                 position = INVALID_INTERSECTION_POSITION,
-                isMergingIntersection = userParameters["mergingIntersection"] == "true"
+                intersectionSettings = MergingIntersectionSettings(0, 1) // tmp vals
             )
 
             userParameters["position"]?.let {
@@ -190,7 +190,8 @@ class Deserializer {
             }
 
             if (userParameters.containsKey("buildingType")) {
-                intersection.building = Building(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
+                intersection.intersectionSettings =
+                    BuildingIntersectionSettings(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
                     capacity = userParameters["buildingCapacity"]!!.toInt()
                 }
             }

@@ -238,7 +238,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
         tJunction.addUserData("buildingFullness", it.fullness.toString())
     }
 
-    if (intersection.isMergingIntersection) {
+    if (intersection.isMerging) {
         tJunction.addUserData("mergingIntersection", "true")
     }
 

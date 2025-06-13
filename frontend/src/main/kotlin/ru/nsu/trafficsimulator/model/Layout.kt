@@ -81,7 +81,7 @@ class Layout {
     fun addBuilding(
         intersection: Intersection, intersectionDirection: Vec3,
         buildingPosition: Vec3, buildingDirection: Vec3,
-        building: Building
+        building: BuildingIntersectionSettings
     ): Road {
         val buildingIntersection = addIntersection(buildingPosition, building)
         return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
@@ -115,10 +115,10 @@ class Layout {
         roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3, building: Building? = null, isMerging: Boolean = false): Intersection {
+    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection =
-            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building, isMerging)
+            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, intersectionSettings)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -140,7 +140,7 @@ class Layout {
     }
 
     private fun deleteIntersection(intersection: Intersection) {
-        if (intersection.isMergingIntersection) {
+        if (intersection.isMerging) {
             return
         }
 

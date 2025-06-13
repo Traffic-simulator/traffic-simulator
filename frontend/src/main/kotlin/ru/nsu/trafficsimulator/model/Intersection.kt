@@ -10,21 +10,27 @@ class Intersection(
     var id: Long,
     var position: Vec2,
     padding: Double = 0.0,
-    var building: Building? = null,
-    var isMergingIntersection: Boolean = false
+    var intersectionSettings: IntersectionSettings? = null
 ) {
-    init {
-        if (building != null && !isMergingIntersection) {
-            throw IllegalArgumentException("Intersection is building and mergingIntersection simultaneously!")
-        }
-    }
-
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: MutableMap<Long, IntersectionRoad> = HashMap()
     var signals: HashMap<Road, Signal> = HashMap()
     private var irNextId: Long = 0
 
-    val isBuilding: Boolean get() = building != null
+    val building: BuildingIntersectionSettings?
+        get() = if (intersectionSettings != null && intersectionSettings is BuildingIntersectionSettings) {
+            intersectionSettings as BuildingIntersectionSettings
+        } else null
+    val isBuilding: Boolean
+        get() = building != null
+
+    val merging: MergingIntersectionSettings?
+        get() = if (intersectionSettings != null && intersectionSettings is MergingIntersectionSettings) {
+            intersectionSettings as MergingIntersectionSettings
+        } else null
+    val isMerging: Boolean
+        get() = merging != null
+
     val hasSignals: Boolean get() = signals.isNotEmpty()
     val incomingRoadsCount get() = incomingRoads.size
     var padding = padding
@@ -43,7 +49,7 @@ class Intersection(
     fun connectRoad(road: Road) {
         removeRoad(road)
 
-        if (isMergingIntersection && incomingRoads.size > 0) {
+        if (isMerging && incomingRoads.size > 0) {
             throw IllegalArgumentException("Merging intersection can has only one road!")
         }
 

@@ -15,14 +15,14 @@ class LayoutMerger {
 
         val mergingIntersections = layouts.map { layout ->
             layout.intersections.values
-                .filter { it.isMergingIntersection }
+                .filter { it.isMerging }
         }
             .flatten()
 
         val used = mutableSetOf<Long>()
         mergingIntersections.forEach { intersection ->
             if (!used.contains(intersection.id)) {
-                intersection.isMergingIntersection = false
+                intersection.intersectionSettings = null
                 used.add(intersection.id)
                 resultLayout.pushIntersection(intersection)
 
@@ -36,7 +36,7 @@ class LayoutMerger {
         }
 
         layouts.forEach { layout ->
-            layout.intersections.values.filter { !it.isMergingIntersection }.forEach {
+            layout.intersections.values.filter { !it.isMerging }.forEach {
                 resultLayout.pushIntersection(it, true)
             }
         }

@@ -1,7 +1,7 @@
 package ru.nsu.trafficsimulator.editor.changes
 
 import ru.nsu.trafficsimulator.math.Vec3
-import ru.nsu.trafficsimulator.model.Building
+import ru.nsu.trafficsimulator.model.BuildingIntersectionSettings
 import ru.nsu.trafficsimulator.model.BuildingType
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
@@ -13,7 +13,7 @@ class AddBuildingStateChange(
     private val endDir: Vec3
 ) : IStateChange {
 
-    private var building: Building = Building(BuildingType.HOME)
+    private var building: BuildingIntersectionSettings = BuildingIntersectionSettings(BuildingType.HOME)
 
     override fun apply(layout: Layout) {
         layout.addBuilding(start, startDir, end, endDir, building)
