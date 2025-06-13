@@ -8,6 +8,6 @@ interface IStateChange {
      */
     fun isStructuralChange(): Boolean = true
 
-    fun apply(layout: Layout)
+    fun apply(layout: Layout) : Any
     fun revert(layout: Layout)
 }
