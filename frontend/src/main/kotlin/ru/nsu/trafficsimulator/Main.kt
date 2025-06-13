@@ -87,6 +87,7 @@ class Main : ApplicationAdapter() {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
             visualizer.updateCars(simState.backend.getVehicles())
             visualizer.updateSignals(simState.backend.getSignalStates())
+            visualizer.updateHeatmap(simState.backend.getSegments())
         }
 
         if (tmpInputProcessor != null) {

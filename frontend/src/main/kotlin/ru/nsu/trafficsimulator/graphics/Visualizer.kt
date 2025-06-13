@@ -228,10 +228,31 @@ class Visualizer(private var layout: Layout) {
         }
     }
 
+    fun updateHeatmap(segments: List<ISimulation.SegmentDTO>) {
+        if (layoutScene == null || layoutScene!!.modelInstance.model.meshes.isEmpty) {
+            return
+        }
+        val mesh = layoutScene!!.modelInstance.model.meshes[0]
+        val parts = layoutScene!!.modelInstance.model.meshParts
+        val nodes = layoutScene!!.modelInstance.model.nodes
+        val roadRegex = Regex("road(\\d+)")
+        for (node in nodes) {
+            for (nodePart in node.parts) {
+                val res = roadRegex.matchEntire(nodePart.meshPart.id) ?: continue
+                val roadId = res.groups[1]?.value?.toLongOrNull() ?: throw Exception("Failed to parse road id??")
+                // TODO: get vertices and indices from VBOWithVAOBatched
+                // TODO: for each vertex find segment with current heat
+                // TODO: update part of VBOWithVAOBatched with new heat values
+                println("Updating road#$roadId")
+            }
+        }
+    }
+
     fun updateLayout(layout: Layout) {
         this.layout = layout
         if (layoutScene != null) {
             sceneManager.removeScene(layoutScene)
+            layoutScene!!.modelInstance.model.dispose()
         }
         layoutScene = Scene(ModelGenerator.createLayoutModel(layout))
         sceneManager.addScene(layoutScene)
