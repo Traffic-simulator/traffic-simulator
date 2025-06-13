@@ -1,7 +1,7 @@
 package ru.nsu.trafficsimulator.editor.changes
 
 import ru.nsu.trafficsimulator.math.Vec3
-import ru.nsu.trafficsimulator.model.BuildingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.BuildingIntersectionSettings
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDING

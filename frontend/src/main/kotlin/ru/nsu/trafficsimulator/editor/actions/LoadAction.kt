@@ -5,6 +5,7 @@ import imgui.ImGui
 import imgui.type.ImString
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.Deserializer
+import ru.nsu.trafficsimulator.server.Client
 
 class LoadAction : IAction {
     private val str = ImString()

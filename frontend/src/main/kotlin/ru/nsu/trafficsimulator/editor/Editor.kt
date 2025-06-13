@@ -7,12 +7,13 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
-import ru.nsu.trafficsimulator.editor.actions.LoadAction
-import ru.nsu.trafficsimulator.editor.actions.SaveAction
+import ru.nsu.trafficsimulator.editor.actions.*
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.server.Client
 import ru.nsu.trafficsimulator.model.*
 
 class Editor {
@@ -24,10 +25,14 @@ class Editor {
             }
 
         private lateinit var camera: Camera
+        private var client: Client? = null
         private var changes = ArrayList<IStateChange>()
         private var nextChange = 0
 
         private val actions = listOf(LoadAction(), SaveAction())
+        private val serverAction = ServerAction()
+        private val clientAction by lazy { ClientAction(client) }
+        private val sendLayoutAction by lazy { SendLayoutAction(client) }
         private val inspectorTool = InspectorTool()
         private val tools = listOf(EditTool(), AddRoadTool(), AddBuildingTool(), DeleteRoadTool(), inspectorTool)
 
@@ -45,6 +50,8 @@ class Editor {
         }
 
         fun runImgui() {
+            renderServerMenu()
+            renderClientMenu()
             if (!viewOnly) {
                 ImGui.begin("Editor")
                 ImGui.labelText("##actions", "Available Actions:")
@@ -83,19 +90,49 @@ class Editor {
                 ImGui.end()
             }
 
-            val change = currentTool.runImgui()
+                val change = currentTool.runImgui()
             if (!viewOnly && change != null) {
-                appendChange(change)
+                    appendChange(change)
+                }
+            }
+
+        private fun renderServerMenu() {
+            ImGui.begin("Client/Server Menu")
+            if (serverAction.runImgui()) {
+                if (serverAction.runAction(layout)) {
+                    onLayoutChange(serverAction.isStructuralAction(), true)
+                }
+            }
+            if (ImGui.button("Create client")) {
+                client = Client()
+            }
+            ImGui.end()
+        }
+
+        private fun renderClientMenu() {
+            if (client != null) {
+                ImGui.begin("Client Menu")
+                if (clientAction.runImgui()) {
+                    if (clientAction.runAction(layout)) {
+                        onLayoutChange(clientAction.isStructuralAction(), true)
+                    }
+                }
+                if (sendLayoutAction.runImgui()) {
+                    if (sendLayoutAction.runAction(layout)) {
+                        onLayoutChange(sendLayoutAction.isStructuralAction(), true)
+                    }
+                }
+                ImGui.end()
             }
         }
 
-        fun render(modelBatch: ModelBatch) {
-            currentTool.render(modelBatch)
+            fun render(modelBatch: ModelBatch) {
+                currentTool.render(modelBatch)
 
-            for ((_, sphere) in spheres) {
-                modelBatch.render(sphere)
+                for ((_, sphere) in spheres) {
+                    modelBatch.render(sphere)
+                }
             }
-        }
 
         fun viewOnlyMode(viewOnly: Boolean) {
             this.viewOnly = viewOnly
@@ -106,60 +143,60 @@ class Editor {
             }
         }
 
-        fun createSphereEditorProcessor(): InputProcessor {
-            return object : InputAdapter() {
-                var grabInput: Boolean = false
-                override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    grabInput = currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
-                    return grabInput
-                }
-
-                override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                    val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
-                    if (!viewOnly && change != null) {
-                        appendChange(change)
+            fun createSphereEditorProcessor(): InputProcessor {
+                return object : InputAdapter() {
+                    var grabInput: Boolean = false
+                    override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                        grabInput = currentTool.handleDown(Vec2(screenX.toDouble(), screenY.toDouble()), button)
+                        return grabInput
                     }
-                    val prevGrabInput = grabInput
-                    grabInput = false
-                    return prevGrabInput
-                }
 
-                override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
-                    currentTool.handleDrag(Vec2(screenX.toDouble(), screenY.toDouble()))
-                    return grabInput
-                }
-            }
-        }
+                    override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                        val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
+                    if (!viewOnly && change != null) {
+                            appendChange(change)
+                        }
+                        val prevGrabInput = grabInput
+                        grabInput = false
+                        return prevGrabInput
+                    }
 
-        private fun appendChange(change: IStateChange) {
-            while (changes.size > nextChange) {
-                changes.removeLast()
-            }
-            changes.add(change)
-            nextChange++
-            try {
-                change.apply(layout)
-            } catch (e: Exception) {
-                logger.warn { "Can't apply change: $change due to: ${e.message}" }
-            }
-            onLayoutChange(change.isStructuralChange(), false)
-        }
-
-        private fun onLayoutChange(generateLayoutMesh: Boolean, reset: Boolean) {
-            if (generateLayoutMesh) {
-                for (observer in onStructuralLayoutChange) {
-                    observer(layout)
+                    override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
+                        currentTool.handleDrag(Vec2(screenX.toDouble(), screenY.toDouble()))
+                        return grabInput
+                    }
                 }
             }
-            currentTool.init(layout, camera, reset)
 
-            this.spheres.clear()
-            val model = createSphere(Color.RED)
-            for ((id, intersection) in layout.intersections) {
-                spheres[id] = ModelInstance(model)
-                spheres[id]!!.transform.setToTranslation(intersection.position.toVec3().toGdxVec())
+            private fun appendChange(change: IStateChange) {
+                while (changes.size > nextChange) {
+                    changes.removeLast()
+                }
+                changes.add(change)
+                nextChange++
+                try {
+                    change.apply(layout)
+                } catch (e: Exception) {
+                    logger.warn { "Can't apply change: $change due to: ${e.message}" }
+                }
+                onLayoutChange(change.isStructuralChange(), false)
             }
-        }
+
+            private fun onLayoutChange(generateLayoutMesh: Boolean, reset: Boolean) {
+                if (generateLayoutMesh) {
+                    for (observer in onStructuralLayoutChange) {
+                        observer(layout)
+                    }
+                }
+                currentTool.init(layout, camera, reset)
+
+                this.spheres.clear()
+                val model = createSphere(Color.RED)
+                for ((id, intersection) in layout.intersections) {
+                    spheres[id] = ModelInstance(model)
+                    spheres[id]!!.transform.setToTranslation(intersection.position.toVec3().toGdxVec())
+                }
+            }
 
         fun updateVehicles(vehicles: List<Vehicle>) {
             inspectorTool.updateVehicles(vehicles)
@@ -180,5 +217,5 @@ class Editor {
         fun getSelectedItem(): Any? {
             return inspectorTool.selectedSubject
         }
+        }
     }
-}
