@@ -131,7 +131,6 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
     private fun bindAttributes(shader: ShaderProgram, locations: IntArray?) {
         var stillValid = cachedLocations.size != 0
         val numAttributes = attributes.size()
-        println("Binding attributes. StillValid = $stillValid; ${cachedLocations}")
 
         if (stillValid) {
             if (locations == null) {
@@ -157,10 +156,9 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
             unbindAttributes(shader)
             cachedLocations.clear()
 
-            print("Binding attributes: ")
+
             for (i in 0..<numAttributes) {
                 val attribute = attributes[i]
-                    print("${attribute.alias}: ${attribute.offset} ")
 
                 if (locations == null) {
                     cachedLocations.add(shader.getAttributeLocation(attribute.alias))
@@ -179,12 +177,10 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
                     0, attribute.offset
                 )
             }
-            println()
         }
     }
 
     private fun unbindAttributes(shaderProgram: ShaderProgram) {
-        println("Tried to unbind")
         if (cachedLocations.size == 0) {
             return
         }

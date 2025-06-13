@@ -49,7 +49,6 @@ class ModelGenerator {
                 addIntersectionToModel(intersection, modelBuilder)
             }
             val model = modelBuilder.end()
-//            val mesh = model.meshes.first()
             return model
         }
 
@@ -58,7 +57,7 @@ class ModelGenerator {
                 VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
                 VertexAttribute(VertexAttributes.Usage.ColorUnpacked, 4, ShaderProgram.COLOR_ATTRIBUTE),
                 VertexAttribute(VertexAttributes.Usage.Normal, 3, ShaderProgram.NORMAL_ATTRIBUTE),
-//                VertexAttribute(VertexAttributes.Usage.Generic, 1, GL20.GL_FLOAT, false, "a_Heatmap"),
+                VertexAttribute(VertexAttributes.Usage.Generic, 1, GL20.GL_FLOAT, false, "a_heatmap"),
             )
             return VertexAttributes(*attributes)
         }
