@@ -8,8 +8,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import mu.KotlinLogging
 
-val logger = KotlinLogging.logger("FRONTEND")
-
 fun createSphere(color: Color, radius: Double = 5.0): Model {
     val modelBuilder = ModelBuilder()
     val material = Material(ColorAttribute.createDiffuse(color))

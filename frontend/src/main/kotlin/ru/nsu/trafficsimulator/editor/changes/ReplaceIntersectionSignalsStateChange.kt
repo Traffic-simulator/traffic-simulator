@@ -8,7 +8,7 @@ import ru.nsu.trafficsimulator.model.Signal
 class ReplaceIntersectionSignalsStateChange(private val intersection: Intersection, private val signals: HashMap<Road, Signal>) : IStateChange {
     private val prevSignals = HashMap(intersection.signals)
 
-    override fun isStructuralChange() = false
+    override fun isStructuralChange() = true
 
     override fun apply(layout: Layout) {
         intersection.signals = signals

@@ -1,19 +1,21 @@
 import mu.KotlinLogging
 import network.Lane
-import heatmap.Segment
 import network.signals.Signal
 import opendrive.OpenDRIVE
+import route_generator_new.ModelConfig
 import vehicle.Vehicle
+import java.time.LocalTime
 
 class BackendAPI : ISimulation {
 
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
 
-    override fun init(layout: OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error? {
-        simulator = Simulator(layout, spawnDetails, despawnDetails, seed)
+    override fun init(layout: OpenDRIVE, regionId: Int?, startingTime: LocalTime, seed: Long): Error? {
+        simulator = Simulator(layout, startingTime, seed)
         return null
     }
+
 
     override fun updateSimulation(deltaTime: Double) {
         if (simulator == null)
@@ -49,6 +51,12 @@ class BackendAPI : ISimulation {
         return lanes.map { segmentToDTO(it) }.toList()
     }
 
+    private val SECONDS_IN_DAY = 60 * 60 * 24
+
+    override fun getSimulationTime(): LocalTime {
+        return LocalTime.ofSecondOfDay(simulator!!.currentTime.toLong() % SECONDS_IN_DAY)
+    }
+
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
         return ISimulation.VehicleDTO(
             vehicle.vehicleId,
@@ -56,14 +64,18 @@ class BackendAPI : ISimulation {
             vehicle.lane.laneId,
             ISimulation.VehicleType.PassengerCar,
             vehicle.position,
-            vehicle.direction)
+            vehicle.direction,
+            vehicle.speed,
+            "Road id: ${vehicle.source.roadId}", // Maybe later will use not road ids
+            "Road id: ${vehicle.destination.roadId}"
+        )
     }
 
     fun signalToDTO(signal: Signal) : ISimulation.SignalDTO {
         return ISimulation.SignalDTO(
             signal.road,
             signal.laneId,
-            signal.t,
+            signal.s,
             signal.state
         )
     }

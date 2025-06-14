@@ -1,5 +1,6 @@
 import signals.SignalState
 import vehicle.Direction
+import java.time.LocalTime
 
 interface ISimulation {
     /**
@@ -19,7 +20,17 @@ interface ISimulation {
      * Distance specifies distance from the start of the road
      * Distance should be positive, and less than length of the road
      */
-    data class VehicleDTO(val id: Int, val road: opendrive.TRoad, val laneId: Int, val type: VehicleType, val distance: Double, val direction: Direction)
+    data class VehicleDTO(
+        val id: Int,
+        val road: opendrive.TRoad,
+        val laneId: Int,
+        val type: VehicleType,
+        val distance: Double,
+        val direction: Direction,
+        val speed: Double,
+        val source: String,
+        val destination: String
+    )
 
     /**
      * Class for info about signal states in the network.
@@ -42,7 +53,10 @@ interface ISimulation {
      * TODO: specify userData layout
      * @param layout Layout to initialize simulation
      */
-    fun init(layout: opendrive.OpenDRIVE, spawnDetails: ArrayList<Waypoint>, despawnDetails: ArrayList<Waypoint>, seed: Long): Error?
+    fun init(layout: opendrive.OpenDRIVE,
+             regionId: Int?,
+             startingTime: LocalTime,
+             seed: Long): Error?
 
     /**
      * Simulate simulation
@@ -64,4 +78,9 @@ interface ISimulation {
      * Getter for all lane-segments DTOs. SegmentDTO assigned to TRoad+laneId.
      */
     fun getSegments(): List<SegmentDTO>
+
+    /**
+     * Get current time of simulation.
+     */
+    fun getSimulationTime(): LocalTime
 }

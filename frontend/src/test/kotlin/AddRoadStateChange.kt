@@ -11,10 +11,11 @@ class AddRoadStateChangeDetailedTest {
     @Test
     fun `add road between two intersections - basic test`() {
         val layout = Layout()
-        val startPos = Intersection(1, Vec2(20.0, 10.0), 0.0)
-        val endPos = Intersection(2, Vec2(-20.0, -10.0), 0.0)
 
-        val change = AddRoadStateChange(startPos, Vec3(-2.0, 0.0, 0.0), endPos, Vec3(2.0, 0.0, 0.0))
+        val change = AddRoadStateChange(
+            Vec3(20.0, 10.0, 0.0) to Vec3(-2.0, 0.0, 0.0), null,
+            Vec3(-20.0, -10.0, 0.0) to Vec3(2.0, 0.0, 0.0), null
+        )
 
         change.apply(layout)
         change.apply(layout)
@@ -36,10 +37,10 @@ class AddRoadStateChangeDetailedTest {
         val endPos = Intersection(2, Vec2(10.0, 0.0), 0.0)
 
         val change = AddRoadStateChange(
+            Vec3(0.0, 0.0, 0.0) to Vec3(1.0, 0.0, 0.0),
             startPos,
-            Vec3(1.0, 0.0, 0.0),
-            endPos,
-            Vec3(-1.0, 0.0, 0.0)
+            Vec3(10.0, 0.0, 0.0) to Vec3(-1.0, 0.0, 0.0),
+            endPos
         )
 
         change.apply(layout)
@@ -57,14 +58,12 @@ class AddRoadStateChangeDetailedTest {
     @Test
     fun `add road should maintain intersections collection`() {
         val layout = Layout()
-        val startPos = Intersection(1, Vec2(0.0, 0.0), 0.0)
-        val endPos = Intersection(2, Vec2(10.0, 0.0), 0.0)
 
         val change = AddRoadStateChange(
-            startPos,
-            Vec3(1.0, 0.0, 0.0),
-            endPos,
-            Vec3(-1.0, 0.0, 0.0)
+            Vec3(0.0, 0.0, 0.0) to Vec3(1.0, 0.0, 0.0),
+            null,
+            Vec3(30.0, 0.0, 0.0) to Vec3(-1.0, 0.0, 0.0),
+            null
         )
 
         assertEquals(0, layout.intersections.size)
@@ -72,10 +71,6 @@ class AddRoadStateChangeDetailedTest {
         change.apply(layout)
 
         assertEquals(2, layout.intersections.size)
-        assertTrue(layout.intersections.containsKey(1))
-        assertTrue(layout.intersections.containsKey(2))
-        assertEquals(startPos, layout.intersections[1])
-        assertEquals(endPos, layout.intersections[2])
 
         change.revert(layout)
 
@@ -89,10 +84,10 @@ class AddRoadStateChangeDetailedTest {
         val endPos = Intersection(2, Vec2(10.0, 0.0), 0.0)
 
         val change = AddRoadStateChange(
+            Vec3(0.0, 0.0, 0.0) to Vec3(1.0, 0.0, 0.0),
             startPos,
-            Vec3(1.0, 0.0, 0.0),
-            endPos,
-            Vec3(-1.0, 0.0, 0.0)
+            Vec3(10.0, 0.0, 0.0) to Vec3(-1.0, 0.0, 0.0),
+            endPos
         )
 
         change.apply(layout)
@@ -113,26 +108,28 @@ class AddRoadStateChangeDetailedTest {
     @Test
     fun `multiple add and undo operations`() {
         val layout = Layout()
-        val pos1 = Intersection(1, Vec2(0.0, 0.0), 0.0)
-        val pos2 = Intersection(2, Vec2(10.0, 0.0), 0.0)
-        val pos3 = Intersection(3, Vec2(20.0, 0.0), 0.0)
 
         val change1 = AddRoadStateChange(
-            pos1,
-            Vec3(1.0, 0.0, 0.0),
-            pos2,
-            Vec3(-1.0, 0.0, 0.0)
+            Vec3(0.0, 0.0, 0.0) to Vec3(1.0, 0.0, 0.0),
+            null,
+            Vec3(30.0, 0.0, 0.0) to Vec3(-1.0, 0.0, 0.0),
+            null
         )
+
         change1.apply(layout)
+        val pos2 = layout.intersections[1] ?: throw IllegalArgumentException("sosi")
+
         assertEquals(1, layout.roads.size)
         assertEquals(0, layout.intersectionRoadsNumber)
 
+
         val change2 = AddRoadStateChange(
+            Vec3(30.0, 0.0, 0.0) to Vec3(1.0, 0.0, 0.0),
             pos2,
-            Vec3(1.0, 0.0, 0.0),
-            pos3,
-            Vec3(-1.0, 0.0, 0.0)
+            Vec3(30.0, 0.0, 30.0) to Vec3(-1.0, 0.0, 0.0),
+            null
         )
+
         change2.apply(layout)
         assertEquals(2, layout.roads.size)
         assertEquals(2, layout.intersectionRoadsNumber)
@@ -151,37 +148,37 @@ class AddRoadStateChangeDetailedTest {
     fun `create and undo triangular road cycle`() {
         val layout = Layout()
 
-        val pos1 = Vec2(0.0, 0.0)
-        val pos2 = Vec2(10.0, 0.0)
-        val pos3 = Vec2(10.0, 10.0)
-
-        val intersection1 = Intersection(1, pos1, 0.0)
-        val intersection2 = Intersection(2, pos2, 0.0)
-        val intersection3 = Intersection(3, pos3, 0.0)
+        val pos1 = Vec3(0.0, 0.0, 0.0)
+        val pos2 = Vec3(30.0, 0.0, 0.0)
+        val pos3 = Vec3(30.0, 0.0, 30.0)
 
         val change1 = AddRoadStateChange(
-            intersection1,
-            Vec3(1.0, 0.0, 0.0),
-            intersection2,
-            Vec3(-1.0, 0.0, 0.0),
+            pos1 to Vec3(1.0, 0.0, 0.0),
+            null,
+            pos2 to Vec3(-1.0, 0.0, 0.0),
+            null
         )
+        change1.apply(layout)
+
+        val int2 = layout.intersections[1] ?: throw IllegalArgumentException("sosi")
 
         val change2 = AddRoadStateChange(
-            intersection2,
-            Vec3(1.0, 0.0, 0.0),
-            intersection3,
-            Vec3(-1.0, 0.0, 0.0),
+            pos2 to Vec3(1.0, 0.0, 0.0),
+            int2,
+            pos3 to Vec3(-1.0, 0.0, 0.0),
+            null
         )
+        change2.apply(layout)
+
+        val int1 = layout.intersections[0] ?: throw IllegalArgumentException("sosi")
+        val int3 = layout.intersections[2] ?: throw IllegalArgumentException("sosi")
 
         val change3 = AddRoadStateChange(
-            intersection3,
-            Vec3(1.0, 0.0, 0.0),
-            intersection1,
-            Vec3(-1.0, 0.0, 0.0),
+            pos1 to Vec3(1.0, 0.0, 0.0),
+            int3,
+            pos3 to Vec3(-1.0, 0.0, 0.0),
+            int1
         )
-
-        change1.apply(layout)
-        change2.apply(layout)
         change3.apply(layout)
 
         assertEquals(3, layout.roads.size)
@@ -200,8 +197,8 @@ class AddRoadStateChangeDetailedTest {
 
         change1.revert(layout)
         assertEquals(0, layout.roads.size)
-        assertEquals(0, intersection1.intersectionRoads.size)
-        assertEquals(0, intersection2.intersectionRoads.size)
-        assertEquals(0, intersection3.intersectionRoads.size)
+        assertEquals(0, int1.intersectionRoads.size)
+        assertEquals(0, int2.intersectionRoads.size)
+        assertEquals(0, int3.intersectionRoads.size)
     }
 }

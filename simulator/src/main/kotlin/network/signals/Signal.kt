@@ -23,7 +23,7 @@ class Signal(val tsignal: TRoadSignalsSignal, tRoad: TRoad, lane: Int) {
     var timeRed = 0.0
     var timeGreen = 0.0
 
-    var nextState = SignalState.RED
+    var nextState = SignalState.GREEN
     var changingStateTime = 0.5
 
     var state: SignalState = SignalState.RED
@@ -32,8 +32,8 @@ class Signal(val tsignal: TRoadSignalsSignal, tRoad: TRoad, lane: Int) {
         }
 
     init {
-        stateChangeTimer = cycle.split("-")[0].toDouble()// time before first change
         timeRed = cycle.split("-")[1].toDouble()
+        stateChangeTimer = cycle.split("-")[0].toDouble() + timeRed// time before first change
         timeGreen = cycle.split("-")[2].toDouble()
     }
 

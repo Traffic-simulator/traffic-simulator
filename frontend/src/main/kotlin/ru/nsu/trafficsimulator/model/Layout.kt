@@ -1,6 +1,6 @@
 package ru.nsu.trafficsimulator.model
 
-import ru.nsu.trafficsimulator.editor.logger
+import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
 
@@ -38,11 +38,20 @@ class Layout {
         val endPoint = endIntersection.position
         val endDir = endDirection.xzProjection()
 
+        val spline = Spline(startPoint, startDir, endPoint, endDir)
+
+        if (spline.length < startIntersection.padding + endIntersection.padding) {
+            throw IllegalArgumentException(
+                "Spline length is ${spline.length}, less than " +
+                    "${startIntersection.padding} + ${endIntersection.padding}"
+            )
+        }
+
         val newRoad = Road(
             id = roadIdCount++,
             startIntersection = startIntersection,
             endIntersection = endIntersection,
-            geometry = Spline(startPoint, startDir, endPoint, endDir)
+            geometry = spline
         )
 
         addRoad(newRoad)
@@ -189,7 +198,7 @@ class Layout {
     }
 
     companion object {
-        const val DEFAULT_INTERSECTION_PADDING = 20.0
+        const val DEFAULT_INTERSECTION_PADDING = 10.0
         const val LANE_WIDTH = 4.0
     }
 }
