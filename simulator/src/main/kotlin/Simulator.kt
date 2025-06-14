@@ -81,7 +81,7 @@ class Simulator(openDrive: OpenDRIVE,
         routeGeneratorAPI.update(dt, createVehicle, isPositionFree)
 
         // Update segments for heatmap on this cycle
-        updateSegments()
+//        updateSegments()
 
         currentTime += dt
         return vehicles

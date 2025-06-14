@@ -76,7 +76,6 @@ class InspectorTool : IEditingTool {
                         incomingLanes.clear()
                         incomingLanes.add(it)
                         drawOutgoingConnections(it.intersection)
-
                     } ?: cleanUpIntersectionRoadsSettings()
 
                     return true
@@ -422,6 +421,7 @@ class InspectorTool : IEditingTool {
         this.camera = camera
         this.layout = layout
         if (reset) {
+            cleanUpIntersectionRoadsSettings()
             selectedIntersection = null
             selectedRoad = null
         }
