@@ -3,8 +3,6 @@ package ru.nsu.trafficsimulator.editor.tools
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
-import com.badlogic.gdx.math.Vector3
-import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.changes.SplitRoadStateChange
@@ -22,7 +20,7 @@ class AddRoadTool : IEditingTool {
 
     private val selectedIntersections = arrayOfNulls<Intersection>(2)
     private var selectedIntersectionCount = 0
-    private var isSpitting = false
+    private var isSpitting = 0
 
     private data class SplitData(
         val originalRoad: Road,
@@ -32,6 +30,7 @@ class AddRoadTool : IEditingTool {
     )
 
     private var splitData: SplitData? = null
+    private var splitData2: SplitData? = null
 
     override fun getButtonName(): String {
         return name
@@ -46,13 +45,15 @@ class AddRoadTool : IEditingTool {
         if (targetIntersection == null) {
             val closestRoad = layout?.let { findRoad(it, intersectionPoint) }
             if (closestRoad != null) {
-                isSpitting = true
+                isSpitting += 1
                 val (road1, road2) = layout!!.splitRoad(closestRoad, intersectionPoint)
 
                 layout!!.roadIdCount = maxOf(layout!!.roadIdCount, road2.id + 1)
-
-                splitData = SplitData(closestRoad, road1, road2, road1.endIntersection)
-
+                if (isSpitting == 1) {
+                    splitData = SplitData(closestRoad, road1, road2, road1.endIntersection)
+                } else if (isSpitting == 2) {
+                    splitData2 = SplitData(closestRoad, road1, road2, road1.endIntersection)
+                }
                 targetIntersection = road1.endIntersection
             } else {
                 targetIntersection = layout!!.addIntersection(intersectionPoint)
@@ -77,10 +78,14 @@ class AddRoadTool : IEditingTool {
         val endDirection = selectedIntersections[1]!!.position + dir * startDirectionLength
 
         val change = AddRoadStateChange(selectedIntersections[0]!!, startDirection.toVec3(), selectedIntersections[1]!!, endDirection.toVec3())
-        if (!isSpitting){
+        if (isSpitting == 0){
             return change
+        } else if (isSpitting == 2) {
+            isSpitting = 0
+            return SplitRoadStateChange(change, splitData!!.originalRoad, Pair(splitData!!.newRoad1, splitData!!.newRoad2),
+                SplitRoadStateChange(null, splitData2!!.originalRoad, Pair(splitData2!!.newRoad1, splitData2!!.newRoad2)))
         } else {
-            isSpitting = false
+            isSpitting = 0
             return SplitRoadStateChange(change, splitData!!.originalRoad, Pair(splitData!!.newRoad1, splitData!!.newRoad2))
         }
     }
