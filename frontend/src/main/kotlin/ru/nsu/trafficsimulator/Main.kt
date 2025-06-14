@@ -18,6 +18,10 @@ import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.serializeLayout
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
 
 val logger = KotlinLogging.logger("FRONTEND")
 
@@ -74,10 +78,13 @@ class Main : ApplicationAdapter() {
 
     fun initializeSimulation(layout: Layout) {
         val dto = serializeLayout(layout)
-        OpenDriveWriter().write(dto, "export.xodr")
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy_HH.mm.ss")
+        val formattedDateTime = currentDateTime.format(formatter)
+        OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto,500)
+        simState.backend.init(dto, null, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
     }
 
     override fun render() {
