@@ -79,6 +79,13 @@ class Road(val troad: TRoad) {
         }
     }
 
+    fun getLaneById(laneId: Int): Lane {
+        val lane = lanes.filter {it.laneId == laneId}
+        assert(lane.size == 1)
+
+        return lane.first()
+    }
+
     companion object {
         val usingRoadTypes = HashSet<ELaneType> (Arrays.asList(
             ELaneType.DRIVING,

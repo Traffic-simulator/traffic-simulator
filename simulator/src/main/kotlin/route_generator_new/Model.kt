@@ -5,15 +5,17 @@ import kotlin.random.Random
 
 class Model (
     private var currentTime: Double, // in seconds from 00:00
-    buildings: List<Building>) {
+    buildings: List<Building>,
+    seed: Long) {
 
     companion object {
         private const val SECONDS_IN_HOUR = 3600;
         private const val HOURS_IN_DAY = 24;
         private const val MAX_PLAN_LENGTH = 3
     }
+    private val random = Random(seed)
     private val travelDesireFunction = ModelConfig.defaultTravelDesireDistribution
-    private val random = Random.Default
+
     private val homes : Homes;
     private var meanOfTravelDesire: Double; //мат ожидание того сколько людей хотят поехать куда-нибудь
     private val buildingsMap = mutableMapOf<String, Building>()

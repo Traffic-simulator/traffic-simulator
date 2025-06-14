@@ -8,10 +8,12 @@ import route_generator.WaypointSpawnAbilityChecker
 import route_generator_new.discrete_function.Building
 
 class RouteGeneratorImpl(
-    private val startingTime: Double,     // In seconds
-    private val buildings: List<Building>) : IRouteGenerator {
+    startingTime: Double,     // In seconds
+    buildings: List<Building>,
+    seed: Long) : IRouteGenerator {
 
-    private val model : Model = Model(startingTime, buildings)
+    private val model : Model = Model(startingTime, buildings, seed)
+
     private var despawnList = mutableListOf<Travel>()
     private var vehicleMap = HashMap<Int, Travel>()
 

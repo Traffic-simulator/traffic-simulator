@@ -26,24 +26,21 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
 
     init {
 
-        val tmp = intersections.filter { it.roadId1 == "8" || it.roadId2 == "8" }
-
-
         println("incidentRoads")
         for (road in roads) {
             incidentJunctions[road] = junctions.filter { road.id in it.connections.keys }
-            println(
-                road.id + "" + (
-                        // get incident Junctions (road is incomingRoad for them)
-                        incidentJunctions[road]?.map {
-                            // in every junction get connections from this road.id
-                            it.connections[road.id]?.map {
-                                // for every connection get the id of the road we connect to
-                                it2 -> it2.connectingRoad
-                            } ?: ""
-                        } ?: ""
-                        )
-            )
+//            println(
+//                road.id + "" + (
+//                        // get incident Junctions (road is incomingRoad for them)
+//                        incidentJunctions[road]?.map {
+//                            // in every junction get connections from this road.id
+//                            it.connections[road.id]?.map {
+//                                // for every connection get the id of the road we connect to
+//                                it2 -> it2.connectingRoad
+//                            } ?: ""
+//                        } ?: ""
+//                        )
+//            )
         }
         // Connections of Lanes. Assign Lane objects as predecessors and successors for Lanes.
         for (road in roads) {
@@ -130,7 +127,7 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
         }
 
         junctions.forEach{ it.initTrajectories() }
-        verbose()
+    //    verbose()
     }
 
     fun getRoadById(id: String): Road {

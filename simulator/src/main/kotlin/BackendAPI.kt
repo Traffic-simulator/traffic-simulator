@@ -16,13 +16,20 @@ class BackendAPI : ISimulation {
         return null
     }
 
+    
+    override fun updateSimulation(deltaTimeMillis: Long) {
 
-    override fun updateSimulation(deltaTime: Double) {
         if (simulator == null)
             return
 
+        // TODO: Probably SimulationConfig should not be used here
+        assert(deltaTimeMillis % SimulationConfig.SIMULATION_FRAME_MILLIS == 0L)
+
+        val iters = deltaTimeMillis / SimulationConfig.SIMULATION_FRAME_MILLIS
         val startNanos = System.nanoTime()
-        simulator!!.update(deltaTime)
+        for (i in 0 until iters) {
+            simulator!!.update(SimulationConfig.SIMULATION_FRAME_MILLIS.toDouble() / 1000.0)
+        }
         logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
     }
 
