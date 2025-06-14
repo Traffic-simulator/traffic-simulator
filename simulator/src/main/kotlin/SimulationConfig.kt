@@ -1,3 +1,5 @@
+import route_generator_new.discrete_function.TravelDesireFunction
+
 class SimulationConfig {
 
     // TODO: move to some kind of real config

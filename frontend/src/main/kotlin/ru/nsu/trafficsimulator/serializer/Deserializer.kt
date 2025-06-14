@@ -1,7 +1,7 @@
 package ru.nsu.trafficsimulator.serializer
 
 import opendrive.*
-import ru.nsu.trafficsimulator.editor.logger
+import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
@@ -95,15 +95,15 @@ class Deserializer {
                 trafficLight.redTimeSecs = nums[1].toInt()
                 trafficLight.greenTimeSecs = nums[2].toInt()
 
-                if (signal.orientation == "+") {
+                if (signal.orientation == "-") {
                     if (abs(signal.s - road.geometry.length) > 1e-2) {
-                        logger.error("Invalid traffic light: it's on at the end: ${signal.s} <-> ${road.geometry.length}")
+                        logger.error("Invalid traffic light: it's not at the end: ${signal.s} <-> ${road.geometry.length}")
                         return@forEach
                     }
                     endIntersection.signals[road] = trafficLight
                 } else {
                     if (abs(signal.s) > 1e-2) {
-                        logger.error("Invalid traffic light: it's on at the start: ${signal.s} <-> 0.0")
+                        logger.error("Invalid traffic light: it's not at the start: ${signal.s} <-> 0.0")
                         return@forEach
                     }
                     startIntersection.signals[road] = trafficLight

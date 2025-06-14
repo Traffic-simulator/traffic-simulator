@@ -11,29 +11,40 @@ import route_generator.IRouteGenerator
 import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
+import route_generator_new.ModelConfig
 import route_generator_new.RouteGeneratorImpl
 import route_generator_new.discrete_function.Building
 import route_generator_new.discrete_function.TravelDesireFunction
 import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.model.MOBIL
+import java.time.LocalTime
 import kotlin.collections.ArrayList
 import kotlin.math.abs
 import kotlin.random.Random
 
 // Route - source point and destination point.
 // Path - all concrete roads and lanes that vehicle will go
-class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long) {
+class Simulator(openDrive: OpenDRIVE,
+                startingTime: LocalTime,
+                seed: Long,
+) {
 
     val finder = JunctionIntersectionFinder(openDrive)
     private val logger = KotlinLogging.logger("SIMULATOR")
     val intersections = finder.findIntersection()
     val network: Network = Network(openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
-    //val routeGeneratorAPI: IRouteGenerator = RandomRouteGenerator(rnd, buildings)
-    val travelDesire : TravelDesireFunction = TravelDesireFunction(mutableListOf(10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0))
-    val routeGeneratorAPI: IRouteGenerator = RouteGeneratorImpl(travelDesire, buildings, seed)
+    val routeGeneratorAPI: IRouteGenerator
+
     val vehicles: ArrayList<Vehicle> = ArrayList()
+    val buildings: List<Building>
+    var currentTime: Double = startingTime.toSecondOfDay().toDouble()
+    init {
+        val buildingParser = BuildingsParser(openDrive)
+        buildings = buildingParser.getBuildings()
+        routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings)
+    }
 
     fun update(dt: Double): ArrayList<Vehicle> {
         /*
@@ -83,6 +94,7 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
         */
         updateSegments()
 
+        currentTime += dt
         return vehicles
     }
 

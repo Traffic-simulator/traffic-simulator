@@ -7,16 +7,13 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
-import imgui.type.ImInt
-import net.mgsx.gltf.scene3d.scene.Scene
-import net.mgsx.gltf.scene3d.scene.SceneManager
 import ru.nsu.trafficsimulator.editor.actions.LoadAction
 import ru.nsu.trafficsimulator.editor.actions.SaveAction
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
+import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
-import ru.nsu.trafficsimulator.graphics.ModelGenerator
 
 class Editor {
     companion object {
@@ -25,9 +22,8 @@ class Editor {
                 field = value
                 onLayoutChange(true, true)
             }
-        private var layoutScene: Scene? = null
-        var sceneManager: SceneManager? = null
-        var camera: Camera? = null
+
+        private lateinit var camera: Camera
         private var changes = ArrayList<IStateChange>()
         private var nextChange = 0
 
@@ -38,10 +34,11 @@ class Editor {
 
         private val spheres = mutableMapOf<Long, ModelInstance>()
 
-        fun init(camera: Camera, sceneManager: SceneManager) {
+        var onStructuralLayoutChange = mutableListOf<(Layout) -> Unit>()
+
+        fun init(camera: Camera) {
             this.camera = camera
-            this.sceneManager = sceneManager
-            onLayoutChange(true, true)
+            onLayoutChange(generateLayoutMesh = true, reset = true)
         }
 
         fun runImgui() {
@@ -127,15 +124,21 @@ class Editor {
             }
             changes.add(change)
             nextChange++
-            change.apply(layout)
+            try {
+                change.apply(layout)
+            } catch (e: Exception) {
+                logger.warn { "Can't apply change: $change due to: ${e.message}" }
+            }
             onLayoutChange(change.isStructuralChange(), false)
         }
 
         private fun onLayoutChange(generateLayoutMesh: Boolean, reset: Boolean) {
             if (generateLayoutMesh) {
-                updateLayout()
+                for (observer in onStructuralLayoutChange) {
+                    observer(layout)
+                }
             }
-            currentTool.init(layout, camera!!, reset)
+            currentTool.init(layout, camera, reset)
 
             this.spheres.clear()
             val model = createSphere(Color.RED)
@@ -145,13 +148,6 @@ class Editor {
             }
         }
 
-        private fun updateLayout() {
-            logger.info("Updating layout, roads: ${layout.roads.size}, intersections: ${layout.intersections.size}")
-            if (layoutScene != null) {
-                sceneManager?.removeScene(layoutScene)
-            }
-            layoutScene = Scene(ModelGenerator.createLayoutModel(layout))
-            sceneManager?.addScene(layoutScene)
-        }
+
     }
 }

@@ -2,11 +2,7 @@ import jakarta.xml.bind.JAXBContext
 import jakarta.xml.bind.JAXBException
 import jakarta.xml.bind.Marshaller
 import opendrive.OpenDRIVE
-import java.io.FileNotFoundException
-import java.io.FileReader
-
-import java.io.FileWriter
-import java.io.IOException
+import java.io.*
 
 
 class OpenDriveWriter {
@@ -16,12 +12,14 @@ class OpenDriveWriter {
         val marshaller: Marshaller = context.createMarshaller()
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, java.lang.Boolean.TRUE)
 
-        val writer = try {
-            FileWriter("src/main/resources/$filename")
-        } catch (e: FileNotFoundException) {
-            FileWriter("../src/main/resources/$filename")
+        val prefix = "src/main/resources/export/"
+
+        File(prefix).mkdirs()
+        val file = File("$prefix$filename")
+        if (!file.exists()) {
+            file.createNewFile()
         }
 
-        marshaller.marshal(drive, writer)
+        marshaller.marshal(drive, FileWriter(file))
     }
 }
