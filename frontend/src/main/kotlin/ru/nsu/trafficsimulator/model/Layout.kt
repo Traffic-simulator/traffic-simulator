@@ -103,26 +103,27 @@ class Layout {
         road.startIntersection.let {
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0 && deleteIntersections) {
-                intersections.remove(it.id)
-            if (it.incomingRoadsCount == 0) {
                 deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0 && deleteIntersections) {
-                intersections.remove(it.id)
-            if (it.incomingRoadsCount == 0) {
                 deleteIntersection(it)
             }
+            roads.remove(road.id)
         }
-        roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings): Intersection {
+    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings?): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection =
-            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, intersectionSettings)
+            Intersection(
+                newIntersectionId,
+                position.xzProjection(),
+                DEFAULT_INTERSECTION_PADDING,
+                intersectionSettings
+            )
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -190,7 +191,7 @@ class Layout {
     fun splitRoad(originalRoad: Road, clickPoint: Vec3): Triple<Road, Road, Intersection> {
         val (closestPoint, splitGlobal) = originalRoad.geometry.closestPoint(clickPoint.xzProjection())
 
-        val newIntersection = addIntersection(closestPoint.toVec3())
+        val newIntersection = addIntersection(closestPoint.toVec3(), null)
 
         val firstSpline = originalRoad.geometry.copy(
             startPadding = originalRoad.startPadding - DEFAULT_INTERSECTION_PADDING,
@@ -216,7 +217,7 @@ class Layout {
             geometry = secondSpline,
         )
 
-        return Triple(road1, road2,  newIntersection)
+        return Triple(road1, road2, newIntersection)
     }
 
     companion object {

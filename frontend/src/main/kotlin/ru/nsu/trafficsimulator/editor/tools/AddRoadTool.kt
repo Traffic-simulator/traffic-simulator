@@ -146,6 +146,6 @@ class AddRoadTool : IEditingTool {
             layout.roadIdCount = maxOf(layout.roadIdCount, road2.id + 1)
             splitResults.add(SplitData(road, road1, road2, road1.endIntersection))
             road1.endIntersection
-        } ?: layout.addIntersection(position)
+        } ?: layout.addIntersection(position, null)
     }
 }
