@@ -232,18 +232,35 @@ class Visualizer(private var layout: Layout) {
         if (layoutScene == null || layoutScene!!.modelInstance.model.meshes.isEmpty) {
             return
         }
-        val mesh = layoutScene!!.modelInstance.model.meshes[0]
-        val parts = layoutScene!!.modelInstance.model.meshParts
         val nodes = layoutScene!!.modelInstance.model.nodes
         val roadRegex = Regex("road(\\d+)")
         for (node in nodes) {
             for (nodePart in node.parts) {
-                val res = roadRegex.matchEntire(nodePart.meshPart.id) ?: continue
+                val meshPart = nodePart.meshPart
+                val res = roadRegex.matchEntire(meshPart.id) ?: continue
                 val roadId = res.groups[1]?.value?.toLongOrNull() ?: throw Exception("Failed to parse road id??")
-                // TODO: get vertices and indices from VBOWithVAOBatched
-                // TODO: for each vertex find segment with current heat
-                // TODO: update part of VBOWithVAOBatched with new heat values
-                println("Updating road#$roadId")
+                val mesh = meshPart.mesh
+                val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+                mesh.getVertices(vertices)
+                val indices = ShortArray(mesh.numIndices)
+                mesh.getIndices(indices)
+
+                // TODO: calculate that based on attributes
+                val attributes = mesh.vertexAttributes
+                val colorAttrib = attributes.findByUsage(VertexAttributes.Usage.ColorUnpacked)
+                val offsetInColorForOffset = 1
+                val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+
+                for (i in 0..<meshPart.size) {
+                    val vertexIndex = indices[meshPart.offset + i]
+                    val offset = vertices[colorAttrib.offset / 4 + offsetInColorForOffset]
+//                    roadSegments = segments.find { it.road.id.toLong() == roadId && it.}
+                    // TODO: for each vertex find segment with current heat
+                    vertices[heatmapAttrib.offset / 4 + vertexIndex] = 1.0f
+                }
+                // TODO: update only a part of VBOWithVAOBatched with new heat values
+                mesh.updateVertices(0, vertices)
+//                println("Updating road#$roadId")
             }
         }
     }

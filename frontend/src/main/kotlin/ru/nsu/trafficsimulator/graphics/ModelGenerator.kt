@@ -162,6 +162,7 @@ class ModelGenerator {
                     prevLeft = prevRight.also { prevRight = prevLeft }
                 }
 
+                // TODO: Divide road into lines
                 insertSegment(left, pos, right, (i - 1) * ROAD_SEGMENT_LEN.toDouble(), i * ROAD_SEGMENT_LEN.toDouble())
 
                 prevPos = pos

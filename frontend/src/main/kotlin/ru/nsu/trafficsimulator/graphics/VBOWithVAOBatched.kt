@@ -197,7 +197,7 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
     private fun bindData(gl: GL20) {
         if (isDirty) {
             gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandle)
-            (byteBuffer as Buffer).limit(buffer!!.limit() * 4)
+            (byteBuffer as Buffer).limit(buffer.limit() * 4)
             gl.glBufferData(GL20.GL_ARRAY_BUFFER, byteBuffer.limit(), byteBuffer, usage)
             isDirty = false
         }
