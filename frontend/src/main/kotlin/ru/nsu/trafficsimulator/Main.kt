@@ -86,26 +86,7 @@ class Main : ApplicationAdapter() {
 //        Editor.layout = Deserializer.deserialize(dto)
         simState.backend.init(dto, null, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
     }
-      
-    private fun initializeBuildings(layout: Layout) {
-        buildingScenes.forEach { sceneManager?.removeScene(it) }
-        buildingScenes.clear()
 
-        layout.intersections.values.forEach { intersection ->
-            if (intersection.isBuilding) {
-                val buildingScene = Scene(buildingModel)
-                val center = intersection.position.toVec3()
-                buildingScene.modelInstance.transform
-                    .setToTranslation(center.toGdxVec())
-                    .scale(0.7f, 0.7f, 0.7f)
-
-                sceneManager?.addScene(buildingScene)
-                buildingScenes.add(buildingScene)
-            }
-        }
-    }
-
-    
     override fun render() {
         // Update
         val frameStartTime = System.nanoTime()

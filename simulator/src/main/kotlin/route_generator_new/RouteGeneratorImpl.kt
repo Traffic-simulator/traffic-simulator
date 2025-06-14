@@ -8,8 +8,8 @@ import route_generator.WaypointSpawnAbilityChecker
 import route_generator_new.discrete_function.Building
 
 class RouteGeneratorImpl(
-    private val startingTime: Double,     // In seconds  
-    private vale buildings: List<Building>,
+    startingTime: Double,     // In seconds
+    buildings: List<Building>,
     seed: Long) : IRouteGenerator {
 
     private val model : Model = Model(startingTime, buildings, seed)

@@ -43,7 +43,7 @@ class Simulator(openDrive: OpenDRIVE,
     init {
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
-        routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings)
+        routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings, seed)
     }
 
     fun update(dt: Double): ArrayList<Vehicle> {

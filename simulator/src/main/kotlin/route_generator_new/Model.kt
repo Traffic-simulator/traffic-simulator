@@ -5,7 +5,8 @@ import kotlin.random.Random
 
 class Model (
     private var currentTime: Double, // in seconds from 00:00
-    buildings: List<Building>) {
+    buildings: List<Building>,
+    seed: Long) {
 
     companion object {
         private const val SECONDS_IN_HOUR = 3600;
