@@ -192,7 +192,7 @@ class Simulator(openDrive: OpenDRIVE,
             val lane = network.getLaneById(waypoint.roadId, waypoint.laneId)
 
             val minVeh = lane.getMinPositionVehicle()
-            if (minVeh == null || minVeh!!.position > 30) {
+            if (minVeh == null || minVeh!!.position - minVeh.length > SimulationConfig.MIN_GAP) {
                 return true
             }
             return false
