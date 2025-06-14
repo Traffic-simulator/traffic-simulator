@@ -46,9 +46,9 @@ interface ISimulation {
 
     /**
      * Simulate simulation
-     * @param deltaTime time interval to simulate
+     * @param deltaTime time interval to simulate in millis!
      */
-    fun updateSimulation(deltaTime: Double)
+    fun updateSimulation(deltaTimeMillis: Long)
 
     /**
      * Get states of vehicles in simulation

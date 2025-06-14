@@ -13,25 +13,25 @@ class BackendAPI : ISimulation {
     var simulator: Simulator? = null
 
     override fun init(layout: OpenDRIVE, seed: Long): Error? {
-        // Ruslan TODO: read buildings data from layout
-        val buildingParser : BuildingsParser = BuildingsParser(layout)
-
+        val buildingParser = BuildingsParser(layout)
         val buildings = buildingParser.getBuildings()
-//        buildings.add(Building(BuildingTypes.HOME, 3600, 3600, "100"))
-//        buildings.add(Building(BuildingTypes.WORK, 50, 0, "101"))
-//        buildings.add(Building(BuildingTypes.SHOPPING, 50, 0, "102"))
-//        buildings.add(Building(BuildingTypes.EDUCATION, 50, 0, "103"))
 
         simulator = Simulator(layout, buildings, seed)
         return null
     }
 
-    override fun updateSimulation(deltaTime: Double) {
+    override fun updateSimulation(deltaTimeMillis: Long) {
         if (simulator == null)
             return
 
+        // TODO: Probably SimulationConfig should not be used here
+        assert(deltaTimeMillis % SimulationConfig.SIMULATION_FRAME_MILLIS == 0L)
+
+        val iters = deltaTimeMillis / SimulationConfig.SIMULATION_FRAME_MILLIS
         val startNanos = System.nanoTime()
-        simulator!!.update(deltaTime)
+        for (i in 0 until iters) {
+            simulator!!.update(SimulationConfig.SIMULATION_FRAME_MILLIS.toDouble() / 1000.0)
+        }
         logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
     }
 

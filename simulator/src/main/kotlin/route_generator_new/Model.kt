@@ -6,14 +6,15 @@ import kotlin.random.Random
 
 class Model (
     private val travelDesireFunction: TravelDesireFunction,
-    private val buildings: List<Building>) {
+    buildings: List<Building>,
+    seed: Long) {
 
     companion object {
         private const val SECONDS_IN_HOUR = 3600;
         private const val HOURS_IN_DAY = 24;
         private const val MAX_PLAN_LENGTH = 3
     }
-    private val random = Random.Default
+    private val random = Random(seed)
     private val homes : Homes;
     private var currentTime : Double
     private var meanOfTravelDesire: Double; //мат ожидание того сколько людей хотят поехать куда-нибудь

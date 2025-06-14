@@ -10,10 +10,11 @@ import route_generator_new.discrete_function.TravelDesireFunction
 import javax.swing.ListModel
 
 class RouteGeneratorImpl(
-    private val travelDesireFunction: TravelDesireFunction,
-    private val buildings: List<Building>) : IRouteGenerator {
+    travelDesireFunction: TravelDesireFunction,
+    buildings: List<Building>,
+    seed: Long) : IRouteGenerator {
 
-    private val model : Model = Model(travelDesireFunction, buildings);
+    private val model : Model = Model(travelDesireFunction, buildings, seed);
     private var despawnList = mutableListOf<Travel>()
     private var vehicleMap = HashMap<Int, Travel>()
     override fun update(

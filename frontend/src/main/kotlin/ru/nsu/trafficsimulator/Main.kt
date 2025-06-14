@@ -47,7 +47,7 @@ class Main : ApplicationAdapter() {
         Simulator,
     }
 
-    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Double = 1.0)
+    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Long = 1)
 
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
@@ -158,7 +158,7 @@ class Main : ApplicationAdapter() {
         OpenDriveWriter().write(dto, "export.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto,500)
+        simState.backend.init(dto,555)
     }
 
     private fun initializeBuildings(layout: Layout) {
@@ -168,7 +168,6 @@ class Main : ApplicationAdapter() {
         layout.intersections.values.forEach { intersection ->
             if (intersection.isBuilding) {
                 val buildingScene = Scene(buildingModel)
-
                 val center = intersection.position.toVec3()
                 buildingScene.modelInstance.transform
                     .setToTranslation(center.toGdxVec())
@@ -180,7 +179,7 @@ class Main : ApplicationAdapter() {
         }
     }
 
-    val FRAMETIME = 0.01 // It's 1 / FPS, duration of one frame in seconds
+    val FRAMETIME = 20 // milliseconds // It's 1 / FPS, duration of one frame in millis
 
     override fun render() {
         val frameStartTime = System.nanoTime()
@@ -230,10 +229,10 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
-        while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
+        while ((System.nanoTime() - frameStartTime) / 1_000_000.0 < FRAMETIME.toDouble()) {
         }
     }
 
@@ -262,15 +261,15 @@ class Main : ApplicationAdapter() {
             }
             ImGui.sameLine()
             if (ImGui.button(">")) {
-                simState.speed = 1.0
+                simState.speed = 1
             }
             ImGui.sameLine()
             if (ImGui.button(">>")) {
-                simState.speed = 2.0
+                simState.speed = 2
             }
             ImGui.sameLine()
             if (ImGui.button(">>>")) {
-                simState.speed = 5.0
+                simState.speed = 5
             }
         }
         ImGui.end()

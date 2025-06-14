@@ -35,7 +35,7 @@ fun main() {
     val endTime = 1000.0
     val delta = 1.0
 
-    val model = Model(travelDesireFunction, buildings)
+    val model = Model(travelDesireFunction, buildings, 500)
 
 
 
