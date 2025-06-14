@@ -16,7 +16,7 @@ class BackendAPI : ISimulation {
         return null
     }
 
-    
+
     override fun updateSimulation(deltaTimeMillis: Long) {
 
         if (simulator == null)
@@ -65,6 +65,19 @@ class BackendAPI : ISimulation {
     }
 
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
+        val lcInfo: ISimulation.LaneChangeDTO
+        if (!vehicle.isInLaneChange()) {
+            lcInfo = ISimulation.LaneChangeDTO(false, 0, 0, 1.0, 1.0)
+        } else {
+            lcInfo = ISimulation.LaneChangeDTO(
+                true,
+                vehicle.laneChangeFromLaneId,
+                vehicle.lane.laneId,
+                vehicle.laneChangeFullDistance,
+                vehicle.laneChangeFullDistance - vehicle.laneChangeDistance
+            )
+        }
+
         return ISimulation.VehicleDTO(
             vehicle.vehicleId,
             vehicle.lane.road.troad,
@@ -73,6 +86,7 @@ class BackendAPI : ISimulation {
             vehicle.position,
             vehicle.direction,
             vehicle.speed,
+            lcInfo,
             "Road id: ${vehicle.source.roadId}", // Maybe later will use not road ids
             "Road id: ${vehicle.destination.roadId}"
         )

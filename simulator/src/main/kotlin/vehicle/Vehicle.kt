@@ -36,7 +36,9 @@ class Vehicle(
     var direction = source.direction
     var speed = 0.0
     var acc = 0.0
-    var laneChangeDistance = 0.0
+    var laneChangeDistance = -0.1
+    var laneChangeFullDistance = 0.0
+    var laneChangeFromLaneId = 0
     var position = 1.0
     var despawned = false
 
@@ -45,8 +47,7 @@ class Vehicle(
     }
 
     fun getLaneChangePenalty(): Double {
-        // max value of res is 20 + 30 / 2.0 = 35
-        val res = SimulationConfig.LANE_CHANGE_DISTANCE_GAP + speed / 2.0
+        val res = SimulationConfig.LANE_CHANGE_DISTANCE_GAP + speed / 1.5
 
         // HAVE TO BE STRICTLY SMALLER THAN MLC_MIN_DISTANCE - 10.0!!!!
         assert(res < SimulationConfig.MLC_MIN_DISTANCE)
@@ -238,6 +239,8 @@ class Vehicle(
         if (_lane == this.lane) return
 
         laneChangeDistance = getLaneChangePenalty()
+        laneChangeFullDistance = laneChangeDistance
+        laneChangeFromLaneId = lane.laneId
         // TODO: We don't need to traverse all junction, only the closest one...
         network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
         setNewLane(_lane)
