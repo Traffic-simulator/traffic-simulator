@@ -1,6 +1,5 @@
 package ru.nsu.trafficsimulator.editor.changes
 
-import ru.nsu.trafficsimulator.model.Building
 import ru.nsu.trafficsimulator.model.BuildingType
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout

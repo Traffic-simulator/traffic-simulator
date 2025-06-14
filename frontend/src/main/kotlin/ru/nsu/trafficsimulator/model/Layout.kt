@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
+import kotlin.math.max
 
 class Layout {
     val roads = mutableMapOf<Long, Road>()
@@ -80,7 +81,7 @@ class Layout {
     fun addBuilding(
         intersection: Intersection, intersectionDirection: Vec3,
         buildingPosition: Vec3, buildingDirection: Vec3,
-        building: Building
+        building: BuildingIntersectionSettings
     ): Road {
         val buildingIntersection = addIntersection(buildingPosition, building)
         return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
@@ -103,21 +104,25 @@ class Layout {
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 intersections.remove(it.id)
+            if (it.incomingRoadsCount == 0) {
+                deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
             if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 intersections.remove(it.id)
+            if (it.incomingRoadsCount == 0) {
+                deleteIntersection(it)
             }
         }
         roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3, building: Building? = null): Intersection {
+    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection =
-            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, building)
+            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, intersectionSettings)
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -139,6 +144,10 @@ class Layout {
     }
 
     private fun deleteIntersection(intersection: Intersection) {
+        if (intersection.isMerging) {
+            return
+        }
+
         for (road in intersection.incomingRoads) {
             deleteRoad(road)
         }
@@ -148,20 +157,33 @@ class Layout {
     /**
      * Only for adding a road without any additional actions.
      */
-    fun pushRoad(road: Road) {
-        if (roads.containsKey(road.id))
-            throw IllegalArgumentException("Road id already exists, can't push road")
+    fun pushRoad(road: Road, onConflictChangeId: Boolean = false) {
+        if (roads.containsKey(road.id)) {
+            if (onConflictChangeId) {
+                road.id = roadIdCount++
+                roads[road.id] = road
+            } else {
+                throw IllegalArgumentException("Road id already exists, can't push road")
+            }
+        }
 
+        roadIdCount = max(roadIdCount, road.id + 1)
         roads[road.id] = road
     }
 
     /**
      * Only for adding a road without any additional actions.
      */
-    fun pushIntersection(intersection: Intersection) {
+    fun pushIntersection(intersection: Intersection, onConflictChangeId: Boolean = false) {
         if (intersections.containsKey(intersection.id))
-            throw IllegalArgumentException("Intersection id already exists, can't push intersection")
+            if (onConflictChangeId) {
+                intersection.id = intersectionIdCount++
+                intersections[intersection.id] = intersection
+            } else {
+                throw IllegalArgumentException("Intersection id already exists, can't push intersection")
+            }
 
+        intersectionIdCount = max(intersectionIdCount, intersection.id + 1)
         intersections[intersection.id] = intersection
     }
 

@@ -7,14 +7,30 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 class Intersection(
-    val id: Long, var position: Vec2, padding: Double = 0.0, var building: Building? = null
+    var id: Long,
+    var position: Vec2,
+    padding: Double = 0.0,
+    var intersectionSettings: IntersectionSettings? = null
 ) {
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: MutableMap<Long, IntersectionRoad> = HashMap()
     var signals: HashMap<Road, Signal> = HashMap()
     private var irNextId: Long = 0
 
-    val isBuilding: Boolean get() = building != null
+    val building: BuildingIntersectionSettings?
+        get() = if (intersectionSettings != null && intersectionSettings is BuildingIntersectionSettings) {
+            intersectionSettings as BuildingIntersectionSettings
+        } else null
+    val isBuilding: Boolean
+        get() = building != null
+
+    val merging: MergingIntersectionSettings?
+        get() = if (intersectionSettings != null && intersectionSettings is MergingIntersectionSettings) {
+            intersectionSettings as MergingIntersectionSettings
+        } else null
+    val isMerging: Boolean
+        get() = merging != null
+
     val hasSignals: Boolean get() = signals.isNotEmpty()
     val incomingRoadsCount get() = incomingRoads.size
     var padding = padding
@@ -31,9 +47,17 @@ class Intersection(
     }
 
     fun connectRoad(road: Road) {
-        if (!isBuilding) {
-            removeRoad(road)
+        if (incomingRoads.isNotEmpty()) {
+            if (isMerging) {
+                throw IllegalArgumentException("Merging intersection can has only one road!")
+            }
+            if (isBuilding) {
+                throw IllegalArgumentException("Building intersection can has only one road!")
+            }
         }
+
+        removeRoad(road)
+
         for (incomingRoad in incomingRoads) {
             if (incomingRoad !== road) {
                 addIntersectionRoad(road, incomingRoad)

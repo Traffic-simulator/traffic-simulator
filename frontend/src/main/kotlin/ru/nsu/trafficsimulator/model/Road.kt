@@ -5,7 +5,7 @@ import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout.Companion.DEFAULT_INTERSECTION_PADDING
 
 class Road(
-    val id: Long,
+    var id: Long,
     var startIntersection: Intersection,
     var endIntersection: Intersection,
     var leftLane: Int = 1,
@@ -33,6 +33,20 @@ class Road(
             throw IllegalArgumentException("distance must be between 0 and length")
         }
         return geometry.getDirection(startPadding + distance).toVec3()
+    }
+
+    fun reconnectIntersection(prevIntersection: Intersection, newIntersection: Intersection) {
+        if (prevIntersection === startIntersection) {
+            startIntersection.removeRoad(this)
+            startIntersection = newIntersection
+            newIntersection.connectRoad(this)
+        } else if (prevIntersection === endIntersection) {
+            endIntersection.removeRoad(this)
+            endIntersection = newIntersection
+            newIntersection.connectRoad(this)
+        } else {
+            throw IllegalArgumentException("Strange prevIntersection")
+        }
     }
 
     fun getIntersectionPoint(intersection: Intersection, laneOffset: Int): Vec3 =
