@@ -13,7 +13,7 @@ import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.Layout
 
 class Editor {
     companion object {

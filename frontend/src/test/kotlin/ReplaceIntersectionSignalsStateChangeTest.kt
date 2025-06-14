@@ -1,5 +1,6 @@
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import ru.nsu.trafficsimulator.editor.changes.ReplaceIntersectionSignalsStateChange
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
@@ -58,11 +59,11 @@ class ReplaceIntersectionSignalsStateChangeTest {
     }
 
     @Test
-    fun `should not be structural change`() {
+    fun `should be structural change`() {
         val change = ReplaceIntersectionSignalsStateChange(
             Intersection(1, Vec2(0.0, 0.0)),
             hashMapOf()
         )
-        assertFalse(change.isStructuralChange())
+        assertTrue(change.isStructuralChange())
     }
 }

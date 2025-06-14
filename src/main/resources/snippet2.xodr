@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OpenDRIVE>
+    <road id="0" junction="-1" length="297.89730737567936">
+        <link>
+            <predecessor elementId="3" elementType="junction"/>
+            <successor elementId="0" elementType="junction"/>
+        </link>
+        <type s="0.0" type="town">
+            <speed max="60" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry hdg="-0.021508953909752094" length="297.89730737567936" s="0.0" x="36.18387932546656" y="199.166324958916">
+                <paramPoly3 aU="0.0" aV="0.0" bU="550.5405230920848" bV="-1.7763568394002505E-15" cU="-639.9820980047309" cV="4.438482275729619" dU="254.8289473227774" dV="-167.81986272368184" pRange="normalized"/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneOffset a="0.0" b="0.0" c="0.0" d="0.0" s="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving">
+                        <width a="4.0" b="0.0" c="0.0" d="0.0" sOffset="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+        <signals/>
+        <userData code="startSpline" value="(0.0;200.0)"/>
+        <userData code="endSpline" value="(200.0;0.0)"/>
+        <userData code="startDirectionSpline" value="(709.0390625;-17.98590087890625)"/>
+        <userData code="endDirectionSpline" value="(46.23187255859375;-627.095703125)"/>
+    </road>
+    <junction id="0">
+        <userData code="position" value="(200.0;-0.0)"/>
+        <userData code="padding" value="20.0"/>
+        <userData code="mergingIntersection" value="true"/>
+    </junction>
+    <junction id="1">
+        <userData code="position" value="(-200.0;-0.0)"/>
+        <userData code="padding" value="20.0"/>
+        <userData code="mergingIntersection" value="true"/>
+    </junction>
+    <junction id="2">
+        <userData code="position" value="(0.0;-200.0)"/>
+        <userData code="padding" value="20.0"/>
+        <userData code="mergingIntersection" value="true"/>
+    </junction>
+    <junction id="3">
+        <userData code="position" value="(0.0;200.0)"/>
+        <userData code="padding" value="20.0"/>
+        <userData code="mergingIntersection" value="true"/>
+    </junction>
+</OpenDRIVE>

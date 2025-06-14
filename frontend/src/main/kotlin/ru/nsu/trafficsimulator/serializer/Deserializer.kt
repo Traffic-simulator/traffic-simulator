@@ -9,6 +9,8 @@ import ru.nsu.trafficsimulator.model.*
 import kotlin.math.abs
 import kotlin.math.max
 
+private val INVALID_INTERSECTION_POSITION = Vec2(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)
+
 class Deserializer {
     companion object {
         fun deserialize(openDRIVE: OpenDRIVE): Layout {
@@ -38,6 +40,12 @@ class Deserializer {
 
 
         private fun deserializeRoad(tRoad: TRoad, idToIntersection: MutableMap<Long, Intersection>): Road {
+            val userParameters: MutableMap<String, String> = mutableMapOf()
+            tRoad.getGAdditionalData().forEach { data ->
+                val userData = data as TUserData
+                userParameters[userData.code] = userData.value
+            }
+
             val id = tRoad.id.toLong()
 
             var nextId = idToIntersection.keys.max() + 1
@@ -51,7 +59,7 @@ class Deserializer {
                 }
             } ?: run {
                 // Position and padding will be calculated later
-                idToIntersection[nextId] = Intersection(nextId, Vec2(0.0, 0.0))
+                idToIntersection[nextId] = Intersection(nextId, INVALID_INTERSECTION_POSITION)
                 idToIntersection[nextId++]!!
             }
             val endIntersection = tRoad.link?.successor?.let {
@@ -70,7 +78,19 @@ class Deserializer {
             val leftLane = tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
             val rightLane = tRoad.lanes.laneSection[0]?.right?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
 
-            val spline = planeViewToSpline(tRoad.planView)
+            val spline: Spline =
+                if (userParameters.containsKey("startSpline") && userParameters.containsKey("endSpline")
+                    && userParameters.containsKey("startDirectionSpline") && userParameters.containsKey("endDirectionSpline")
+                ) {
+                    val start = parseVec2(userParameters["startSpline"]!!)
+                    val end = parseVec2(userParameters["endSpline"]!!)
+                    val startDirection = parseVec2(userParameters["startDirectionSpline"]!!)
+                    val endDirection = parseVec2(userParameters["endDirectionSpline"]!!)
+                    val s = Spline()
+                    s.addSplinePart(start to start + startDirection, end to end + endDirection)
+                    s
+                } else planeViewToSpline(tRoad.planView)
+
 
             val road = Road(
                 id,
@@ -149,17 +169,33 @@ class Deserializer {
         }
 
         private fun deserializeIntersection(junction: TJunction): Intersection {
-            val intersection = Intersection(junction.id.toLong(), Vec2(0.0, 0.0))
             val userParameters: MutableMap<String, String> = mutableMapOf()
             junction.getGAdditionalData().forEach { data ->
                 val userData = data as TUserData
                 userParameters[userData.code] = userData.value
             }
+
+            val intersection = Intersection(
+                junction.id.toLong(),
+                position = INVALID_INTERSECTION_POSITION,
+                intersectionSettings = MergingIntersectionSettings(0, 1) // tmp vals
+            )
+
+            userParameters["position"]?.let {
+                intersection.position = parseVec2(it)
+            }
+
+            userParameters["padding"]?.let {
+                intersection.padding = it.toDouble()
+            }
+
             if (userParameters.containsKey("buildingType")) {
-                intersection.building = Building(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
+                intersection.intersectionSettings =
+                    BuildingIntersectionSettings(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
                     capacity = userParameters["buildingCapacity"]!!.toInt()
                 }
             }
+
             return intersection
         }
 
@@ -198,12 +234,15 @@ class Deserializer {
 
         private fun recalculateIntersectionPosition(layout: Layout) {
             for (intersection in layout.intersections.values) {
+                if (intersection.position != INVALID_INTERSECTION_POSITION) {
+                    continue
+                }
                 var pos = Vec2(0.0, 0.0)
                 for (road in intersection.incomingRoads) {
-                    if (road.startIntersection == intersection) {
-                        pos += road.geometry.getPoint(0.0)
+                    pos += if (road.startIntersection == intersection) {
+                        road.geometry.getPoint(0.0)
                     } else {
-                        pos += road.geometry.getPoint(road.geometry.length)
+                        road.geometry.getPoint(road.geometry.length)
                     }
                 }
                 intersection.position = pos / intersection.incomingRoads.size.toDouble()
@@ -253,5 +292,17 @@ class Deserializer {
                 }
             }
         }
+    }
+}
+
+private fun parseVec2(str: String): Vec2 {
+    val regex = Regex("^[(]([-+]?[0-9]*\\.?[0-9]+);([-+]?[0-9]*\\.?[0-9]+)[)]$")
+    val matchResult = regex.find(str)
+
+    if (matchResult != null) {
+        val (x, y) = matchResult.destructured
+        return Vec2(x.toDouble(), y.toDouble())
+    } else {
+        throw IllegalArgumentException("Vec2 must be in the format (x;y).")
     }
 }
