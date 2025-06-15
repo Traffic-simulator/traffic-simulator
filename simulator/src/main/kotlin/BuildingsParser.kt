@@ -23,9 +23,6 @@ class BuildingsParser(val openDrive: OpenDRIVE) {
                     "buildingType" -> buildingType = BuildingTypes.valueOf(tUser.value)
                     "buildingCapacity" -> buildingCapacity = tUser.value.toInt()
                     "buildingFullness" -> buildingCurrentPeople = tUser.value.toInt()
-                    else -> {
-                        throw Exception("unknown type + ${tUser.code}")
-                    }
                 }
             }
 
