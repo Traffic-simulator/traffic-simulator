@@ -174,6 +174,9 @@ class Main : ApplicationAdapter() {
             if (ImGui.button(">>>")) {
                 simState.speed = 5.0
             }
+            if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
+                visualizer.heatmapMode = !visualizer.heatmapMode
+            }
         }
         ImGui.end()
     }

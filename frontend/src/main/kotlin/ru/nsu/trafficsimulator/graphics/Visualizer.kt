@@ -51,6 +51,14 @@ class Visualizer(private var layout: Layout) {
 
     private var layoutScene: Scene? = null
 
+    var heatmapMode: Boolean = false
+        set(value) {
+            if (field && !value) {
+                turnOffHeatmap()
+            }
+            field = value
+        }
+
     init {
         val environment = Environment()
         environment.add(
@@ -133,6 +141,10 @@ class Visualizer(private var layout: Layout) {
         }
         carInstances.clear()
 
+        turnOffHeatmap()
+    }
+
+    private fun turnOffHeatmap() {
         val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
         val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
         mesh.getVertices(vertices)
@@ -244,6 +256,9 @@ class Visualizer(private var layout: Layout) {
     }
 
     fun updateHeatmap(segments: List<ISimulation.SegmentDTO>) {
+        if (!heatmapMode) {
+            return
+        }
         if (layoutScene == null || layoutScene!!.modelInstance.model.meshes.isEmpty) {
             return
         }
