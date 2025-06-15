@@ -22,13 +22,13 @@ class BackendAPI : ISimulation {
         if (simulator == null)
             return
 
-        // TODO: Probably SimulationConfig should not be used here
-        assert(deltaTimeMillis % SimulationConfig.SIMULATION_FRAME_MILLIS == 0L)
+        val frametime = ISimulation.Constants.SIMULATION_FRAME_MILLIS
+        assert(deltaTimeMillis % frametime == 0L)
 
-        val iters = deltaTimeMillis / SimulationConfig.SIMULATION_FRAME_MILLIS
+        val iters = deltaTimeMillis / frametime
         val startNanos = System.nanoTime()
         for (i in 0 until iters) {
-            simulator!!.update(SimulationConfig.SIMULATION_FRAME_MILLIS.toDouble() / 1000.0)
+            simulator!!.update(frametime.toDouble() / 1000.0)
         }
         logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
     }

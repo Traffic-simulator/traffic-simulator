@@ -47,7 +47,7 @@ class Main : ApplicationAdapter() {
 
     private lateinit var visualizer: Visualizer
 
-    private val FRAMETIME = SimulationConfig.SIMULATION_FRAME_MILLIS
+    private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
     // It's 1 / FPS, duration of one frame in milliseconds
     // [Simulator] I'm sorry for this dependency, later have to do smth with that
 

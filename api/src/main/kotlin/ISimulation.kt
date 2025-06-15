@@ -16,6 +16,10 @@ interface ISimulation {
         var variation: Int = 0
     }
 
+    object Constants {
+        const val SIMULATION_FRAME_MILLIS: Long = 10
+    }
+
     data class LaneChangeDTO(
         val fromLaneId: Int,
         val toLaneId: Int,
