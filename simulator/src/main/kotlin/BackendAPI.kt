@@ -16,19 +16,19 @@ class BackendAPI : ISimulation {
         return null
     }
 
-    
+
     override fun updateSimulation(deltaTimeMillis: Long) {
 
         if (simulator == null)
             return
 
-        // TODO: Probably SimulationConfig should not be used here
-        assert(deltaTimeMillis % SimulationConfig.SIMULATION_FRAME_MILLIS == 0L)
+        val frametime = ISimulation.Constants.SIMULATION_FRAME_MILLIS
+        assert(deltaTimeMillis % frametime == 0L)
 
-        val iters = deltaTimeMillis / SimulationConfig.SIMULATION_FRAME_MILLIS
+        val iters = deltaTimeMillis / frametime
         val startNanos = System.nanoTime()
         for (i in 0 until iters) {
-            simulator!!.update(SimulationConfig.SIMULATION_FRAME_MILLIS.toDouble() / 1000.0)
+            simulator!!.update(frametime.toDouble() / 1000.0)
         }
         logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
     }
@@ -65,6 +65,18 @@ class BackendAPI : ISimulation {
     }
 
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
+        val lcInfo: ISimulation.LaneChangeDTO?
+        if (!vehicle.isInLaneChange()) {
+            lcInfo = null
+        } else {
+            lcInfo = ISimulation.LaneChangeDTO(
+                vehicle.laneChangeFromLaneId,
+                vehicle.lane.laneId,
+                vehicle.laneChangeFullDistance,
+                vehicle.laneChangeFullDistance - vehicle.laneChangeDistance
+            )
+        }
+
         return ISimulation.VehicleDTO(
             vehicle.vehicleId,
             vehicle.lane.road.troad,
@@ -73,6 +85,7 @@ class BackendAPI : ISimulation {
             vehicle.position,
             vehicle.direction,
             vehicle.speed,
+            lcInfo,
             "Road id: ${vehicle.source.roadId}", // Maybe later will use not road ids
             "Road id: ${vehicle.destination.roadId}"
         )

@@ -1,6 +1,7 @@
 import signals.SignalState
 import vehicle.Direction
 import java.time.LocalTime
+import kotlin.math.abs
 
 interface ISimulation {
     /**
@@ -15,6 +16,17 @@ interface ISimulation {
         var variation: Int = 0
     }
 
+    object Constants {
+        const val SIMULATION_FRAME_MILLIS: Long = 10
+    }
+
+    data class LaneChangeDTO(
+        val fromLaneId: Int,
+        val toLaneId: Int,
+        val laneChangeFullDistance: Double,
+        val laneChangeCurrentDistance: Double
+    )
+
     /**
      * Class for communicating information about vehicles and their positions of the road
      * Distance specifies distance from the start of the road
@@ -28,6 +40,7 @@ interface ISimulation {
         val distance: Double,
         val direction: Direction,
         val speed: Double,
+        val laneChangeInfo: LaneChangeDTO?,
         val source: String,
         val destination: String
     )

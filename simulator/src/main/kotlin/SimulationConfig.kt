@@ -20,8 +20,5 @@ class SimulationConfig {
 
         // Mandatory Lane Changes - MLC
         const val MLC_MIN_DISTANCE = 50.0
-
-        // TODO: connect this value with frontend frametime
-        const val SIMULATION_FRAME_MILLIS: Long = 20
     }
 }

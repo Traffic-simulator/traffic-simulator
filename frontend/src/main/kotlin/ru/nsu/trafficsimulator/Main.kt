@@ -46,8 +46,9 @@ class Main : ApplicationAdapter() {
     private val inputMultiplexer = InputMultiplexer()
 
     private lateinit var visualizer: Visualizer
-
-    private val FRAMETIME = 20 // It's 1 / FPS, duration of one frame in milliseconds
+    
+    // It's 1 / FPS, duration of one frame in milliseconds
+    private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
