@@ -176,11 +176,11 @@ class Visualizer(private var layout: Layout) {
     }
 
     fun getVehicleOffset(vehicle: ISimulation.VehicleDTO): Double {
-        if (!vehicle.laneChangeInfo.isLaneChanging) {
+        if (vehicle.laneChangeInfo == null) {
             return abs(vehicle.laneId) - 0.5
         }
 
-        val lcInfo = vehicle.laneChangeInfo
+        val lcInfo = vehicle.laneChangeInfo!!
         val base = abs(lcInfo.toLaneId) - 0.5
         val addition = 1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance, )
         if (abs(lcInfo.toLaneId) < abs(lcInfo.fromLaneId)) {
@@ -192,11 +192,11 @@ class Visualizer(private var layout: Layout) {
 
     val middlePartLaneChangeAngle = customSigmoid(2.0, 6.0)
     fun getVehicleLaneChangeAngle(vehicle: ISimulation.VehicleDTO): Double {
-        if (!vehicle.laneChangeInfo.isLaneChanging) {
+        if (vehicle.laneChangeInfo == null) {
             return 0.0
         }
 
-        val lcInfo = vehicle.laneChangeInfo
+        val lcInfo = vehicle.laneChangeInfo!!
         val angle: Double
         if (lcInfo.laneChangeCurrentDistance < lcInfo.laneChangeFullDistance / 3.0) {
             angle = customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance)

@@ -17,7 +17,6 @@ interface ISimulation {
     }
 
     data class LaneChangeDTO(
-        val isLaneChanging: Boolean,
         val fromLaneId: Int,
         val toLaneId: Int,
         val laneChangeFullDistance: Double,
@@ -37,7 +36,7 @@ interface ISimulation {
         val distance: Double,
         val direction: Direction,
         val speed: Double,
-        val laneChangeInfo: LaneChangeDTO,
+        val laneChangeInfo: LaneChangeDTO?,
         val source: String,
         val destination: String
     )

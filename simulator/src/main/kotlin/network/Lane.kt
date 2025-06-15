@@ -26,7 +26,16 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     val lenOfSegment: Double = 10.0
     var segments: List<Segment> = List(max(length.div(lenOfSegment).roundToInt(), 1)) {
         index ->
-        Segment()
+        Segment(this)
+    }
+
+    fun getMaxSpeed(): Double {
+        val defaultMaxSpeed = 30.0
+        val res = road.troad.type
+        if (res != null && !res.isEmpty()) {
+            return res.get(0)?.speed?.max?.toDouble() ?: defaultMaxSpeed
+        }
+        return defaultMaxSpeed
     }
 
     override fun addVehicle(vehicle: Vehicle) {

@@ -47,7 +47,9 @@ class Main : ApplicationAdapter() {
 
     private lateinit var visualizer: Visualizer
 
-    private val FRAMETIME = 20 // It's 1 / FPS, duration of one frame in milliseconds
+    private val FRAMETIME = SimulationConfig.SIMULATION_FRAME_MILLIS
+    // It's 1 / FPS, duration of one frame in milliseconds
+    // [Simulator] I'm sorry for this dependency, later have to do smth with that
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle

@@ -65,12 +65,11 @@ class BackendAPI : ISimulation {
     }
 
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
-        val lcInfo: ISimulation.LaneChangeDTO
+        val lcInfo: ISimulation.LaneChangeDTO?
         if (!vehicle.isInLaneChange()) {
-            lcInfo = ISimulation.LaneChangeDTO(false, 0, 0, 1.0, 1.0)
+            lcInfo = null
         } else {
             lcInfo = ISimulation.LaneChangeDTO(
-                true,
                 vehicle.laneChangeFromLaneId,
                 vehicle.lane.laneId,
                 vehicle.laneChangeFullDistance,
