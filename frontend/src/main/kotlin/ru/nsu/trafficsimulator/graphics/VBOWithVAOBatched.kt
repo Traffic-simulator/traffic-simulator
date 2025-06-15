@@ -107,6 +107,23 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
         bufferChanged()
     }
 
+    fun updateVerticesImmediately(offset: Int, vertices: FloatArray, count: Int) {
+        val pos = byteBuffer!!.position()
+        (byteBuffer as Buffer).position(offset * 4)
+        BufferUtils.copy(vertices, offset, count, byteBuffer)
+
+        (buffer as Buffer).position(0)
+
+        byteBuffer.position(offset * 4)
+
+        val gl = Gdx.gl30
+        gl.glBindVertexArray(vaoHandle)
+        gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandle)
+        gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, offset * 4, count * 4, byteBuffer)
+
+        (byteBuffer as Buffer).position(pos)
+    }
+
     /** Binds this VertexBufferObject for rendering via glDrawArrays or glDrawElements
      *
      * @param shader the shader
