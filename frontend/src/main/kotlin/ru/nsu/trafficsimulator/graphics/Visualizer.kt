@@ -127,6 +127,23 @@ class Visualizer(private var layout: Layout) {
         sceneManager.render()
     }
 
+    fun cleanup() {
+        for (car in carInstances.values) {
+            sceneManager.removeScene(car)
+        }
+        carInstances.clear()
+
+        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
+        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+        mesh.getVertices(vertices)
+        val attributes = mesh.vertexAttributes
+        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+        for (i in 0..<mesh.numVertices) {
+            vertices[heatmapAttrib.offset / 4 + i] = 0.0f
+        }
+        mesh.updateVertices(0, vertices)
+    }
+
     fun updateCars(cars: List<ISimulation.VehicleDTO>) {
         for (vehicle in cars) {
             val vehicleId = vehicle.id

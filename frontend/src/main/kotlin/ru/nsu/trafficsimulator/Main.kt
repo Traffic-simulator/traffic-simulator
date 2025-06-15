@@ -150,6 +150,7 @@ class Main : ApplicationAdapter() {
                 ApplicationState.Simulator -> ApplicationState.Editor
             }
             if (state == ApplicationState.Editor) {
+                visualizer.cleanup()
                 inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
                 inputMultiplexer.removeProcessor(editorInputProcess)
