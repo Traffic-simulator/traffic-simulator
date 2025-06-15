@@ -227,31 +227,26 @@ class Visualizer(private var layout: Layout) {
     }
 
     fun updateHeatmap(segments: List<ISimulation.SegmentDTO>) {
-        println("Max value in segments: ${segments.maxOf {segment ->
-            segment.segments.max()
-        }}")
-//        println(segments)
-//        for (segment in segments) {
-//            val road = layout.roads[segment.road.id.toLong()] ?: continue
-//            println("Road length = ${segment.road.length}; ${segment.segments.size} segments with length = ${segment.segmentLen}")
-//        }
         if (layoutScene == null || layoutScene!!.modelInstance.model.meshes.isEmpty) {
             return
         }
         val nodes = layoutScene!!.modelInstance.model.nodes
+        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
+        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+        mesh.getVertices(vertices)
+        val indices = ShortArray(mesh.numIndices)
+        mesh.getIndices(indices)
         val roadRegex = Regex("road(\\d+)")
         for (node in nodes) {
             for (nodePart in node.parts) {
                 val meshPart = nodePart.meshPart
                 val res = roadRegex.matchEntire(meshPart.id) ?: continue
                 val roadId = res.groups[1]?.value?.toLongOrNull() ?: throw Exception("Failed to parse road id??")
-                val mesh = meshPart.mesh
-                val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
-                mesh.getVertices(vertices)
-                val indices = ShortArray(mesh.numIndices)
-                mesh.getIndices(indices)
+                if (meshPart.mesh != mesh) {
+                    logger.warn { "Found mesh part with a different mesh" }
+                    continue
+                }
 
-                // TODO: calculate that based on attributes
                 val attributes = mesh.vertexAttributes
                 val colorAttrib = attributes.findByUsage(VertexAttributes.Usage.ColorUnpacked)
                 val offsetInColorForOffset = 1
@@ -278,15 +273,15 @@ class Visualizer(private var layout: Layout) {
                     } else {
                         laneC.toInt()
                     }
-                    // TODO: for each vertex find segment with current heat
                     vertices[heatmapAttrib.offset / 4 + vertexIndexA] = getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
                     vertices[heatmapAttrib.offset / 4 + vertexIndexB] = getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
                     vertices[heatmapAttrib.offset / 4 + vertexIndexC] = getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
                 }
-                // TODO: update only a part of VBOWithVAOBatched with new heat values
-                mesh.updateVertices(0, vertices)
             }
         }
+        // TODO: update only a part of VBOWithVAOBatched with new heat values
+        // TODO: Do double or even triple buffering of mesh values for better perf
+        mesh.updateVertices(0, vertices)
     }
 
     private fun getHeatmapValue(segments: List<ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
