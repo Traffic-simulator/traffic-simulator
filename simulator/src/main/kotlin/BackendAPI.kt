@@ -1,37 +1,35 @@
 import mu.KotlinLogging
 import network.Lane
-import heatmap.Segment
 import network.signals.Signal
 import opendrive.OpenDRIVE
-import route_generator_new.BuildingTypes
-import route_generator_new.discrete_function.Building
+import route_generator_new.ModelConfig
 import vehicle.Vehicle
+import java.time.LocalTime
 
 class BackendAPI : ISimulation {
 
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
 
-    override fun init(layout: OpenDRIVE, seed: Long): Error? {
-        // Ruslan TODO: read buildings data from layout
-        val buildingParser : BuildingsParser = BuildingsParser(layout)
-
-        val buildings = buildingParser.getBuildings()
-//        buildings.add(Building(BuildingTypes.HOME, 3600, 3600, "100"))
-//        buildings.add(Building(BuildingTypes.WORK, 50, 0, "101"))
-//        buildings.add(Building(BuildingTypes.SHOPPING, 50, 0, "102"))
-//        buildings.add(Building(BuildingTypes.EDUCATION, 50, 0, "103"))
-
-        simulator = Simulator(layout, buildings, seed)
+    override fun init(layout: OpenDRIVE, regionId: Int?, startingTime: LocalTime, seed: Long): Error? {
+        simulator = Simulator(layout, startingTime, seed)
         return null
     }
 
-    override fun updateSimulation(deltaTime: Double) {
+
+    override fun updateSimulation(deltaTimeMillis: Long) {
+
         if (simulator == null)
             return
 
+        val frametime = ISimulation.Constants.SIMULATION_FRAME_MILLIS
+        assert(deltaTimeMillis % frametime == 0L)
+
+        val iters = deltaTimeMillis / frametime
         val startNanos = System.nanoTime()
-        simulator!!.update(deltaTime)
+        for (i in 0 until iters) {
+            simulator!!.update(frametime.toDouble() / 1000.0)
+        }
         logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
     }
 
@@ -60,14 +58,37 @@ class BackendAPI : ISimulation {
         return lanes.map { segmentToDTO(it) }.toList()
     }
 
+    private val SECONDS_IN_DAY = 60 * 60 * 24
+
+    override fun getSimulationTime(): LocalTime {
+        return LocalTime.ofSecondOfDay(simulator!!.currentTime.toLong() % SECONDS_IN_DAY)
+    }
+
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
+        val lcInfo: ISimulation.LaneChangeDTO?
+        if (!vehicle.isInLaneChange()) {
+            lcInfo = null
+        } else {
+            lcInfo = ISimulation.LaneChangeDTO(
+                vehicle.laneChangeFromLaneId,
+                vehicle.lane.laneId,
+                vehicle.laneChangeFullDistance,
+                vehicle.laneChangeFullDistance - vehicle.laneChangeDistance
+            )
+        }
+
         return ISimulation.VehicleDTO(
             vehicle.vehicleId,
             vehicle.lane.road.troad,
             vehicle.lane.laneId,
             ISimulation.VehicleType.PassengerCar,
             vehicle.position,
-            vehicle.direction)
+            vehicle.direction,
+            vehicle.speed,
+            lcInfo,
+            "Road id: ${vehicle.source.roadId}", // Maybe later will use not road ids
+            "Road id: ${vehicle.destination.roadId}"
+        )
     }
 
     fun signalToDTO(signal: Signal) : ISimulation.SignalDTO {

@@ -11,8 +11,9 @@ import ru.nsu.trafficsimulator.editor.actions.LoadAction
 import ru.nsu.trafficsimulator.editor.actions.SaveAction
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
+import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.Layout
 
 class Editor {
     companion object {
@@ -123,7 +124,11 @@ class Editor {
             }
             changes.add(change)
             nextChange++
-            change.apply(layout)
+            try {
+                change.apply(layout)
+            } catch (e: Exception) {
+                logger.warn { "Can't apply change: $change due to: ${e.message}" }
+            }
             onLayoutChange(change.isStructuralChange(), false)
         }
 

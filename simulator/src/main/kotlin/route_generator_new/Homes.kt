@@ -16,27 +16,27 @@ class Homes {
     private val fullHomes: HashMap<String, Building> = hashMapOf()
 
     constructor(buildings: List<Building>) {
-        var currentPeople = 0;
+        var currentPeople = 0
         for(building in buildings) {
             if (building.type == BuildingTypes.HOME) {
                 homes.put(building.junctionId, building)
                 fullHomes.put(building.junctionId, building)
                 nonEmptyHomes.put(building.junctionId, building)
 
-                currentPeople+=building.currentPeople;
+                currentPeople+=building.currentPeople
             }
         }
-        numberOfAllHumans = currentPeople;
+        numberOfAllHumans = currentPeople
         numberOfHumansInHomes = numberOfAllHumans
     }
 
     // Возвращает коль-во людей в пути(не в доме(buildingtype=home))
-    public fun getNumberOfHumansOnWay() : Int {
+    fun getNumberOfHumansOnWay() : Int {
         return numberOfAllHumans - numberOfHumansInHomes
     }
 
     //метод добавляет человека к текущему зданию
-    public fun increaseNumberOfPeopleInHome(junctionId: String) {
+    fun increaseNumberOfPeopleInHome(junctionId: String) {
         val building : Building = homes[junctionId]!!
         //обновляем fullHomes в случае заполнения
         if (building.currentPeople == building.capacity - 1) {
@@ -51,7 +51,7 @@ class Homes {
     }
 
     //метод удаляет человека из здания
-    public fun decreaseNumberOfHumansInHome(junctionId: String) {
+    fun decreaseNumberOfHumansInHome(junctionId: String) {
         val building : Building = homes[junctionId]!!
         //обновляем fullHomes в случае удаления от туда человека
         if (building.currentPeople == building.capacity) {
@@ -65,20 +65,20 @@ class Homes {
         building.currentPeople--
     }
 
-    public fun getNonEmpty() : HashMap<String, Building> = nonEmptyHomes
+    fun getNonEmpty() : HashMap<String, Building> = nonEmptyHomes
 
 
-    public fun decreaseNumberOfHumansInHomes(diff : Int) {
+    fun decreaseNumberOfHumansInHomes(diff : Int) {
         numberOfHumansInHomes -= diff
         require(numberOfHumansInHomes >= 0)
     }
 
-    public fun increaseNumberOfHumansInHomes(diff : Int) {
+    fun increaseNumberOfHumansInHomes(diff : Int) {
         numberOfHumansInHomes += diff
         require(numberOfHumansInHomes <= numberOfAllHumans)
     }
 
-    public fun getNumberOfHumansInHomes() : Int {
+    fun getNumberOfHumansInHomes() : Int {
         return numberOfHumansInHomes
     }
 }

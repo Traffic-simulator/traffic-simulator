@@ -18,6 +18,10 @@ import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.serializeLayout
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
 
 val logger = KotlinLogging.logger("FRONTEND")
 
@@ -27,7 +31,7 @@ class Main : ApplicationAdapter() {
         Simulator,
     }
 
-    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Double = 1.0)
+    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Long = 1)
 
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
@@ -42,8 +46,9 @@ class Main : ApplicationAdapter() {
     private val inputMultiplexer = InputMultiplexer()
 
     private lateinit var visualizer: Visualizer
-
-    private val FRAMETIME = 0.01 // It's 1 / FPS, duration of one frame in seconds
+    
+    // It's 1 / FPS, duration of one frame in milliseconds
+    private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -74,10 +79,13 @@ class Main : ApplicationAdapter() {
 
     fun initializeSimulation(layout: Layout) {
         val dto = serializeLayout(layout)
-        OpenDriveWriter().write(dto, "export.xodr")
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy_HH.mm.ss")
+        val formattedDateTime = currentDateTime.format(formatter)
+        OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto,500)
+        simState.backend.init(dto, null, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
     }
 
     override fun render() {
@@ -130,10 +138,10 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
-        while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
+        while ((System.nanoTime() - frameStartTime) / 1_000_000.0 < FRAMETIME.toDouble()) {
         }
     }
 
@@ -164,15 +172,15 @@ class Main : ApplicationAdapter() {
             }
             ImGui.sameLine()
             if (ImGui.button(">")) {
-                simState.speed = 1.0
+                simState.speed = 1
             }
             ImGui.sameLine()
             if (ImGui.button(">>")) {
-                simState.speed = 2.0
+                simState.speed = 2
             }
             ImGui.sameLine()
             if (ImGui.button(">>>")) {
-                simState.speed = 5.0
+                simState.speed = 5
             }
             if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
                 visualizer.heatmapMode = !visualizer.heatmapMode

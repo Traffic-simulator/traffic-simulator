@@ -18,6 +18,7 @@ import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.math.customSigmoid
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
@@ -184,8 +185,8 @@ class Visualizer(private var layout: Layout) {
                 1.0
             }
             val right = dir.toVec3().cross(Vec3.UP).normalized()
-            val angle = acos(dir.x) * sign(dir.y)
-            val laneOffset = (abs(vehicle.laneId) - 0.5)
+            val angle = acos(dir.x) * sign(dir.y) + getVehicleLaneChangeAngle(vehicle)
+            val laneOffset = getVehicleOffset(vehicle)
             val finalTranslation = pos.toVec3() + right * laneOffset * LANE_WIDTH + Vec3.UP
             carInstance
                 .modelInstance
@@ -201,6 +202,44 @@ class Visualizer(private var layout: Layout) {
             sceneManager.removeScene(carInstances[key])
             carInstances.remove(key)
         }
+    }
+
+    fun getVehicleOffset(vehicle: ISimulation.VehicleDTO): Double {
+        if (vehicle.laneChangeInfo == null) {
+            return abs(vehicle.laneId) - 0.5
+        }
+
+        val lcInfo = vehicle.laneChangeInfo!!
+        val base = abs(lcInfo.toLaneId) - 0.5
+        val addition = 1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance, )
+        if (abs(lcInfo.toLaneId) < abs(lcInfo.fromLaneId)) {
+            return base + addition
+        }
+        return base - addition
+    }
+
+
+    val middlePartLaneChangeAngle = customSigmoid(2.0, 6.0)
+    fun getVehicleLaneChangeAngle(vehicle: ISimulation.VehicleDTO): Double {
+        if (vehicle.laneChangeInfo == null) {
+            return 0.0
+        }
+
+        val lcInfo = vehicle.laneChangeInfo!!
+        val angle: Double
+        if (lcInfo.laneChangeCurrentDistance < lcInfo.laneChangeFullDistance / 3.0) {
+            angle = customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance)
+        } else
+        if (lcInfo.laneChangeCurrentDistance < 2.0 * lcInfo.laneChangeFullDistance / 3.0){
+            angle = middlePartLaneChangeAngle
+        } else {
+            angle = (1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance))
+        }
+
+        if (abs(lcInfo.toLaneId) < abs(lcInfo.fromLaneId)) {
+            return angle
+        }
+        return -angle
     }
 
     fun updateSignals(signals: List<ISimulation.SignalDTO>) {

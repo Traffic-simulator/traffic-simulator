@@ -1,5 +1,7 @@
 import signals.SignalState
 import vehicle.Direction
+import java.time.LocalTime
+import kotlin.math.abs
 
 interface ISimulation {
     /**
@@ -14,12 +16,34 @@ interface ISimulation {
         var variation: Int = 0
     }
 
+    object Constants {
+        const val SIMULATION_FRAME_MILLIS: Long = 10
+    }
+
+    data class LaneChangeDTO(
+        val fromLaneId: Int,
+        val toLaneId: Int,
+        val laneChangeFullDistance: Double,
+        val laneChangeCurrentDistance: Double
+    )
+
     /**
      * Class for communicating information about vehicles and their positions of the road
      * Distance specifies distance from the start of the road
      * Distance should be positive, and less than length of the road
      */
-    data class VehicleDTO(val id: Int, val road: opendrive.TRoad, val laneId: Int, val type: VehicleType, val distance: Double, val direction: Direction)
+    data class VehicleDTO(
+        val id: Int,
+        val road: opendrive.TRoad,
+        val laneId: Int,
+        val type: VehicleType,
+        val distance: Double,
+        val direction: Direction,
+        val speed: Double,
+        val laneChangeInfo: LaneChangeDTO?,
+        val source: String,
+        val destination: String
+    )
 
     /**
      * Class for info about signal states in the network.
@@ -42,13 +66,16 @@ interface ISimulation {
      * TODO: specify userData layout
      * @param layout Layout to initialize simulation
      */
-    fun init(layout: opendrive.OpenDRIVE, seed: Long): Error?
+    fun init(layout: opendrive.OpenDRIVE,
+             regionId: Int?,
+             startingTime: LocalTime,
+             seed: Long): Error?
 
     /**
      * Simulate simulation
-     * @param deltaTime time interval to simulate
+     * @param deltaTime time interval to simulate in millis!
      */
-    fun updateSimulation(deltaTime: Double)
+    fun updateSimulation(deltaTimeMillis: Long)
 
     /**
      * Get states of vehicles in simulation
@@ -64,4 +91,9 @@ interface ISimulation {
      * Getter for all lane-segments DTOs. SegmentDTO assigned to TRoad+laneId.
      */
     fun getSegments(): List<SegmentDTO>
+
+    /**
+     * Get current time of simulation.
+     */
+    fun getSimulationTime(): LocalTime
 }
