@@ -89,8 +89,8 @@ class ModelGenerator {
             val length = road.geometry.length - if (hasStart) { road.startIntersection.padding } else { 0.0 } - if (hasEnd) { road.endIntersection.padding } else { 0.0 }
 
             val start = if (hasStart) { road.startIntersection.padding } else { 0.0 }
-            val rightLaneCntF = road.rightLane.toFloat()
-            val leftLaneCntF = -road.leftLane.toFloat()
+            val rightLaneCntF = -road.rightLane.toFloat()
+            val leftLaneCntF = road.leftLane.toFloat()
 
             val stepCount = floor(length / ROAD_SEGMENT_LEN).toInt()
             var prevPos = road.geometry.getPoint(start).toVec3()
@@ -106,9 +106,9 @@ class ModelGenerator {
 
             val insertSegment = fun(left: Vec3, pos: Vec3, right: Vec3, prevOffset: Double, offset: Double) {
                 // Top
-                for (lane in -road.leftLane until road.rightLane) {
-                    val startLane = lane.toDouble()
-                    val endLane = (lane + 1).toDouble()
+                for (lane in road.leftLane downTo -road.rightLane + 1) {
+                    val endLane = lane.toDouble()
+                    val startLane = (lane - 1).toDouble()
                     meshPartBuilder.rect(
                         MeshPartBuilder.VertexInfo().set(
                             (prevPos + prevRight * endLane + TO_ROAD_HEIGHT).toGdxVec(),

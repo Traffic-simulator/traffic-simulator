@@ -1269,7 +1269,7 @@ void main() {
     } else if (abs(v_color.x - closest_lane) <= LINE_WIDTH && fract(v_color.y) >= 0.5) {
         baseColor.xyz = white_color;
     } else {
-        baseColor.xyz = mix(green_color, red_color, v_heatmap);
+        baseColor.xyz = mix(red_color, green_color, v_heatmap);
     }
 
 #ifdef iorFlag

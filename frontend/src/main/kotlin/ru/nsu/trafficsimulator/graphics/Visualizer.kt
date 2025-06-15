@@ -25,9 +25,7 @@ import ru.nsu.trafficsimulator.serializer.Deserializer
 import signals.SignalState
 import vehicle.Direction
 import java.lang.Math.clamp
-import kotlin.math.abs
-import kotlin.math.acos
-import kotlin.math.sign
+import kotlin.math.*
 
 class Visualizer(private var layout: Layout) {
     private val sceneManager = SceneManager()
@@ -229,6 +227,14 @@ class Visualizer(private var layout: Layout) {
     }
 
     fun updateHeatmap(segments: List<ISimulation.SegmentDTO>) {
+        println("Max value in segments: ${segments.maxOf {segment ->
+            segment.segments.max()
+        }}")
+//        println(segments)
+//        for (segment in segments) {
+//            val road = layout.roads[segment.road.id.toLong()] ?: continue
+//            println("Road length = ${segment.road.length}; ${segment.segments.size} segments with length = ${segment.segmentLen}")
+//        }
         if (layoutScene == null || layoutScene!!.modelInstance.model.meshes.isEmpty) {
             return
         }
@@ -249,20 +255,43 @@ class Visualizer(private var layout: Layout) {
                 val attributes = mesh.vertexAttributes
                 val colorAttrib = attributes.findByUsage(VertexAttributes.Usage.ColorUnpacked)
                 val offsetInColorForOffset = 1
+                val offsetInColorForLane = 0
                 val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
 
-                for (i in 0..<meshPart.size) {
-                    val vertexIndex = indices[meshPart.offset + i]
-                    val offset = vertices[colorAttrib.offset / 4 + offsetInColorForOffset]
-//                    roadSegments = segments.find { it.road.id.toLong() == roadId && it.}
+                val getOffsetAndLane = {vertexIndex: Short ->
+                    val offset = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
+                    val lane = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
+                    offset to lane
+                }
+
+                for (i in 0..<meshPart.size step 3) {
+                    val vertexIndexA = indices[meshPart.offset + i + 0]
+                    val vertexIndexB = indices[meshPart.offset + i + 1]
+                    val vertexIndexC = indices[meshPart.offset + i + 2]
+                    val (offsetA, laneA) = getOffsetAndLane(vertexIndexA)
+                    val (offsetB, laneB) = getOffsetAndLane(vertexIndexB)
+                    val (offsetC, laneC) = getOffsetAndLane(vertexIndexC)
+                    val lane = -if (abs(laneA) >= abs(laneB) && abs(laneA) >= abs(laneC)) {
+                        laneA.toInt()
+                    } else if (abs(laneB) >= abs(laneA) && abs(laneB) >= abs(laneC)) {
+                        laneB.toInt()
+                    } else {
+                        laneC.toInt()
+                    }
                     // TODO: for each vertex find segment with current heat
-                    vertices[heatmapAttrib.offset / 4 + vertexIndex] = 1.0f
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] = getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] = getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] = getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
                 }
                 // TODO: update only a part of VBOWithVAOBatched with new heat values
                 mesh.updateVertices(0, vertices)
-//                println("Updating road#$roadId")
             }
         }
+    }
+
+    private fun getHeatmapValue(segments: List<ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
+        val segment = segments.find { it.road.id.toLong() == roadId && it.laneId == laneId } ?: return -1.0
+        return segment.segments[min(floor(offset / segment.segmentLen).toInt(), segment.segments.size - 1)]
     }
 
     fun updateLayout(layout: Layout) {

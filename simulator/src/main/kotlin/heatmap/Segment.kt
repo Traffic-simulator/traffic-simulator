@@ -12,7 +12,7 @@ class Segment {
     var currentIterVehiclesCount: Int = 0
 
     fun update() {
-        var meanSpeed = 0.0
+        var meanSpeed = 1.0
         if (currentIterVehiclesCount != 0) {
             meanSpeed = tanh(currentIterVehiclesSum / currentIterVehiclesCount)
         }

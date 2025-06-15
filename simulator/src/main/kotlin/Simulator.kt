@@ -71,7 +71,7 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
         routeGeneratorAPI.update(dt, createVehicle, isPositionFree)
 
         // Update segments for heatmap on this cycle
-//        updateSegments()
+        updateSegments()
 
         return vehicles
     }
@@ -103,7 +103,12 @@ class Simulator(openDrive: OpenDRIVE, val buildings: List<Building>, seed: Long)
         for (road in roads) {
             for (lane in road.lanes) {
                 lane.vehicles.forEach {
-                    val segmentIndex = (it.position / lane.lenOfSegment).toInt()
+                    val posFromStart = if (it.direction == Direction.BACKWARD) {
+                        lane.length - it.position
+                    } else {
+                        it.position
+                    }
+                    val segmentIndex = (posFromStart / lane.lenOfSegment).toInt()
                     if (segmentIndex < lane.segments.size) {
                         lane.segments[segmentIndex].addVehicleSpeed(it)
                     } else {
