@@ -95,8 +95,8 @@ class ModelGenerator {
             val stepCount = floor(length / ROAD_SEGMENT_LEN).toInt()
             var prevPos = road.geometry.getPoint(start).toVec3()
             var prevDir = road.geometry.getDirection(start).toVec3().normalized()
-            var prevRight = prevDir.cross(Vec3.UP).normalized() * LANE_WIDTH * road.rightLane.toDouble()
-            var prevLeft = -prevDir.cross(Vec3.UP).normalized() * LANE_WIDTH * road.leftLane.toDouble()
+            var prevRight = prevDir.cross(Vec3.UP).normalized() * LANE_WIDTH
+            var prevLeft = -prevRight
             meshPartBuilder.rect(
                 MeshPartBuilder.VertexInfo().set((prevPos + prevLeft).toGdxVec(), -prevDir.toGdxVec(), Color.CLEAR, null),
                 MeshPartBuilder.VertexInfo().set((prevPos + prevRight).toGdxVec(), -prevDir.toGdxVec(), Color.CLEAR, null),
@@ -106,32 +106,36 @@ class ModelGenerator {
 
             val insertSegment = fun(left: Vec3, pos: Vec3, right: Vec3, prevOffset: Double, offset: Double) {
                 // Top
-                meshPartBuilder.rect(
-                    MeshPartBuilder.VertexInfo().set(
-                        (prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(),
-                        Vec3.UP.toGdxVec(),
-                        colorOf(rightLaneCntF, prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
-                        null
-                    ),
-                    MeshPartBuilder.VertexInfo().set(
-                        (pos + right + TO_ROAD_HEIGHT).toGdxVec(),
-                        Vec3.UP.toGdxVec(),
-                        colorOf(rightLaneCntF, offset.toFloat(), leftLaneCntF, rightLaneCntF),
-                        null
-                    ),
-                    MeshPartBuilder.VertexInfo().set(
-                        (pos + left + TO_ROAD_HEIGHT).toGdxVec(),
-                        Vec3.UP.toGdxVec(),
-                        colorOf(leftLaneCntF, offset.toFloat(), leftLaneCntF, rightLaneCntF),
-                        null
-                    ),
-                    MeshPartBuilder.VertexInfo().set(
-                        (prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(),
-                        Vec3.UP.toGdxVec(),
-                        colorOf(leftLaneCntF, prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
-                        null
-                    ),
-                )
+                for (lane in -road.leftLane until road.rightLane) {
+                    val startLane = lane.toDouble()
+                    val endLane = (lane + 1).toDouble()
+                    meshPartBuilder.rect(
+                        MeshPartBuilder.VertexInfo().set(
+                            (prevPos + prevRight * endLane + TO_ROAD_HEIGHT).toGdxVec(),
+                            Vec3.UP.toGdxVec(),
+                            colorOf(endLane.toFloat(), prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            null
+                        ),
+                        MeshPartBuilder.VertexInfo().set(
+                            (pos + right * endLane + TO_ROAD_HEIGHT).toGdxVec(),
+                            Vec3.UP.toGdxVec(),
+                            colorOf(endLane.toFloat(), offset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            null
+                        ),
+                        MeshPartBuilder.VertexInfo().set(
+                            (pos + right * startLane + TO_ROAD_HEIGHT).toGdxVec(),
+                            Vec3.UP.toGdxVec(),
+                            colorOf(startLane.toFloat(), offset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            null
+                        ),
+                        MeshPartBuilder.VertexInfo().set(
+                            (prevPos + prevRight * startLane + TO_ROAD_HEIGHT).toGdxVec(),
+                            Vec3.UP.toGdxVec(),
+                            colorOf(startLane.toFloat(), prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            null
+                        ),
+                    )
+                }
 
                 // Right
                 val rightNormal = (pos - prevPos).cross(Vec3.UP).toGdxVec()
@@ -156,13 +160,12 @@ class ModelGenerator {
                 val t = start + i * ROAD_SEGMENT_LEN.toDouble()
                 val pos = road.geometry.getPoint(t).toVec3()
                 val direction = road.geometry.getDirection(t).toVec3().normalized()
-                val right = direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.rightLane.toDouble()
-                val left = -direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.leftLane.toDouble()
+                val right = direction.cross(Vec3.UP).normalized() * LANE_WIDTH
+                val left = -right
                 if (direction.dot(prevDir) < 0.0) {
                     prevLeft = prevRight.also { prevRight = prevLeft }
                 }
 
-                // TODO: Divide road into lines
                 insertSegment(left, pos, right, (i - 1) * ROAD_SEGMENT_LEN.toDouble(), i * ROAD_SEGMENT_LEN.toDouble())
 
                 prevPos = pos
@@ -173,8 +176,8 @@ class ModelGenerator {
             val t = road.geometry.length - if (hasEnd) { road.endIntersection.padding } else { 0.0 }
             val pos = road.geometry.getPoint(t).toVec3()
             val direction = road.geometry.getDirection(t).toVec3().normalized()
-            val right = direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.rightLane.toDouble()
-            val left = -direction.cross(Vec3.UP).normalized() * LANE_WIDTH * road.leftLane.toDouble()
+            val right = direction.cross(Vec3.UP).normalized() * LANE_WIDTH
+            val left = -direction.cross(Vec3.UP).normalized() * LANE_WIDTH
             insertSegment(left, pos, right, start + stepCount * ROAD_SEGMENT_LEN.toDouble(), t)
 
             val endNormal = direction.toGdxVec()
