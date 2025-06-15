@@ -99,26 +99,31 @@ class Layout {
         intersection.recalculateIntersectionRoads()
     }
 
-    fun deleteRoad(road: Road) {
+    fun deleteRoad(road: Road, deleteIntersections: Boolean = true) {
         road.startIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 deleteIntersection(it)
             }
+            roads.remove(road.id)
         }
-        roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings): Intersection {
+    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings?): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection =
-            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, intersectionSettings)
+            Intersection(
+                newIntersectionId,
+                position.xzProjection(),
+                DEFAULT_INTERSECTION_PADDING,
+                intersectionSettings
+            )
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
@@ -181,6 +186,38 @@ class Layout {
 
         intersectionIdCount = max(intersectionIdCount, intersection.id + 1)
         intersections[intersection.id] = intersection
+    }
+
+    fun splitRoad(originalRoad: Road, clickPoint: Vec3): Triple<Road, Road, Intersection> {
+        val (closestPoint, splitGlobal) = originalRoad.geometry.closestPoint(clickPoint.xzProjection())
+
+        val newIntersection = addIntersection(closestPoint.toVec3(), null)
+
+        val firstSpline = originalRoad.geometry.copy(
+            startPadding = originalRoad.startPadding - DEFAULT_INTERSECTION_PADDING,
+            endPadding = originalRoad.geometry.length - splitGlobal
+        )
+
+        val secondSpline = originalRoad.geometry.copy(
+            startPadding = splitGlobal,
+            endPadding = originalRoad.endPadding - DEFAULT_INTERSECTION_PADDING
+        )
+
+        val road1 = Road(
+            id = roadIdCount++,
+            startIntersection = originalRoad.startIntersection,
+            endIntersection = newIntersection,
+            geometry = firstSpline,
+        )
+
+        val road2 = Road(
+            id = roadIdCount++,
+            startIntersection = newIntersection,
+            endIntersection = originalRoad.endIntersection,
+            geometry = secondSpline,
+        )
+
+        return Triple(road1, road2, newIntersection)
     }
 
     companion object {
