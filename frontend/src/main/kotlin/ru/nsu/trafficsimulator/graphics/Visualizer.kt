@@ -284,9 +284,11 @@ class Visualizer(private var layout: Layout) {
         mesh.updateVertices(0, vertices)
     }
 
+    // Valid heatmap values lie in range [1.0, 2.0], offset by 1 from [0.0, 1.0]
+    // heatmap value of 0.0 is an invalid value
     private fun getHeatmapValue(segments: List<ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
-        val segment = segments.find { it.road.id.toLong() == roadId && it.laneId == laneId } ?: return -1.0
-        return segment.segments[min(floor(offset / segment.segmentLen).toInt(), segment.segments.size - 1)]
+        val segment = segments.find { it.road.id.toLong() == roadId && it.laneId == laneId } ?: return 0.0
+        return segment.segments[min(floor(offset / segment.segmentLen).toInt(), segment.segments.size - 1)] + 1.0
     }
 
     fun updateLayout(layout: Layout) {
