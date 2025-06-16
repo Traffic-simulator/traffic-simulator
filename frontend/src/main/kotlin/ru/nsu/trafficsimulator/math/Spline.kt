@@ -360,9 +360,11 @@ class Spline {
         }
 
         private fun getNormalizedPosition(distance: Double): Double {
+            // 0.0 <= f(distance) <= 1.0
+            // such that length of spline until f(distance) = distance
             // f(0) = 0
-            // f'(0) = 1/alpha'(0)
-            // f(1) = f(0) + f'(0) * dt
+            // f'(0) = 1/|(x'(0), y'(0))|
+            // Compensate polynom's derivative length
             val minStepSize = 0.2
             val iterationCount = ceil(distance / minStepSize).toInt()
             val actualStepSize = distance / iterationCount
