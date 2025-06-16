@@ -12,7 +12,6 @@ import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model.Road
 
 private const val START_DIRECTION_LENGTH = 25.0
 
@@ -24,13 +23,6 @@ class AddRoadTool : IEditingTool {
 
     private var existingStartIntersection: Intersection? = null
     private var startPosition: Vec3? = null
-
-    private data class SplitData(
-        val originalRoad: Road,
-        val newRoad1: Road,
-        val newRoad2: Road,
-        val newIntersection: Intersection
-    )
 
     override fun getButtonName(): String {
         return name
