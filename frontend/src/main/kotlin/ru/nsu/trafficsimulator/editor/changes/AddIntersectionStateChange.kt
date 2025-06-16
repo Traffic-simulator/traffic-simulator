@@ -22,7 +22,7 @@ class AddIntersectionStateChange(
                 )
         }
 
-        layout.intersections[newIntersection!!.id] = newIntersection!!
+        layout.pushIntersection(newIntersection!!)
 
         return newIntersection!!
     }
