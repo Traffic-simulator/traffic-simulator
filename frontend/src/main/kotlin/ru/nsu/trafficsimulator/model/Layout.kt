@@ -188,38 +188,6 @@ class Layout {
         intersections[intersection.id] = intersection
     }
 
-    fun splitRoad(originalRoad: Road, clickPoint: Vec3): Triple<Road, Road, Intersection> {
-        val (closestPoint, splitGlobal) = originalRoad.geometry.closestPoint(clickPoint.xzProjection())
-
-        val newIntersection = addIntersection(closestPoint.toVec3(), null)
-
-        val firstSpline = originalRoad.geometry.copy(
-            startPadding = originalRoad.startPadding - DEFAULT_INTERSECTION_PADDING,
-            endPadding = originalRoad.geometry.length - splitGlobal
-        )
-
-        val secondSpline = originalRoad.geometry.copy(
-            startPadding = splitGlobal,
-            endPadding = originalRoad.endPadding - DEFAULT_INTERSECTION_PADDING
-        )
-
-        val road1 = Road(
-            id = roadIdCount++,
-            startIntersection = originalRoad.startIntersection,
-            endIntersection = newIntersection,
-            geometry = firstSpline,
-        )
-
-        val road2 = Road(
-            id = roadIdCount++,
-            startIntersection = newIntersection,
-            endIntersection = originalRoad.endIntersection,
-            geometry = secondSpline,
-        )
-
-        return Triple(road1, road2, newIntersection)
-    }
-
     companion object {
         const val DEFAULT_INTERSECTION_PADDING = 10.0
         const val LANE_WIDTH = 4.0

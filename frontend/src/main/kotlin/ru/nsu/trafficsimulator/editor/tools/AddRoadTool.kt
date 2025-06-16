@@ -57,22 +57,7 @@ class AddRoadTool : IEditingTool {
         try {
             startPosition?.let { startPosition ->
                 val endPosition = getIntersectionWithGround(screenPos, camera!!) ?: return null
-                val splitResults = mutableListOf<SplitData>()
-
-                existingStartIntersection = processRoadSplit(
-                    startPosition,
-                    layout!!,
-                    existingStartIntersection,
-                    splitResults
-                )
-
-                val existingEndIntersection = processRoadSplit(
-                    endPosition,
-                    layout!!,
-                    findRoadIntersectionAt(endPosition),
-                    splitResults
-                )
-
+                var existingEndIntersection = findRoadIntersectionAt(endPosition)
 
                 val dir = (endPosition - startPosition).normalized()
                 val startDirection = startPosition + dir * START_DIRECTION_LENGTH
@@ -85,24 +70,61 @@ class AddRoadTool : IEditingTool {
                     existingEndIntersection
                 )
 
-                return when (splitResults.size) {
-                    0 -> roadChange
-                    1 -> SplitRoadStateChange(
-                        roadChange,
-                        splitResults[0].originalRoad,
-                        Pair(splitResults[0].newRoad1, splitResults[0].newRoad2)
-                    )
-                    2 -> SplitRoadStateChange(
-                        roadChange,
-                        splitResults[0].originalRoad,
-                        Pair(splitResults[0].newRoad1, splitResults[0].newRoad2),
+                val startRoad = findRoad(layout!!, startPosition)
+                val endRoad = findRoad(layout!!, endPosition)
+
+                return when {
+                    // If we are connecting 2 roads
+                    startRoad != null && endRoad != null && existingStartIntersection == null && existingEndIntersection == null -> {
+                        val (startPosOnRoad, _) = startRoad.geometry.closestPoint(startPosition.xzProjection())
+                        existingStartIntersection = findRoadIntersectionAt(startPosOnRoad.toVec3())
+                        val (endPosOnRoad, _) = endRoad.geometry.closestPoint(endPosition.xzProjection())
+                        existingEndIntersection = findRoadIntersectionAt(endPosOnRoad.toVec3())
+                        val firstSplit = SplitRoadStateChange(
+                            AddRoadStateChange(
+                                startPosOnRoad.toVec3() to startDirection,
+                                existingStartIntersection,
+                                endPosOnRoad.toVec3() to endDirection,
+                                existingEndIntersection
+                            ),
+                            startRoad, startPosOnRoad.toVec3()
+                        )
                         SplitRoadStateChange(
                             null,
-                            splitResults[1].originalRoad,
-                            Pair(splitResults[1].newRoad1, splitResults[1].newRoad2)
+                            endRoad, endPosOnRoad.toVec3(),
+                            firstSplit
                         )
-                    )
-                    else -> null
+                    }
+                    // If we are splitting by first click
+                    startRoad != null && existingStartIntersection == null -> {
+                        val (startPos, _) = startRoad.geometry.closestPoint(startPosition.xzProjection())
+                        existingStartIntersection = findRoadIntersectionAt(startPos.toVec3())
+                        SplitRoadStateChange(
+                            AddRoadStateChange(
+                                startPos.toVec3() to startDirection,
+                                existingStartIntersection,
+                                endPosition to endDirection,
+                                existingEndIntersection
+                            ),
+                            startRoad, startPos.toVec3()
+                        )
+                    }
+                    // If we are splitting by second click
+                    endRoad != null && existingEndIntersection == null -> {
+                        val (endPos, _) = endRoad.geometry.closestPoint(endPosition.xzProjection())
+                        existingEndIntersection = findRoadIntersectionAt(endPos.toVec3())
+                        SplitRoadStateChange(
+                            AddRoadStateChange(
+                                startPosition to startDirection,
+                                existingStartIntersection,
+                                endPos.toVec3() to endDirection,
+                                existingEndIntersection
+                            ),
+                            endRoad, endPos.toVec3()
+                        )
+                    }
+                    // If we aren't splitting
+                    else -> roadChange
                 }
             }
             return null
@@ -111,6 +133,7 @@ class AddRoadTool : IEditingTool {
             existingStartIntersection = null
         }
     }
+
     override fun handleDrag(screenPos: Vec2) {
         return
     }
@@ -131,21 +154,5 @@ class AddRoadTool : IEditingTool {
             }
         }
         return null
-    }
-
-    private fun processRoadSplit(
-        position: Vec3,
-        layout: Layout,
-        currentIntersection: Intersection?,
-        splitResults: MutableList<SplitData>
-    ): Intersection {
-        if (currentIntersection != null) return currentIntersection
-
-        return findRoad(layout, position)?.let { road ->
-            val (road1, road2) = layout.splitRoad(road, position)
-            layout.roadIdCount = maxOf(layout.roadIdCount, road2.id + 1)
-            splitResults.add(SplitData(road, road1, road2, road1.endIntersection))
-            road1.endIntersection
-        } ?: layout.addIntersection(position, null)
     }
 }
