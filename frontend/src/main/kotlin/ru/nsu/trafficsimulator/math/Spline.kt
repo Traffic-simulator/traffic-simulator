@@ -172,7 +172,7 @@ class Spline {
     /**
      * @return Pair of closest point and distance from the start of that point
      */
-    fun closestPoint(point: Vec2): Pair<Vec2, Double> {
+    fun closestPoint(point: Vec2): Triple<Vec2, Vec2, Double> {
         return splineParts
             .map { it.closestPoint(point) }
             .minBy { (closestPoint, _) -> point.distance(closestPoint) }
@@ -194,8 +194,8 @@ class Spline {
 
         val (x, y) = normalizedPolynom(newPoint to newDirection, splineParts.first().getEndPoint())
         val partLength = calculateLength(x, y)
-        splineParts.removeFirst()
-        splineParts.addFirst(SplinePart(x, y, 0.0, partLength, true))
+
+        splineParts[0] = SplinePart(x, y, 0.0, partLength, true)
         recalculateSplineLength()
     }
 
@@ -206,19 +206,6 @@ class Spline {
             length += sp.length
         }
         this.length = length
-    }
-
-    private fun calculateLength(x: Poly3, y: Poly3): Double {
-        val iterations = 1000
-        var length = 0.0
-        var prev = Vec2(x.value(0.0), y.value(0.0))
-        val step = 1.0 / iterations
-        for (i in 0..iterations) {
-            val cur = Vec2(x.value(step * i), y.value(step * i))
-            length += prev.distance(cur)
-            prev = cur
-        }
-        return length
     }
 
     private fun normalizedPolynom(start: Pair<Vec2, Vec2>, end: Pair<Vec2, Vec2>): Pair<Poly3, Poly3> {
@@ -313,24 +300,23 @@ class Spline {
 
         fun getPoint(distance: Double): Vec2 {
             if (normalized) {
-                return Vec2(x.value(distance / length), y.value(distance / length))
+                val t = getNormalizedPosition(distance)
+                return Vec2(x.value(t), y.value(t))
             }
             return Vec2(x.value(distance), y.value(distance))
         }
 
         fun getDirection(distance: Double): Vec2 {
             if (normalized) {
-                return Vec2(x.derivativeValue(distance / length), y.derivativeValue(distance / length))
+                val t = getNormalizedPosition(distance)
+                return Vec2(x.derivativeValue(t), y.derivativeValue(t))
             }
             return Vec2(x.derivativeValue(distance), y.derivativeValue(distance))
         }
 
-        fun closestPoint(point: Vec2): Pair<Vec2, Double> {
-            val maxValue = if (normalized) {
-                1.0
-            } else {
-                length
-            }
+        // Point, direction, distance from start
+        fun closestPoint(point: Vec2): Triple<Vec2, Vec2, Double> {
+            val maxValue = endDist
             val iterationCount = 5
             val sampleCount = 10
             val converge = { start: Double ->
@@ -367,8 +353,28 @@ class Spline {
                 }
             }
 
-            val distanceFromStart = if (normalized) { bestGuess * length } else { bestGuess }
-            return Vec2(x.value(bestGuess), y.value(bestGuess)) to distanceFromStart
+            val distanceFromStart = if (normalized) { calculateLength(x, y, bestGuess) } else { bestGuess }
+
+            return Triple(
+                Vec2(x.value(bestGuess), y.value(bestGuess)),
+                Vec2(x.derivativeValue(bestGuess), y.derivativeValue(bestGuess)),
+                distanceFromStart
+            )
+        }
+
+        private fun getNormalizedPosition(distance: Double): Double {
+            // f(0) = 0
+            // f'(0) = 1/alpha'(0)
+            // f(1) = f(0) + f'(0) * dt
+            val minStepSize = 0.2
+            val iterationCount = ceil(distance / minStepSize).toInt()
+            val actualStepSize = distance / iterationCount
+            var value = 0.0
+            for (i in 0..<iterationCount) {
+                val directionLen = Vec2(x.derivativeValue(value), y.derivativeValue(value)).length()
+                value += actualStepSize / directionLen
+            }
+            return value
         }
 
         override fun toString(): String {
@@ -384,6 +390,20 @@ class Spline {
         result += "\n])\n"
         return result
     }
+}
+
+// Must be: 0.0 <= end <= 1.0
+fun calculateLength(x: Poly3, y: Poly3, end: Double = 1.0): Double {
+    val iterations = 1000
+    var length = 0.0
+    var prev = Vec2(x.value(0.0), y.value(0.0))
+    val step = end / iterations
+    for (i in 0..iterations) {
+        val cur = Vec2(x.value(step * i), y.value(step * i))
+        length += prev.distance(cur)
+        prev = cur
+    }
+    return length
 }
 
 fun main() {
