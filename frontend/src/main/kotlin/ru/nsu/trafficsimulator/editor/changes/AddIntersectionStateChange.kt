@@ -10,20 +10,21 @@ class AddIntersectionStateChange(
     val position: Vec3,
     val building: BuildingIntersectionSettings? = null,
 ) : IStateChange {
-    var newIntersection: Intersection? = null
+    private var newIntersection: Intersection? = null
 
     override fun apply(layout: Layout): Intersection {
-        val intersectionId = layout.intersectionIdCount++
-        val intersection =
-            Intersection(
-                intersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING,
-                building
-            )
-        layout.intersections[intersectionId] = intersection
+        if (newIntersection == null) {
+            val intersectionId = layout.intersectionIdCount++
+            newIntersection =
+                Intersection(
+                    intersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING,
+                    building
+                )
+        }
 
-        newIntersection = intersection
+        layout.intersections[newIntersection!!.id] = newIntersection!!
 
-        return intersection
+        return newIntersection!!
     }
 
     override fun revert(layout: Layout) {

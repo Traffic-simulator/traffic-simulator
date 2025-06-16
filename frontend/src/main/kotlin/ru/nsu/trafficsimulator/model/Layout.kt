@@ -72,6 +72,12 @@ class Layout {
             road.endIntersection.signals[road] = Signal()
         }
 
+        if (!intersections.containsKey(road.startIntersection.id)) {
+            pushIntersection(road.startIntersection)
+        }
+        if (!intersections.containsKey(road.endIntersection.id)) {
+            pushIntersection(road.endIntersection)
+        }
         road.startIntersection.connectRoad(road)
         road.endIntersection.connectRoad(road)
 
