@@ -2,16 +2,13 @@ package path_builder
 
 import SimulationConfig
 import Waypoint
-import jakarta.validation.Path
 import network.Lane
 import network.Network
-import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.VehicleDetector
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.random.Random
 
 
 // TODO: Use proxy or dectorator pattern
@@ -52,7 +49,6 @@ class ShortestPathBuilder: IPathBuilder {
      */
     override fun getNextMLCDistance(vehicle: Vehicle): Double {
         var curLane = vehicle.lane
-        var curDir = vehicle.direction
         var first = true
         var acc_distance = 0.0
         var tmpAcc = curLane.length - vehicle.position
@@ -74,7 +70,6 @@ class ShortestPathBuilder: IPathBuilder {
             tmpAcc = nextLane.lane.length
 
             curLane = nextLane.lane
-            curDir = curDir.opposite(nextLane.isDirectionOpposite)
         }
         return SimulationConfig.INF
     }
@@ -82,7 +77,6 @@ class ShortestPathBuilder: IPathBuilder {
     private fun getDijkstraShortestPath(network: Network, source: Waypoint, destination: Waypoint, initPosition: Double): ArrayList<IPathBuilder.PathWaypoint> {
         data class RoadWaypoint (
             val lane: Lane,
-            val direction: Direction,
             val type: IPathBuilder.PWType
         )
 
@@ -91,8 +85,8 @@ class ShortestPathBuilder: IPathBuilder {
         val par = mutableMapOf<RoadWaypoint, RoadWaypoint>()
         var first = true
         val srcLane = network.getLaneById(source.roadId, source.laneId)
-        dist[RoadWaypoint(srcLane, source.direction, IPathBuilder.PWType.NORMAL)] = 0.0
-        queue.add(RoadWaypoint(srcLane, source.direction, IPathBuilder.PWType.NORMAL) to 0.0)
+        dist[RoadWaypoint(srcLane, IPathBuilder.PWType.NORMAL)] = 0.0
+        queue.add(RoadWaypoint(srcLane, IPathBuilder.PWType.NORMAL) to 0.0)
 
         // States with type.MLC are the same, and imply that MLC can be done before the end of the road.
         //                               No matter from distance reserve.
@@ -104,9 +98,9 @@ class ShortestPathBuilder: IPathBuilder {
             if (curDist > dist.getValue(curRoadWaypoint)) continue
 
             // Explore the next lanes
-            curRoadWaypoint.lane.getNextLane(curRoadWaypoint.direction)?.forEach {
-                (toLane, dirChange) ->
-                    val toWaypoint = RoadWaypoint(toLane, curRoadWaypoint.direction.opposite(dirChange), IPathBuilder.PWType.NORMAL)
+            curRoadWaypoint.lane.getNextLane()?.forEach {
+                toLane ->
+                    val toWaypoint = RoadWaypoint(toLane, IPathBuilder.PWType.NORMAL)
                     val newDist = curDist + curRoadWaypoint.lane.road.troad.length - (if (first) initPosition else 0.0) // TODO: Think about it
                     val oldDist = dist.getValue(toWaypoint)
                     if (newDist < oldDist) {
@@ -131,7 +125,7 @@ class ShortestPathBuilder: IPathBuilder {
                     if (! isMLCPossible(availablePosition, roadLanes, curRoadWaypoint.lane.laneId, toLane.laneId))
                         return@forEach
 
-                    val toWaypoint = RoadWaypoint(toLane, curRoadWaypoint.direction, IPathBuilder.PWType.MLC)
+                    val toWaypoint = RoadWaypoint(toLane, IPathBuilder.PWType.MLC)
 
                     // Add some distance to do not create cycles with mandatory lane changes
                     val newDist = curDist + 10.0 * numLaneChanges
@@ -150,7 +144,7 @@ class ShortestPathBuilder: IPathBuilder {
         val dstLane = network.getLaneById(destination.roadId, destination.laneId)
 
         // TODO: Currently assume building can be reached without MLC on the last lane
-        var curWaypoint = RoadWaypoint(dstLane, destination.direction, IPathBuilder.PWType.NORMAL)
+        var curWaypoint = RoadWaypoint(dstLane, IPathBuilder.PWType.NORMAL)
         if (!par.containsKey(curWaypoint)) {
             return path
         }
@@ -170,7 +164,6 @@ class ShortestPathBuilder: IPathBuilder {
                 path.add(IPathBuilder.PathWaypoint(
                     IPathBuilder.PWType.MLC,
                     curWaypoint.lane,
-                    false,
                     getMLCMaxRoadOffset(curWaypoint.lane.length, 1, roadLanes, toLaneId))) // to be find path using available space. TODO: another logic!
 
                 var i = 2
@@ -180,19 +173,15 @@ class ShortestPathBuilder: IPathBuilder {
                     path.add(IPathBuilder.PathWaypoint(
                         IPathBuilder.PWType.MLC,
                         road.getLaneById(toLaneId),
-                        false,
                         getMLCMaxRoadOffset(curWaypoint.lane.length, i, roadLanes, tmpFromLaneId)))
                     toLaneId = tmpFromLaneId
                     i++
                 }
             } else {
                 // 2) Simple next road change
-                val oldDir = par.get(curWaypoint)!!.direction
-                val curDir = curWaypoint.direction
                 path.add(IPathBuilder.PathWaypoint(
                     IPathBuilder.PWType.NORMAL,
                     curWaypoint.lane,
-                    oldDir != curDir,
                     -SimulationConfig.INF))
             }
 
@@ -201,7 +190,6 @@ class ShortestPathBuilder: IPathBuilder {
         path.add(IPathBuilder.PathWaypoint(
             IPathBuilder.PWType.NORMAL,
             curWaypoint.lane,
-            false,
             -SimulationConfig.INF))
 
         Collections.reverse(path)
@@ -260,13 +248,12 @@ class ShortestPathBuilder: IPathBuilder {
         return null
     }
 
-    private fun generateNextRoads(vehicle: Vehicle, lane: Lane, direction: Direction) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
+    private fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
         var curLane = lane
-        var curDir = direction
 
         // initial lane
         var acc_distance = 0.0
-        yield(VehicleDetector.VehicleLaneSequence(vehicle, lane, direction, acc_distance, true))
+        yield(VehicleDetector.VehicleLaneSequence(vehicle, lane, acc_distance, true))
         acc_distance += lane.road.troad.length - vehicle.position
 
         // next path lanes
@@ -280,7 +267,6 @@ class ShortestPathBuilder: IPathBuilder {
                 VehicleDetector.VehicleLaneSequence(
                     vehicle,
                     nextLane.lane,
-                    curDir.opposite(nextLane.isDirectionOpposite),
                     acc_distance,
                     false
                 )
@@ -288,21 +274,20 @@ class ShortestPathBuilder: IPathBuilder {
             acc_distance += nextLane.lane.length
 
             curLane = nextLane.lane
-            curDir = curDir.opposite(nextLane.isDirectionOpposite)
         }
     }
 
     override fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
         createPathIfNotExists(vehicle, vehicle.position)
 
-        return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, vehicle.lane, vehicle.direction))
+        return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, vehicle.lane))
     }
 
     private fun createPathIfNotExists(vehicle: Vehicle, initPosition: Double) {
         if (!vehiclesPaths.containsKey(vehicle.vehicleId)) {
             vehiclesPaths[vehicle.vehicleId] = getDijkstraShortestPath(
                 vehicle.network,
-                Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString(), vehicle.direction),
+                Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString()),
                 vehicle.destination,
                 initPosition)
         }
