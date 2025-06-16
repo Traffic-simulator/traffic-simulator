@@ -172,7 +172,7 @@ class Spline {
     /**
      * @return Pair of closest point and distance from the start of that point
      */
-    fun closestPoint(point: Vec2): Triple<Vec2, Vec2, Double> {
+    fun closestPoint(point: Vec2): Pair<Vec2, Vec2> {
         return splineParts
             .map { it.closestPoint(point) }
             .minBy { (closestPoint, _) -> point.distance(closestPoint) }
@@ -315,7 +315,7 @@ class Spline {
         }
 
         // Point, direction, distance from start
-        fun closestPoint(point: Vec2): Triple<Vec2, Vec2, Double> {
+        fun closestPoint(point: Vec2): Pair<Vec2, Vec2> {
             val maxValue = endDist
             val iterationCount = 5
             val sampleCount = 10
@@ -353,12 +353,9 @@ class Spline {
                 }
             }
 
-            val distanceFromStart = if (normalized) { calculateLength(x, y, bestGuess) } else { bestGuess }
-
-            return Triple(
+            return Pair(
                 Vec2(x.value(bestGuess), y.value(bestGuess)),
-                Vec2(x.derivativeValue(bestGuess), y.derivativeValue(bestGuess)),
-                distanceFromStart
+                Vec2(x.derivativeValue(bestGuess), y.derivativeValue(bestGuess))
             )
         }
 

@@ -194,7 +194,7 @@ class ModelGenerator {
                 val point = intersection.position + local
                 var minDist = intersectionBoxSize * intersectionBoxSize
                 for ((_, road) in intersection.intersectionRoads) {
-                    val (closestPoint, direction, pointOffset) = road.geometry.closestPoint(point)
+                    val (closestPoint, direction) = road.geometry.closestPoint(point)
                     val toRight = direction.toVec3().cross(Vec3.UP)
                     val laneCount = if ((point - closestPoint).toVec3().dot(toRight) > 0.0) {
                         road.lane

@@ -34,7 +34,7 @@ inline fun <T> isNear(vec3: Vec3, obj: T, threshold: Double, toVec3: (T) -> Vec3
 fun findRoad(layout: Layout, point: Vec3): Road? {
     val point2d = point.xzProjection()
     for (road in layout.roads.values) {
-        val (closestPoint, direction, pointOffset) = road.geometry.closestPoint(point2d)
+        val (closestPoint, direction) = road.geometry.closestPoint(point2d)
         val toRight = direction.toVec3().cross(Vec3.UP)
         val laneCount = if ((point - closestPoint.toVec3()).dot(toRight) > 0.0) {
             road.rightLane
