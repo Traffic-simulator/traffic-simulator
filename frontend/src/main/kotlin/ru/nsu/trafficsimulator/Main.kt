@@ -104,6 +104,8 @@ class Main : ApplicationAdapter() {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
             visualizer.updateCars(simState.backend.getVehicles())
             visualizer.updateSignals(simState.backend.getSignalStates())
+            visualizer.updateHeatmap(simState.backend.getSegments())
+
             simState.currentTime = simState.backend.getSimulationTime()
         }
 
@@ -189,6 +191,7 @@ class Main : ApplicationAdapter() {
                 ApplicationState.Simulator -> ApplicationState.Editor
             }
             if (state == ApplicationState.Editor) {
+                visualizer.cleanup()
                 inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
                 inputMultiplexer.removeProcessor(editorInputProcess)
@@ -211,6 +214,9 @@ class Main : ApplicationAdapter() {
             ImGui.sameLine()
             if (ImGui.button(">>>")) {
                 simState.speed = 5
+            }
+            if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
+                visualizer.heatmapMode = !visualizer.heatmapMode
             }
         }
         ImGui.end()

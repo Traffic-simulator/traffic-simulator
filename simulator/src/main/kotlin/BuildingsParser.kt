@@ -19,7 +19,6 @@ class BuildingsParser(val openDrive: OpenDRIVE) {
             for (data in additionalData) {
                 val tUser = data as TUserData
                 when (tUser.code) {
-
                     "buildingType" -> buildingType = BuildingTypes.valueOf(tUser.value)
                     "buildingCapacity" -> buildingCapacity = tUser.value.toInt()
                     "buildingFullness" -> buildingCurrentPeople = tUser.value.toInt()
