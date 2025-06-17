@@ -33,7 +33,14 @@ class AddRoadStateChange(
                 realEndIntersection, endPoint.second
             )
         } else {
-            layout.addRoad(newRoad!!)
+            val road = newRoad!!
+            if (!layout.intersections.containsKey(road.startIntersection.id)) {
+                layout.pushIntersection(road.startIntersection)
+            }
+            if (!layout.intersections.containsKey(road.endIntersection.id)) {
+                layout.pushIntersection(road.endIntersection)
+            }
+            layout.addRoad(road)
         }
     }
 

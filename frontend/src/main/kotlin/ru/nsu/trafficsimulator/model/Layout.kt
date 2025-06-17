@@ -73,10 +73,10 @@ class Layout {
         }
 
         if (!intersections.containsKey(road.startIntersection.id)) {
-            pushIntersection(road.startIntersection)
+            throw Exception("Adding road with intersection outside the layout")
         }
         if (!intersections.containsKey(road.endIntersection.id)) {
-            pushIntersection(road.endIntersection)
+            throw Exception("Adding road with intersection outside the layout")
         }
         road.startIntersection.connectRoad(road)
         road.endIntersection.connectRoad(road)
