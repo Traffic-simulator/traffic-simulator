@@ -90,7 +90,13 @@ class Layout {
         building: BuildingIntersectionSettings
     ): Road {
         val buildingIntersection = addIntersection(buildingPosition, building)
-        return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
+        try {
+            val road = addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
+            return road
+        } catch (e: Exception) {
+            deleteIntersection(buildingIntersection)
+            throw e
+        }
     }
 
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {
