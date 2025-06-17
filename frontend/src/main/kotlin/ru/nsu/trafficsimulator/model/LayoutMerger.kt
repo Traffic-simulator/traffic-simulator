@@ -1,11 +1,15 @@
 package ru.nsu.trafficsimulator.model
 
+import ru.nsu.trafficsimulator.model.intsettings.SplitDistrictsIntersectionSettings
+
 const val THRESHOLD = 1.0
 
 class LayoutMerger {
 
     fun merge(layouts: List<Layout>): Layout {
-        val resultLayout = Layout()
+        val newDistrict = layouts.maxBy { it.district }.district + 1
+
+        val resultLayout = Layout(newDistrict)
 
         layouts.forEach { layout ->
             layout.roads.values.forEach {
@@ -16,15 +20,24 @@ class LayoutMerger {
         val mergingIntersections = layouts.map { layout ->
             layout.intersections.values
                 .filter { it.isMerging }
+        }.flatten()
+
+        layouts.forEach { layout ->
+            layout.intersections.values.filter { !it.isMerging }.forEach {
+                resultLayout.pushIntersection(it, true)
+            }
         }
-            .flatten()
 
         val used = mutableSetOf<Long>()
         mergingIntersections.forEach { intersection ->
             if (!used.contains(intersection.id)) {
-                intersection.intersectionSettings = null
+                val merging = intersection.merging!!
+                intersection.intersectionSettings = SplitDistrictsIntersectionSettings(
+                    merging.firstDistrict,
+                    merging.secondDistrict
+                )
                 used.add(intersection.id)
-                resultLayout.pushIntersection(intersection)
+                resultLayout.pushIntersection(intersection, true)
 
                 mergingIntersections.filter { it.id == intersection.id && it !== intersection }
                     .forEach { int ->
@@ -32,12 +45,6 @@ class LayoutMerger {
                             road.reconnectIntersection(int, intersection)
                         }
                     }
-            }
-        }
-
-        layouts.forEach { layout ->
-            layout.intersections.values.filter { !it.isMerging }.forEach {
-                resultLayout.pushIntersection(it, true)
             }
         }
 

@@ -30,7 +30,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
             logger.info { "Accept client: ${clientSocket.inetAddress.hostAddress}" }
 
             Thread {
-                handleClient(clientSocket, clients.size)
+                handleClient(clientSocket)
             }.start()
 
             clients.add(clientSocket)
@@ -49,9 +49,9 @@ class Server(private val port: Int, private val startLayout: Layout) {
     }
 
 
-    private fun handleClient(clientSocket: Socket, districtId: Int) {
+    private fun handleClient(clientSocket: Socket) {
         clientSocket.use { client ->
-            val xodrString = OpenDriveWriter().toString(serializeLayout(startLayout, districtId))
+            val xodrString = OpenDriveWriter().toString(serializeLayout(startLayout))
 
             println("tmp $xodrString")
 
