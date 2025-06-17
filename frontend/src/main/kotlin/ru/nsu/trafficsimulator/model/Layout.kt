@@ -88,11 +88,11 @@ class Layout {
         intersection: Intersection, intersectionDirection: Vec3,
         buildingPosition: Vec3, buildingDirection: Vec3,
         building: BuildingIntersectionSettings
-    ): Road {
+    ): Pair<Intersection, Road> {
         val buildingIntersection = addIntersection(buildingPosition, building)
         try {
             val road = addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
-            return road
+            return buildingIntersection to road
         } catch (e: Exception) {
             deleteIntersection(buildingIntersection)
             throw e
