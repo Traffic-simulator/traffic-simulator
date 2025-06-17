@@ -72,6 +72,12 @@ class Layout {
             road.endIntersection.signals[road] = Signal()
         }
 
+        if (!intersections.containsKey(road.startIntersection.id)) {
+            throw Exception("Adding road with intersection outside the layout")
+        }
+        if (!intersections.containsKey(road.endIntersection.id)) {
+            throw Exception("Adding road with intersection outside the layout")
+        }
         road.startIntersection.connectRoad(road)
         road.endIntersection.connectRoad(road)
 

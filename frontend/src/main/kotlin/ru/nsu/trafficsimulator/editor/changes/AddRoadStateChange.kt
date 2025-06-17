@@ -13,48 +13,43 @@ class AddRoadStateChange(
 ) : IStateChange {
     private var newRoad: Road? = null
 
-    private var startStateChange: AddIntersectionStateChange? = null
-    private var endStateChange: AddIntersectionStateChange? = null
+    private val startStateChange = AddIntersectionStateChange(startPoint.first)
+    private val endStateChange = AddIntersectionStateChange(endPoint.first)
 
     override fun apply(layout: Layout) {
-        if (newRoad != null) {
-            return
-        }
+        if (newRoad == null) {
+            val realStartIntersection = startIntersection ?: startStateChange.apply(layout)
+            val realEndIntersection = endIntersection ?: endStateChange.apply(layout)
 
-        val realStartIntersection: Intersection = if (startIntersection == null) {
-            startStateChange = AddIntersectionStateChange(startPoint.first)
-            startStateChange?.apply(layout)!!
+            if (realStartIntersection.position.distance(realEndIntersection.position) <
+                realStartIntersection.padding + realEndIntersection.padding) {
+                endStateChange.revert(layout)
+                startStateChange.revert(layout)
+                throw IllegalArgumentException("StartPadding + EndPadding > road.length")
+            }
+
+            newRoad = layout.addRoad(
+                realStartIntersection, startPoint.second,
+                realEndIntersection, endPoint.second
+            )
         } else {
-            startIntersection
+            val road = newRoad!!
+            if (!layout.intersections.containsKey(road.startIntersection.id)) {
+                layout.pushIntersection(road.startIntersection)
+            }
+            if (!layout.intersections.containsKey(road.endIntersection.id)) {
+                layout.pushIntersection(road.endIntersection)
+            }
+            layout.addRoad(road)
         }
-
-        val realEndIntersection: Intersection = if (endIntersection == null) {
-            endStateChange = AddIntersectionStateChange(endPoint.first)
-            endStateChange?.apply(layout)!!
-        } else {
-            endIntersection
-        }
-
-        if (realStartIntersection.position.distance(realEndIntersection.position) <
-            realStartIntersection.padding + realEndIntersection.padding) {
-            endStateChange?.revert(layout)
-            startStateChange?.revert(layout)
-            throw IllegalArgumentException("StartPadding + EndPadding > road.length")
-        }
-
-        newRoad = layout.addRoad(
-            realStartIntersection, startPoint.second,
-            realEndIntersection, endPoint.second
-        )
-
     }
 
     override fun revert(layout: Layout) {
         if (newRoad != null) {
             layout.deleteRoad(newRoad!!)
-        }
 
-        endStateChange?.revert(layout)
-        startStateChange?.revert(layout)
+            endStateChange.revert(layout)
+            startStateChange.revert(layout)
+        }
     }
 }
