@@ -17,6 +17,7 @@ import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import imgui.type.ImInt
 import mu.KotlinLogging
+import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.model.Layout
@@ -65,6 +66,7 @@ class Main : ApplicationAdapter() {
         ImGui.styleColorsDark()
         imGuiGlfw.init(windowHandle, true)
         imGuiGl3.init()
+        GLFW.glfwSwapInterval(0)
 
         visualizer = Visualizer(Editor.layout)
 
