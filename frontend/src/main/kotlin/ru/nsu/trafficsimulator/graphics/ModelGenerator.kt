@@ -43,28 +43,18 @@ class ModelGenerator {
         }
 
         fun createLayoutModel(layout: Layout): Model {
-            var model: Model
-            val millis = measureTimeMillis {
-                val modelBuilder = ModelBuilder()
-                modelBuilder.begin()
-                TO_ROAD_HEIGHT.y += 0.01
-                for (road in layout.roads.values) {
-                    val millis = measureTimeMillis {
-                        addRoadToModel(road, modelBuilder)
-                    }
-                    println("Adding road took ${millis}ms")
-                }
-                TO_ROAD_HEIGHT.y -= 0.01
-
-                for (intersection in layout.intersections.values) {
-                    val millis = measureTimeMillis {
-                        addIntersectionToModel(intersection, modelBuilder)
-                    }
-                    println("Adding intersection took ${millis}ms")
-                }
-                model = modelBuilder.end()
+            val modelBuilder = ModelBuilder()
+            modelBuilder.begin()
+            TO_ROAD_HEIGHT.y += 0.01
+            for (road in layout.roads.values) {
+                addRoadToModel(road, modelBuilder)
             }
-            println("Layout update took ${millis}ms")
+            TO_ROAD_HEIGHT.y -= 0.01
+
+            for (intersection in layout.intersections.values) {
+                addIntersectionToModel(intersection, modelBuilder)
+            }
+            val model = modelBuilder.end()
             return model
         }
 
@@ -319,10 +309,7 @@ class ModelGenerator {
                     }
                 }
             }
-            val gcMillis = measureTimeMillis {
-                System.gc()
-            }
-            println("Intersection GC took ${gcMillis}ms")
+            System.gc()
         }
 
         private fun intersectionSdfSign(intersection: Intersection, local: Vec2): Boolean {
