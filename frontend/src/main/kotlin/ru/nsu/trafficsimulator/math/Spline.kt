@@ -287,6 +287,24 @@ class Spline {
 
     class SplinePart(val x: Poly3, val y: Poly3, var offset: Double, val length: Double, val normalized: Boolean) {
         private val endDist = if (normalized) 1.0 else length
+        private val stepSize = 0.2
+        private val normalizedPositions = mutableListOf<Double>()
+
+        init {
+            // 0.0 <= f(distance) <= 1.0
+            // such that length of spline until f(distance) = distance
+            // f(0) = 0
+            // f'(0) = 1/|(x'(0), y'(0))|
+            // Compensate polynom's derivative length
+
+            val iterationCount = floor(length / stepSize).toInt()
+            var value = 0.0
+            for (i in 0..iterationCount) {
+                normalizedPositions.add(value)
+                val directionLen = Vec2(x.derivativeValue(value), y.derivativeValue(value)).length()
+                value += stepSize / directionLen
+            }
+        }
 
         fun getStartPoint(): Pair<Vec2, Vec2> {
             return Vec2(x.value(0.0), y.value(0.0)) to
@@ -360,19 +378,11 @@ class Spline {
         }
 
         private fun getNormalizedPosition(distance: Double): Double {
-            // 0.0 <= f(distance) <= 1.0
-            // such that length of spline until f(distance) = distance
-            // f(0) = 0
-            // f'(0) = 1/|(x'(0), y'(0))|
-            // Compensate polynom's derivative length
-            val minStepSize = 0.2
-            val iterationCount = ceil(distance / minStepSize).toInt()
-            val actualStepSize = distance / iterationCount
-            var value = 0.0
-            for (i in 0..<iterationCount) {
-                val directionLen = Vec2(x.derivativeValue(value), y.derivativeValue(value)).length()
-                value += actualStepSize / directionLen
-            }
+            val stepNumber = floor(distance / stepSize).toInt()
+            val base = normalizedPositions[stepNumber]
+            val rest = distance - stepNumber * stepSize
+            val directionLen = Vec2(x.derivativeValue(base), y.derivativeValue(base)).length()
+            val value = base + rest / directionLen
             return value
         }
 

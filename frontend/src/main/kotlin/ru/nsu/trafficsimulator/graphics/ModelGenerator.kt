@@ -21,6 +21,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.system.measureTimeMillis
 
 class ModelGenerator {
     companion object {
@@ -42,18 +43,28 @@ class ModelGenerator {
         }
 
         fun createLayoutModel(layout: Layout): Model {
-            val modelBuilder = ModelBuilder()
-            modelBuilder.begin()
-            TO_ROAD_HEIGHT.y += 0.01
-            for (road in layout.roads.values) {
-                addRoadToModel(road, modelBuilder)
-            }
-            TO_ROAD_HEIGHT.y -= 0.01
+            var model: Model
+            val millis = measureTimeMillis {
+                val modelBuilder = ModelBuilder()
+                modelBuilder.begin()
+                TO_ROAD_HEIGHT.y += 0.01
+                for (road in layout.roads.values) {
+                    val millis = measureTimeMillis {
+                        addRoadToModel(road, modelBuilder)
+                    }
+                    println("Adding road took ${millis}ms")
+                }
+                TO_ROAD_HEIGHT.y -= 0.01
 
-            for (intersection in layout.intersections.values) {
-                addIntersectionToModel(intersection, modelBuilder)
+                for (intersection in layout.intersections.values) {
+                    val millis = measureTimeMillis {
+                        addIntersectionToModel(intersection, modelBuilder)
+                    }
+                    println("Adding intersection took ${millis}ms")
+                }
+                model = modelBuilder.end()
             }
-            val model = modelBuilder.end()
+            println("Layout update took ${millis}ms")
             return model
         }
 
@@ -190,20 +201,25 @@ class ModelGenerator {
                     PBRFloatAttribute(PBRFloatAttribute.Roughness, 1.0f),
                 )
             )
+            var totalSdfMillis = 0.0
             val intersectionSdf = { local: Vec2 ->
-                val point = intersection.position + local
                 var minDist = intersectionBoxSize * intersectionBoxSize
-                for ((_, road) in intersection.intersectionRoads) {
-                    val (closestPoint, direction) = road.geometry.closestPoint(point)
-                    val toRight = direction.toVec3().cross(Vec3.UP)
-                    val laneCount = if ((point - closestPoint).toVec3().dot(toRight) > 0.0) {
-                        road.lane
-                    } else {
-                        0
+                val millis = measureTimeMillis {
+                    val point = intersection.position + local
+
+                    for ((_, road) in intersection.intersectionRoads) {
+                        val (closestPoint, direction) = road.geometry.closestPoint(point)
+                        val toRight = direction.toVec3().cross(Vec3.UP)
+                        val laneCount = if ((point - closestPoint).toVec3().dot(toRight) > 0.0) {
+                            road.lane
+                        } else {
+                            0
+                        }
+                        val dist = (closestPoint - point).length() - laneCount * LANE_WIDTH
+                        minDist = min(minDist, dist)
                     }
-                    val dist = (closestPoint - point).length() - laneCount * LANE_WIDTH
-                    minDist = min(minDist, dist)
                 }
+                totalSdfMillis += millis
                 minDist
             }
             val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
@@ -343,7 +359,12 @@ class ModelGenerator {
                     }
                 }
             }
-            System.gc()
+            val gcMillis = measureTimeMillis {
+                System.gc()
+            }
+            println("Intersection sdf took ${totalSdfMillis}ms")
+            println("Intersection GC took ${gcMillis}ms")
         }
+
     }
 }
