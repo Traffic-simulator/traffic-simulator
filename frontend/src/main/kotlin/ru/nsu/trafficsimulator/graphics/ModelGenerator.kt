@@ -201,27 +201,6 @@ class ModelGenerator {
                     PBRFloatAttribute(PBRFloatAttribute.Roughness, 1.0f),
                 )
             )
-            var totalSdfMillis = 0.0
-            val intersectionSdf = { local: Vec2 ->
-                var minDist = intersectionBoxSize * intersectionBoxSize
-                val millis = measureTimeMillis {
-                    val point = intersection.position + local
-
-                    for ((_, road) in intersection.intersectionRoads) {
-                        val (closestPoint, direction) = road.geometry.closestPoint(point)
-                        val toRight = direction.toVec3().cross(Vec3.UP)
-                        val laneCount = if ((point - closestPoint).toVec3().dot(toRight) > 0.0) {
-                            road.lane
-                        } else {
-                            0
-                        }
-                        val dist = (closestPoint - point).length() - laneCount * LANE_WIDTH
-                        minDist = min(minDist, dist)
-                    }
-                }
-                totalSdfMillis += millis
-                minDist
-            }
             val insertRect = { a: Vec3, b: Vec3, normal: Vec3 ->
                 meshPartBuilder.rect(
                     MeshPartBuilder.VertexInfo().set((a + TO_INTERSECTION_HEIGHT).toGdxVec(), normal.toGdxVec(), Color.CLEAR, null),
@@ -232,8 +211,7 @@ class ModelGenerator {
             }
             val insertTriangle = { a: Vec3, b: Vec3, c: Vec3, normal: Vec3 ->
                 meshPartBuilder.triangle(
-                    MeshPartBuilder.VertexInfo().set(
-                        a.toGdxVec(),
+                    MeshPartBuilder.VertexInfo().set( a.toGdxVec(),
                         normal.toGdxVec(),
                         Color.CLEAR,
                         null
@@ -252,33 +230,12 @@ class ModelGenerator {
                     ),
                 )
             }
-            val getRefinedGuess = { a: Vec2, b: Vec2 ->
-                val iterationCount = 5
-                var guess = (a + b) / 2.0
-                var left = a
-                var right = b
-                var guessType = intersectionSdf(guess) > 0
-                val leftType = intersectionSdf(left) > 0
-                val rightType = intersectionSdf(right) > 0
-                assert(leftType != rightType)
-                for (i in 0..<iterationCount) {
-                    if (guessType == rightType) {
-                        right = guess
-                        guess = (left + guess) / 2.0
-                    } else {
-                        left = guess
-                        guess = (right + guess) / 2.0
-                    }
-                    guessType = intersectionSdf(guess) > 0
-                }
-                guess
-            }
             val leftBottomCorner = Vec2(-intersectionBoxSize / 2.0, -intersectionBoxSize / 2.0)
             val patterns = arrayOf(
                 {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and !bType and !cType and !dType}
                     to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
-                    val abPoint = getRefinedGuess(a, b).toVec3()
-                    val acPoint = getRefinedGuess(a, c).toVec3()
+                    val abPoint = getRefinedGuess(intersection, a, b).toVec3()
+                    val acPoint = getRefinedGuess(intersection, a, c).toVec3()
                     val normal = (abPoint - acPoint).cross(Vec3.UP).normalized()
                     insertRect(acPoint, abPoint, normal)
                     insertTriangle(d.toVec3() + TO_INTERSECTION_HEIGHT, abPoint + TO_INTERSECTION_HEIGHT, b.toVec3() + TO_INTERSECTION_HEIGHT, Vec3.UP)
@@ -287,8 +244,8 @@ class ModelGenerator {
                 },
                 { aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and bType and !cType and !dType }
                     to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
-                    val bdPoint = getRefinedGuess(b, d).toVec3()
-                    val acPoint = getRefinedGuess(a, c).toVec3()
+                    val bdPoint = getRefinedGuess(intersection, b, d).toVec3()
+                    val acPoint = getRefinedGuess(intersection, a, c).toVec3()
                     val normal = (bdPoint - acPoint).cross(Vec3.UP).normalized()
                     insertRect(acPoint, bdPoint, normal)
                     meshPartBuilder.rect(
@@ -300,10 +257,10 @@ class ModelGenerator {
                 },
                 {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> aType and dType and !bType and !cType}
                     to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
-                    val abPoint = getRefinedGuess(a, b).toVec3()
-                    val acPoint = getRefinedGuess(a, c).toVec3()
-                    val bdPoint = getRefinedGuess(b, d).toVec3()
-                    val cdPoint = getRefinedGuess(c, d).toVec3()
+                    val abPoint = getRefinedGuess(intersection, a, b).toVec3()
+                    val acPoint = getRefinedGuess(intersection, a, c).toVec3()
+                    val bdPoint = getRefinedGuess(intersection, b, d).toVec3()
+                    val cdPoint = getRefinedGuess(intersection, c, d).toVec3()
                     var normal = (cdPoint - abPoint).cross(Vec3.UP).normalized()
                     insertRect(abPoint, bdPoint, normal)
                     normal = (abPoint - cdPoint).cross(Vec3.UP).normalized()
@@ -311,8 +268,8 @@ class ModelGenerator {
                 },
                 {aType: Boolean, bType: Boolean, cType: Boolean, dType: Boolean -> !aType and bType and cType and dType}
                     to { a: Vec2, b: Vec2, c: Vec2, d: Vec2 ->
-                    val abPoint = getRefinedGuess(a, b).toVec3()
-                    val acPoint = getRefinedGuess(a, c).toVec3()
+                    val abPoint = getRefinedGuess(intersection, a, b).toVec3()
+                    val acPoint = getRefinedGuess(intersection, a, c).toVec3()
                     val normal = (acPoint - abPoint).cross(Vec3.UP).normalized()
                     insertRect(abPoint, acPoint, normal)
                     insertTriangle(acPoint + TO_INTERSECTION_HEIGHT, a.toVec3() + TO_INTERSECTION_HEIGHT, abPoint + TO_INTERSECTION_HEIGHT, Vec3.UP)
@@ -327,20 +284,23 @@ class ModelGenerator {
                     )
                 },
             )
+            val sdfSignGrid = Array(INTERSECTION_SAMPLES_PER_SIDE) { Array(INTERSECTION_SAMPLES_PER_SIDE) { false } }
+            for (i in 0..<INTERSECTION_SAMPLES_PER_SIDE) {
+                for (j in 0..<INTERSECTION_SAMPLES_PER_SIDE) {
+                    val a = leftBottomCorner + Vec2(i, j) * cellSize
+                    sdfSignGrid[i][j] = intersectionSdfSign(intersection, a)
+                }
+            }
             for (i in 0..<(INTERSECTION_SAMPLES_PER_SIDE - 1)) {
                 for (j in 0..<(INTERSECTION_SAMPLES_PER_SIDE - 1)) {
                     val a = leftBottomCorner + Vec2(i, j) * cellSize
                     val b = leftBottomCorner + Vec2(i + 1, j) * cellSize
                     val c = leftBottomCorner + Vec2(i, j + 1) * cellSize
                     val d = leftBottomCorner + Vec2(i + 1, j + 1) * cellSize
-                    val aSample = intersectionSdf(a)
-                    val bSample = intersectionSdf(b)
-                    val cSample = intersectionSdf(c)
-                    val dSample = intersectionSdf(d)
-                    val aType = aSample > 0.0
-                    val bType = bSample > 0.0
-                    val cType = cSample > 0.0
-                    val dType = dSample > 0.0
+                    val aType = sdfSignGrid[i][j]
+                    val bType = sdfSignGrid[i + 1][j]
+                    val cType = sdfSignGrid[i][j + 1]
+                    val dType = sdfSignGrid[i + 1][j + 1]
 
                     for ((match, action) in patterns) {
                         if (match(aType, bType, cType, dType)) {
@@ -362,9 +322,48 @@ class ModelGenerator {
             val gcMillis = measureTimeMillis {
                 System.gc()
             }
-            println("Intersection sdf took ${totalSdfMillis}ms")
             println("Intersection GC took ${gcMillis}ms")
         }
 
+        private fun intersectionSdfSign(intersection: Intersection, local: Vec2): Boolean {
+            val point = intersection.position + local
+
+            for ((_, road) in intersection.intersectionRoads) {
+                val (closestPoint, direction) = road.geometry.closestPoint(point)
+                val toRight = direction.toVec3().cross(Vec3.UP)
+                val laneCount = if ((point - closestPoint).toVec3().dot(toRight) > 0.0) {
+                    road.lane
+                } else {
+                    0
+                }
+                val dist = (closestPoint - point).length() - laneCount * LANE_WIDTH
+                if (dist < 0) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        private fun getRefinedGuess(intersection: Intersection, a: Vec2, b: Vec2): Vec2 {
+            val iterationCount = 5
+            var guess = (a + b) / 2.0
+            var left = a
+            var right = b
+            var guessType = intersectionSdfSign(intersection, guess)
+            val leftType = intersectionSdfSign(intersection, left)
+            val rightType = intersectionSdfSign(intersection, right)
+            assert(leftType != rightType)
+            for (i in 0..<iterationCount) {
+                if (guessType == rightType) {
+                    right = guess
+                    guess = (left + guess) / 2.0
+                } else {
+                    left = guess
+                    guess = (right + guess) / 2.0
+                }
+                guessType = intersectionSdfSign(intersection, guess)
+            }
+            return guess
+        }
     }
 }
