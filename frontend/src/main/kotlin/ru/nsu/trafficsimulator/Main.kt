@@ -23,17 +23,12 @@ import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.intsettings.MergingIntersectionSettings
 import ru.nsu.trafficsimulator.serializer.serializeLayout
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.PrintWriter
-import java.net.ServerSocket
-import java.net.Socket
+import ru.nsu.trafficsimulator.server.Server
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-
-import ru.nsu.trafficsimulator.server.Server
 
 val logger = KotlinLogging.logger("FRONTEND")
 
@@ -267,12 +262,11 @@ class Main : ApplicationAdapter() {
     }
 
     private fun hostLayout(): Layout {
-        // TODO add merging settings
-        val result = Layout()
-        result.addIntersection(Vec3(150.0, 0.0, 0.0))
-        result.addIntersection(Vec3(-150.0, 0.0, 0.0))
-        result.addIntersection(Vec3(0.0, 0.0, 150.0))
-        result.addIntersection(Vec3(0.0, 0.0, -150.0))
+        val result = Layout(0)
+        result.addIntersection(Vec3(150.0, 0.0, 0.0), MergingIntersectionSettings(4, 1))
+        result.addIntersection(Vec3(0.0, 0.0, 150.0), MergingIntersectionSettings(1, 2))
+        result.addIntersection(Vec3(-150.0, 0.0, 0.0), MergingIntersectionSettings(2, 3))
+        result.addIntersection(Vec3(0.0, 0.0, -150.0), MergingIntersectionSettings(3, 4))
 
         return result
     }
