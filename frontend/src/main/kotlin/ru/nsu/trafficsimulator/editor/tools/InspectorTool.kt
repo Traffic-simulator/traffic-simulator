@@ -18,7 +18,6 @@ import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
-import ru.nsu.trafficsimulator.model.BuildingType
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
