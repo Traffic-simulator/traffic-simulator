@@ -105,7 +105,7 @@ class BackendAPI : ISimulation {
             lane.road.troad,
             lane.laneId,
             lane.lenOfSegment,
-            lane.segments.map { it.currentState }
+            lane.segments.map { it.getHeatmapScore() }
         )
     }
 }

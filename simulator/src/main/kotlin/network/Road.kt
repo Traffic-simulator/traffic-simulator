@@ -15,16 +15,14 @@ class Road(val troad: TRoad) {
     var predecessor: TRoadLinkPredecessorSuccessor? = troad.link.predecessor
     var successor: TRoadLinkPredecessorSuccessor? = troad.link.successor
     var signals: TRoadSignals? = troad.signals
+    var negativeSideAvgSpeed: Double = 0.0
+    var positiveSideAvgSpeed: Double = 0.0
 
     init {
 
         if (troad.lanes.laneSection[0].left != null) {
             lanes.addAll(troad.lanes.laneSection[0].left.lane.filter { /* usingRoadTypes.contains(it.type) */ true }.map{ it -> Lane(it, this, it.id.toInt())})
         }
-        // TODO: Is it any cases when we need center lane?
-//        if (troad.lanes.laneSection[0].center != null) {
-//            lanes.addAll(troad.lanes.laneSection[0].center.lane.map{ it -> Lane(it, this, it.id.toInt())})
-//        }
         if (troad.lanes.laneSection[0].right != null) {
             lanes.addAll(troad.lanes.laneSection[0].right.lane.filter { /* usingRoadTypes.contains(it.type) */ true  }.map{ it -> Lane(it, this, it.id.toInt())})
         }
@@ -65,7 +63,6 @@ class Road(val troad: TRoad) {
         if (signals != null) {
             for (signal in signals!!.signal.filter { it.dynamic == TYesNo.YES && Regex("[0-9]*-[0-9]*-[0-9]*").matches(it.subtype) }) {
                 // привязываем к тем лэйнам, с которыми совпадает orientation
-                // TODO понять, всегда ли right полосы с "-"
                 if (signal.orientation == "-") {
                     for (lane in lanes.filter { it.laneId < 0 }) {
                         lane.signal = Signal(signal, troad, lane.laneId)
@@ -77,6 +74,17 @@ class Road(val troad: TRoad) {
                 }
             }
         }
+    }
+
+    fun getAverageRoadSideSpeed(roadSide: Int): Double {
+        if (roadSide == -1) {
+            return negativeSideAvgSpeed
+        }
+        if (roadSide == 1) {
+            return positiveSideAvgSpeed
+        }
+
+        throw RuntimeException("Wrong road side")
     }
 
     fun getLaneById(laneId: Int): Lane {
