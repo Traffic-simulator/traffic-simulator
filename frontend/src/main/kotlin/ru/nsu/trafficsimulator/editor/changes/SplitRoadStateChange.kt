@@ -10,25 +10,44 @@ class SplitRoadStateChange(
     private var addRoadStateChange: AddRoadStateChange?,
     private val originalRoad: Road,
     private val clickPoint: Vec3,
-    private val secondRoadSplit: SplitRoadStateChange? = null
+    private val isEndSplit: Boolean = false,
+    private val splitIntersection: Intersection? = null
 ) : IStateChange {
 
     private lateinit var newRoad1: Road
     private lateinit var newRoad2: Road
-    private lateinit var newIntersection: Intersection
     private lateinit var oldIntersections: Pair<Intersection, Intersection>
+    private lateinit var newRoadIntersection: Pair<Intersection, Intersection>
+
+    // Добавляем всего одно поле
+    private var originalRoadWasPresent = true
 
     override fun apply(layout: Layout) {
-        addRoadStateChange?.apply(layout)
-        val (road1, road2, intersection) = splitRoad(layout)
-        this.newRoad1 = road1
-        this.newRoad2 = road2
-        this.newIntersection = intersection
+        originalRoadWasPresent = layout.roads.containsKey(originalRoad.id)
+
+        if (addRoadStateChange != null && splitIntersection == null) {
+            newRoadIntersection = addRoadStateChange!!.apply(layout)
+            val newIntersection: Intersection = if (isEndSplit) {
+                newRoadIntersection.second
+            } else {
+                newRoadIntersection.first
+            }
+            if (!(::newRoad1.isInitialized && ::newRoad2.isInitialized)) {
+                val (road1, road2, _) = splitRoad(layout, newIntersection)
+                this.newRoad1 = road1
+                this.newRoad2 = road2
+            }
+        } else {
+            if (!(::newRoad1.isInitialized && ::newRoad2.isInitialized)) {
+                val (road1, road2, _) = splitRoad(layout, splitIntersection!!)
+                this.newRoad1 = road1
+                this.newRoad2 = road2
+            }
+        }
         this.oldIntersections = Pair(originalRoad.startIntersection, originalRoad.endIntersection)
         layout.deleteRoad(originalRoad, false)
         layout.addRoad(newRoad1)
         layout.addRoad(newRoad2)
-        secondRoadSplit?.apply(layout)
     }
 
     override fun revert(layout: Layout) {
@@ -48,13 +67,10 @@ class SplitRoadStateChange(
             layout.pushIntersection(oldIntersections.second)
         }
         addRoadStateChange?.revert(layout)
-        secondRoadSplit?.revert(layout)
     }
 
-    private fun splitRoad(layout: Layout): Triple<Road, Road, Intersection> {
-        val (closestPoint, _, splitGlobal) = originalRoad.geometry.closestPointWithDistance(clickPoint.xzProjection())
-
-        val newIntersection = layout.addIntersection(closestPoint.toVec3(), null)
+    private fun splitRoad(layout: Layout, newIntersection: Intersection): Triple<Road, Road, Intersection> {
+        val (_, _, splitGlobal) = originalRoad.geometry.closestPointWithDistance(clickPoint.xzProjection())
 
         val firstSpline = originalRoad.geometry.copy(
             startPadding = originalRoad.startPadding - DEFAULT_INTERSECTION_PADDING,

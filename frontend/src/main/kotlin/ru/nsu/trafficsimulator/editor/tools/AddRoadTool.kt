@@ -4,6 +4,7 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
+import ru.nsu.trafficsimulator.editor.changes.ConnectRoadsChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.changes.SplitRoadStateChange
 import ru.nsu.trafficsimulator.math.Vec2
@@ -72,19 +73,14 @@ class AddRoadTool : IEditingTool {
                         existingStartIntersection = findRoadIntersectionAt(startPosOnRoad.toVec3())
                         val (endPosOnRoad, _) = endRoad.geometry.closestPoint(endPosition.xzProjection())
                         existingEndIntersection = findRoadIntersectionAt(endPosOnRoad.toVec3())
-                        val firstSplit = SplitRoadStateChange(
+                        ConnectRoadsChange(
                             AddRoadStateChange(
                                 startPosOnRoad.toVec3() to startDirection,
                                 existingStartIntersection,
                                 endPosOnRoad.toVec3() to endDirection,
                                 existingEndIntersection
                             ),
-                            startRoad, startPosOnRoad.toVec3()
-                        )
-                        SplitRoadStateChange(
-                            null,
-                            endRoad, endPosOnRoad.toVec3(),
-                            firstSplit
+                            startRoad, endRoad, startPosOnRoad.toVec3(), endPosOnRoad.toVec3()
                         )
                     }
                     // If we are splitting by first click
@@ -98,7 +94,7 @@ class AddRoadTool : IEditingTool {
                                 endPosition to endDirection,
                                 existingEndIntersection
                             ),
-                            startRoad, startPos.toVec3()
+                            startRoad, startPos.toVec3(), false
                         )
                     }
                     // If we are splitting by second click
@@ -112,7 +108,7 @@ class AddRoadTool : IEditingTool {
                                 endPos.toVec3() to endDirection,
                                 existingEndIntersection
                             ),
-                            endRoad, endPos.toVec3()
+                            endRoad, endPos.toVec3(), true
                         )
                     }
                     // If we aren't splitting
