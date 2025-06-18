@@ -1,5 +1,6 @@
 package vehicle.model
 
+import SimulationConfig
 import network.Lane
 import vehicle.Vehicle
 
@@ -7,12 +8,37 @@ class MOBIL {
 
     companion object {
         // TODO: Have to be connected with IDM and Configs
-        val minimumGap = 5.0
         val bsafe = 4.0
         val ath = 0.1
         val politeness = 0.1
 
-        fun calcAccelerationBalance(me: Vehicle, toLane: Lane): Double {
+        fun checkNMLCAbility(me: Vehicle, toLane: Lane): Boolean {
+            val accelerations = calculateAccelerations(me, toLane)
+            if (accelerations == null) {
+                return false
+            }
+
+            val balance = accelerations.first + politeness * (accelerations.second + accelerations.third) - ath
+            return balance > 0.0
+        }
+
+        fun checkMLCAbility(me: Vehicle, toLane: Lane): Boolean {
+            val accelerations = calculateAccelerations(me, toLane)
+            if (accelerations == null) {
+                return false
+            }
+
+            if (accelerations.first < -me.safeDeceleration) {
+                return false
+            }
+
+            val balance = accelerations.first + politeness * (accelerations.second + accelerations.third)
+            println("${me.vehicleId} bal $balance")
+            return balance > -0.4
+        }
+
+        private fun calculateAccelerations(me: Vehicle, toLane: Lane): Triple<Double, Double, Double>? {
+            val meInitAcc = me.acc
 
             // Check results if me will be in toLane.
             // Building whole path will be too long, so later have to do something another
@@ -22,18 +48,19 @@ class MOBIL {
             me.lane = toLane
 
             // New Front
-            val newFront = me.pathBuilder.getNextVehicle(me, me.lane, me.direction)
-            if (newFront.first?.isInLaneChange() ?: false || newFront.second < minimumGap) {
+            // TODO: check is it working that way or need to explicitly delete vehicle from lane.
+            val newFront = me.pathBuilder.getNextVehicle(me)
+            if (newFront.first?.isInLaneChange() ?: false || newFront.second < SimulationConfig.MIN_GAP) {
                 me.pathBuilder.removePath(me)
                 me.lane = oldLane
-                return negativeBalance
+                return null
             }
             // New Back
             val newBack = me.lane.getPrevVehicle(me)
-            if (newBack.first?.isInLaneChange() ?: false || newBack.second < minimumGap) {
+            if (newBack.first?.isInLaneChange() ?: false || newBack.second < SimulationConfig.MIN_GAP) {
                 me.pathBuilder.removePath(me)
                 me.lane = oldLane
-                return negativeBalance
+                return null
             }
 
             // Moving to initial lane
@@ -42,16 +69,18 @@ class MOBIL {
 
 
             // Cur Front
-            val curFront = me.pathBuilder.getNextVehicle(me, me.lane, me.direction)
+            val curFront = me.pathBuilder.getNextVehicle(me)
             if (curFront.first?.isInLaneChange() ?: false) {
-                return negativeBalance
+                return null
             }
 
-            val newBackNewAcc = IDM.getAcceleration(newBack.first, me, newBack.second)
             val meNewAcc = IDM.getAcceleration(me, newFront)
+            me.acc = meNewAcc
+            val newBackNewAcc = IDM.getAcceleration(newBack.first, me, newBack.second)
             if (-newBackNewAcc > bsafe || -meNewAcc > bsafe) {
-                return negativeBalance
+                return null
             }
+            me.acc = meInitAcc
 
             val curMeAcc = IDM.getAcceleration(me, curFront)
 
@@ -65,8 +94,7 @@ class MOBIL {
             val newBackDiffAcc = newBackNewAcc - newBackOldAcc
             val meDiffAcc = meNewAcc - curMeAcc
 
-            val balance = meDiffAcc + politeness * (curBackDiffAcc + newBackDiffAcc) - ath
-            return balance
+            return Triple(meDiffAcc, curBackDiffAcc, newBackDiffAcc)
         }
 
         val negativeBalance = -Double.MAX_VALUE

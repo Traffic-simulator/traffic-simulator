@@ -1,20 +1,25 @@
 package heatmap
 
+import SimulationConfig
+import network.Lane
 import vehicle.Vehicle
+import kotlin.math.exp
 import kotlin.math.tanh
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-class Segment {
-    val lastStates: ArrayDeque<Double> by dequeLimiter(5000)
+class Segment(lane: Lane) {
+    val lastStates = SumTrackingArrayDeque(5000)
+    val speedLimit = lane.getMaxSpeed()
     var currentState: Double = 0.0
     var currentIterVehiclesSum: Double = 0.0
     var currentIterVehiclesCount: Int = 0
 
     fun update() {
-        var meanSpeed = 0.0
+        var meanSpeed = 1.0
         if (currentIterVehiclesCount != 0) {
-            meanSpeed = tanh(currentIterVehiclesSum / currentIterVehiclesCount)
+            // [Simulation] For now vehicles can move faster than maxspeed :(
+            meanSpeed = customCenteredSigmoid(currentIterVehiclesSum / currentIterVehiclesCount, speedLimit)
         }
 
         // чистим машинки для след апдейта
@@ -23,7 +28,26 @@ class Segment {
 
         // закидываем новое значение к последним и высчитываем среднее
         lastStates.add(meanSpeed)
-        currentState = lastStates.average()
+        currentState = lastStates.average
+    }
+
+    fun customCenteredSigmoid(
+        t: Double,
+        xEnd: Double = 1.0,
+        steepness: Double = 20.0,
+        midpointRatio: Double = 0.5
+    ): Double {
+        val midpoint = xEnd * midpointRatio
+        val transformedT = steepness * (t - midpoint) / xEnd
+
+        // Compute standard sigmoid
+        val sig = 1.0 / (1.0 + exp(-transformedT))
+
+        // Normalization factors
+        val sig0 = 1.0 / (1.0 + exp(steepness * midpointRatio))
+        val sigEnd = 1.0 / (1.0 + exp(-steepness * (1.0 - midpointRatio)))
+
+        return (sig - sig0) / (sigEnd - sig0)
     }
 
     fun addVehicleSpeed(vehicle: Vehicle) {
@@ -31,26 +55,25 @@ class Segment {
         currentIterVehiclesCount += 1
     }
 
-    fun <E> dequeLimiter(limit: Int): ReadWriteProperty<Any?, ArrayDeque<E>> =
-        object : ReadWriteProperty<Any?, ArrayDeque<E>> {
+    class SumTrackingArrayDeque(private val limit: Int) {
+        private val deque = ArrayDeque<Double>()
+        private var currentSum: Double = 0.0
 
-            private var deque: ArrayDeque<E> = ArrayDeque(limit)
+        val size: Int get() = deque.size
+        val isEmpty: Boolean get() = deque.isEmpty()
+        val average: Double get() = if (isEmpty) 0.0 else currentSum / size
 
-            private fun applyLimit() {
-                while (deque.size > limit) {
-                    val removed = deque.removeFirst()
-                    println("dequeLimiter removed $removed")
-                }
-            }
+        fun add(value: Double) {
+            deque.addLast(value)
+            currentSum += value
+            enforceLimit()
+        }
 
-            override fun getValue(thisRef: Any?, property: KProperty<*>): ArrayDeque<E> {
-                applyLimit()
-                return deque
-            }
-
-            override fun setValue(thisRef: Any?, property: KProperty<*>, value: ArrayDeque<E>) {
-                this.deque = value
-                applyLimit()
+        private fun enforceLimit() {
+            while (deque.size > limit) {
+                val removed = deque.removeFirst()
+                currentSum -= removed
             }
         }
+    }
 }
