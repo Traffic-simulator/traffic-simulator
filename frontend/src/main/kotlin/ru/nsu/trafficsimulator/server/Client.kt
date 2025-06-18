@@ -14,20 +14,34 @@ import OpenDriveReader
 class Client {
     private var connected = false
     private var currentSocket: Socket? = null
+    private var districtId: Int = -1
 
     fun connect(serverHost: String, serverPort: Int): Layout {
         if (connected) {
             throw IllegalStateException("Client is already connected to a server")
         }
-        val socket = Socket(serverHost, serverPort)
-        currentSocket = socket
+        currentSocket = Socket(serverHost, serverPort)
         connected = true
         return try {
-            val initialLayout = receiveLayout(socket)
+            val initialLayout = receiveInitialLayout(currentSocket!!)
             initialLayout
         } catch (e: Exception) {
             disconnect()
             throw IllegalStateException("Error while connecting to $serverHost:$serverPort", e)
+        }
+    }
+
+    fun sendLayout(layout: Layout): Layout {
+        if (!connected || currentSocket == null) {
+            throw IllegalStateException("Client is not connected to any server")
+        }
+        return try {
+            sendLayoutToServer(layout)
+            val resultLayout = receiveResultLayout()
+            resultLayout
+        } catch (e: Exception) {
+            disconnect()
+            throw e
         }
     }
 
@@ -39,46 +53,50 @@ class Client {
         } finally {
             currentSocket = null
             connected = false
+            districtId = -1
         }
     }
 
-    fun sendLayout(layout: Layout): Layout {
-        if (!connected || currentSocket == null) {
-            throw IllegalStateException("Client is not connected to any server")
-        }
-        return try {
-            sendLayoutToServer(layout)
-            val resultLayout = receiveLayout(currentSocket!!)
-            resultLayout
-        } catch (e: Exception) {
-            disconnect()
-            throw e
-        }
-    }
-
-    private fun receiveLayout(socket: Socket): Layout {
-        val xodrString = StringBuilder()
+    private fun receiveResultLayout(): Layout {
+        val socket = currentSocket ?: throw IllegalStateException("Client is not connected to any server")
         BufferedReader(InputStreamReader(socket.getInputStream())).use { reader ->
+            val xodrString = StringBuilder()
             var line: String?
             while (true) {
-                line = reader.readLine() ?: break
-                if (line.isEmpty()) {
-                    break
-                }
+                line = reader.readLine() ?: throw IllegalStateException("Unexpected end of stream")
+                if (line == "END OF RESULT LAYOUT") break
                 xodrString.append(line).append("\n")
             }
+            val xodr = OpenDriveReader().read(xodrString.toString())
+            return Deserializer.deserialize(xodr)
         }
+    }
 
-        val xodr = OpenDriveReader().read(xodrString.toString())
-        return Deserializer.deserialize(xodr)
+    private fun receiveInitialLayout(socket: Socket): Layout {
+        BufferedReader(InputStreamReader(socket.getInputStream())).use { reader ->
+            val districtLine = reader.readLine() ?: throw IllegalStateException("No district ID received")
+            districtId = districtLine.removePrefix("DISTRICT: ").toInt()
+
+            val xodrString = StringBuilder()
+            var line: String?
+            while (true) {
+                line = reader.readLine() ?: throw IllegalStateException("Unexpected end of stream")
+                if (line == "END OF INIT LAYOUT") break
+                xodrString.append(line).append("\n")
+            }
+
+            val xodr = OpenDriveReader().read(xodrString.toString())
+            return Deserializer.deserialize(xodr)
+        }
     }
 
     private fun sendLayoutToServer(layout: Layout) {
-        val resultXodrString = OpenDriveWriter().toString(serializeLayout(layout))
-        if (currentSocket != null) {
-            PrintWriter(currentSocket!!.getOutputStream(), true).use { writer ->
-                writer.println(resultXodrString)
-            }
+        val socket = currentSocket ?: throw IllegalStateException("Client is not connected to any server")
+        PrintWriter(socket.getOutputStream(), true).use { writer ->
+            val xodrString = OpenDriveWriter().toString(serializeLayout(layout))
+            writer.println(xodrString)
+            writer.println("END OF DISTRICT LAYOUT")
+            writer.flush()
         }
     }
 }
