@@ -62,7 +62,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
                 BufferedReader(InputStreamReader(client.getInputStream())).use { reader ->
                     writer.println("DISTRICT: $districtId")
 
-                    val initXodrString = OpenDriveWriter().toString(serializeLayout(startLayout))
+                    val initXodrString = OpenDriveWriter().toString(serializeLayout(startLayout, districtId))
 
                     writer.println(initXodrString)
                     writer.println("END OF INIT LAYOUT")
