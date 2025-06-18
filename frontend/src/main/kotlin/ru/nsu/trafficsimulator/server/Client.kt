@@ -1,15 +1,15 @@
 package ru.nsu.trafficsimulator.server
 
+import OpenDriveReader
+import OpenDriveWriter
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.model.Layout
-import java.net.Socket
-import OpenDriveWriter
-import ru.nsu.trafficsimulator.serializer.serializeLayout
 import ru.nsu.trafficsimulator.serializer.Deserializer
+import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
-import OpenDriveReader
+import java.net.Socket
 
 class Client {
     private var connected = false
@@ -85,7 +85,8 @@ class Client {
                 xodrString.append(line).append("\n")
             }
 
-            val xodr = OpenDriveReader().read(xodrString.toString())
+
+            val xodr = OpenDriveReader().readUsingFileReader(xodrString.toString().byteInputStream())
             return Deserializer.deserialize(xodr)
         }
     }
