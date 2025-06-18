@@ -66,9 +66,9 @@ class Server(private val port: Int, private val startLayout: Layout) {
 
                     writer.println(initXodrString)
                     writer.println("END OF INIT LAYOUT")
+                    writer.flush()
 
                     val resultXodr = StringBuilder()
-
                     var line: String?
 
                     while (true) {
@@ -78,15 +78,15 @@ class Server(private val port: Int, private val startLayout: Layout) {
                         }
                         resultXodr.append(line).append("\n")
                     }
+
+                    val result = waitForResultLayout()
+
+                    val resultXodrString = OpenDriveWriter().toString(serializeLayout(result))
+
+                    writer.println(resultXodrString)
+                    writer.println("END OF RESULT LAYOUT")
+                    writer.flush()
                 }
-
-                val result = waitForResultLayout()
-
-                val resultXodrString = OpenDriveWriter().toString(serializeLayout(result))
-
-                writer.println(resultXodrString)
-                writer.println("END OF RESULT LAYOUT")
-                writer.flush()
             }
         }
     }

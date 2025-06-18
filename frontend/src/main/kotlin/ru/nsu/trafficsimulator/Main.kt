@@ -243,7 +243,7 @@ class Main : ApplicationAdapter() {
             val server = Server(PORT, hostLayout)
             server.start()
         }
-        if (ImGui.button("Client")) {
+        if (ImGui.button("Connect")) {
             logger.error("I am client") // TODO
         }
         ImGui.end()
