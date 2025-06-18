@@ -130,24 +130,29 @@ class Model (
     //создаем путь
     fun checkMeanOfTravelDesire() {
         while (meanOfTravelDesire >= 1.0) {
-            var travel: Travel = createTravel()
-            travelQueue.addTravel(travel)
+            var travel = createTravel()
+            if (travel != null) {
+                travelQueue.addTravel(travel)
+            }
             meanOfTravelDesire--
         }
     }
 
-    fun getRandomNonEmptyHome() : Building {
-        var nonEmpty = homes.getNonEmpty();
-        var numberOfNonEmptyHomes = nonEmpty.size;
+    fun getRandomNonEmptyHome() : Building? {
+        var nonEmpty = homes.getNonEmpty()
+        if (nonEmpty.isEmpty()) {
+            return null
+        }
+        var numberOfNonEmptyHomes = nonEmpty.size
         var indexOfHome = random.nextInt(numberOfNonEmptyHomes)
         var building = nonEmpty.toList().get(indexOfHome).second
         return building
     }
 
 
-    fun createTravel() : Travel {
+    fun createTravel() : Travel? {
         val travelPoints = mutableListOf<TravelPoint>();
-        var startHome = getRandomNonEmptyHome()
+        var startHome = getRandomNonEmptyHome() ?: return null
         var startPoint : TravelPoint = TravelPoint(startHome.junctionId, 0.0);
         var planLength = random.nextInt(MAX_PLAN_LENGTH);
         travelPoints.add(startPoint);

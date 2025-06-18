@@ -211,11 +211,19 @@ class Main : ApplicationAdapter() {
             }
             ImGui.sameLine()
             if (ImGui.button(">>")) {
-                simState.speed = 2
+                simState.speed = 5
             }
             ImGui.sameLine()
             if (ImGui.button(">>>")) {
-                simState.speed = 5
+                simState.speed = 10
+            }
+            ImGui.sameLine()
+            if (ImGui.button(">>>>")) {
+                simState.speed = 60
+            }
+            ImGui.sameLine()
+            if (ImGui.button("kchau")) {
+                simState.speed = 60 * 60
             }
             if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
                 visualizer.heatmapMode = !visualizer.heatmapMode
