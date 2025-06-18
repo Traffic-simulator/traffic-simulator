@@ -5,7 +5,6 @@ import Waypoint
 import network.Lane
 import network.Network
 import path_builder.cost_function.ICostFunction
-import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.VehicleDetector
 import java.util.*
@@ -51,7 +50,6 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
      */
     override fun getNextMLCDistance(vehicle: Vehicle): Double {
         var curLane = vehicle.lane
-        var curDir = vehicle.direction
         var first = true
         var acc_distance = 0.0
         var tmpAcc = curLane.length - vehicle.position
@@ -73,7 +71,6 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
             tmpAcc = nextLane.lane.length
 
             curLane = nextLane.lane
-            curDir = curDir.opposite(nextLane.isDirectionOpposite)
         }
         return SimulationConfig.INF
     }
@@ -82,7 +79,6 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         var initPosition = initPosition_
         data class RoadWaypoint (
             val lane: Lane,
-            val direction: Direction,
             val type: IPathBuilder.PWType
         )
 
@@ -90,8 +86,8 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         val cost = mutableMapOf<RoadWaypoint, Double>().withDefault { Double.MAX_VALUE }
         val par = mutableMapOf<RoadWaypoint, RoadWaypoint>()
         val srcLane = network.getLaneById(source.roadId, source.laneId)
-        cost[RoadWaypoint(srcLane, source.direction, IPathBuilder.PWType.NORMAL)] = 0.0
-        queue.add(RoadWaypoint(srcLane, source.direction, IPathBuilder.PWType.NORMAL) to 0.0)
+        cost[RoadWaypoint(srcLane, IPathBuilder.PWType.NORMAL)] = 0.0
+        queue.add(RoadWaypoint(srcLane, IPathBuilder.PWType.NORMAL) to 0.0)
 
         // States with type.MLC are the same, and imply that MLC can be done before the end of the road.
         //                               No matter from distance reserve.
@@ -113,9 +109,9 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
             }
 
             // Explore the next lanes
-            curRoadWaypoint.lane.getNextLane(curRoadWaypoint.direction)?.forEach {
+            curRoadWaypoint.lane.getNextLane()?.forEach {
                 (toLane, dirChange) ->
-                    val toWaypoint = RoadWaypoint(toLane, curRoadWaypoint.direction.opposite(dirChange), IPathBuilder.PWType.NORMAL)
+                    val toWaypoint = RoadWaypoint(toLane, IPathBuilder.PWType.NORMAL)
                     // We can not consider initPosition in cost, as first road will be fully traversed in every situation
                     val weight = costFunction.getLaneCost(curRoadWaypoint.lane)
                     updateDijkstraState(toWaypoint, weight)
@@ -136,7 +132,7 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
                     if (! isMLCPossible(availablePosition, roadLanes, curRoadWaypoint.lane.laneId, toLane.laneId))
                         return@forEach
 
-                    val toWaypoint = RoadWaypoint(toLane, curRoadWaypoint.direction, IPathBuilder.PWType.MLC)
+                    val toWaypoint = RoadWaypoint(toLane, IPathBuilder.PWType.MLC)
                     val weight = costFunction.getLaneChangeCost(numLaneChanges)
                     updateDijkstraState(toWaypoint, weight)
             }
@@ -152,7 +148,7 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         val dstLane = network.getLaneById(destination.roadId, destination.laneId)
 
         // TODO: Currently assume building can be reached without MLC on the last lane, it's not right during region simulation
-        var curWaypoint = RoadWaypoint(dstLane, destination.direction, IPathBuilder.PWType.NORMAL)
+        var curWaypoint = RoadWaypoint(dstLane, IPathBuilder.PWType.NORMAL)
         if (!par.containsKey(curWaypoint)) {
             return path
         }
@@ -172,7 +168,6 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
                 path.add(IPathBuilder.PathWaypoint(
                     IPathBuilder.PWType.MLC,
                     curWaypoint.lane,
-                    false,
                     getMLCMaxRoadOffset(curWaypoint.lane.length, 1, roadLanes, toLaneId))) // to be find path using available space. TODO: another logic!
 
                 var i = 2
@@ -182,19 +177,15 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
                     path.add(IPathBuilder.PathWaypoint(
                         IPathBuilder.PWType.MLC,
                         road.getLaneById(toLaneId),
-                        false,
                         getMLCMaxRoadOffset(curWaypoint.lane.length, i, roadLanes, tmpFromLaneId)))
                     toLaneId = tmpFromLaneId
                     i++
                 }
             } else {
                 // 2) Simple next road change
-                val oldDir = par.get(curWaypoint)!!.direction
-                val curDir = curWaypoint.direction
                 path.add(IPathBuilder.PathWaypoint(
                     IPathBuilder.PWType.NORMAL,
                     curWaypoint.lane,
-                    oldDir != curDir,
                     -SimulationConfig.INF))
             }
 
@@ -203,7 +194,6 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         path.add(IPathBuilder.PathWaypoint(
             IPathBuilder.PWType.NORMAL,
             curWaypoint.lane,
-            false,
             -SimulationConfig.INF))
 
         Collections.reverse(path)
@@ -262,13 +252,12 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         return null
     }
 
-    private fun generateNextRoads(vehicle: Vehicle, lane: Lane, direction: Direction) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
+    private fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
         var curLane = lane
-        var curDir = direction
 
         // initial lane
         var acc_distance = 0.0
-        yield(VehicleDetector.VehicleLaneSequence(vehicle, lane, direction, acc_distance, true))
+        yield(VehicleDetector.VehicleLaneSequence(vehicle, lane, acc_distance, true))
         acc_distance += lane.road.troad.length - vehicle.position
 
         // next path lanes
@@ -282,7 +271,6 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
                 VehicleDetector.VehicleLaneSequence(
                     vehicle,
                     nextLane.lane,
-                    curDir.opposite(nextLane.isDirectionOpposite),
                     acc_distance,
                     false
                 )
@@ -290,21 +278,20 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
             acc_distance += nextLane.lane.length
 
             curLane = nextLane.lane
-            curDir = curDir.opposite(nextLane.isDirectionOpposite)
         }
     }
 
     override fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
         createPathIfNotExists(vehicle, vehicle.position)
 
-        return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, vehicle.lane, vehicle.direction))
+        return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, vehicle.lane))
     }
 
     private fun createPathIfNotExists(vehicle: Vehicle, initPosition: Double) {
         if (!vehiclesPaths.containsKey(vehicle.vehicleId)) {
             vehiclesPaths[vehicle.vehicleId] = getDijkstraShortestPath(
                 vehicle.network,
-                Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString(), vehicle.direction),
+                Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString()),
                 vehicle.destination,
                 initPosition)
         }
