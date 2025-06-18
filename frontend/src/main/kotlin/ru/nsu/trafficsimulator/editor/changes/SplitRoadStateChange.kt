@@ -34,6 +34,12 @@ class SplitRoadStateChange(
     override fun revert(layout: Layout) {
         layout.deleteRoad(newRoad1)
         layout.deleteRoad(newRoad2)
+        if (!layout.intersections.containsKey(originalRoad.startIntersection.id)) {
+            layout.pushIntersection(originalRoad.startIntersection)
+        }
+        if (!layout.intersections.containsKey(originalRoad.endIntersection.id)) {
+            layout.pushIntersection(originalRoad.endIntersection)
+        }
         layout.addRoad(originalRoad)
         if (!layout.intersections.containsKey(oldIntersections.first.id)) {
             layout.pushIntersection(oldIntersections.first)
@@ -46,7 +52,7 @@ class SplitRoadStateChange(
     }
 
     private fun splitRoad(layout: Layout): Triple<Road, Road, Intersection> {
-        val (closestPoint, splitGlobal) = originalRoad.geometry.closestPoint(clickPoint.xzProjection())
+        val (closestPoint, _, splitGlobal) = originalRoad.geometry.closestPointWithDistance(clickPoint.xzProjection())
 
         val newIntersection = layout.addIntersection(closestPoint.toVec3(), null)
 

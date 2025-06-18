@@ -16,7 +16,7 @@ class AddRoadStateChange(
     private val startStateChange = AddIntersectionStateChange(startPoint.first)
     private val endStateChange = AddIntersectionStateChange(endPoint.first)
 
-    override fun apply(layout: Layout) {
+    override fun apply(layout: Layout): Pair<Intersection, Intersection> {
         if (newRoad == null) {
             val realStartIntersection = startIntersection ?: startStateChange.apply(layout)
             val realEndIntersection = endIntersection ?: endStateChange.apply(layout)
@@ -32,6 +32,7 @@ class AddRoadStateChange(
                 realStartIntersection, startPoint.second,
                 realEndIntersection, endPoint.second
             )
+            return realStartIntersection to realEndIntersection
         } else {
             val road = newRoad!!
             if (!layout.intersections.containsKey(road.startIntersection.id)) {
@@ -41,6 +42,7 @@ class AddRoadStateChange(
                 layout.pushIntersection(road.endIntersection)
             }
             layout.addRoad(road)
+            return road.startIntersection to road.endIntersection
         }
     }
 
