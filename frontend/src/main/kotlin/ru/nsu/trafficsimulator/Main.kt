@@ -16,9 +16,11 @@ import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import imgui.type.ImInt
+import imgui.type.ImString
 import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.editor.actions.ClientAction
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
@@ -60,6 +62,8 @@ class Main : ApplicationAdapter() {
     private val inputMultiplexer = InputMultiplexer()
 
     private lateinit var visualizer: Visualizer
+
+    private val clientAction = ClientAction()
 
     // It's 1 / FPS, duration of one frame in milliseconds
     private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
@@ -128,6 +132,7 @@ class Main : ApplicationAdapter() {
         renderSimulationMenu()
 
         renderClientServerMenu()
+        renderClientMenu()
 
         if (state == ApplicationState.Editor) {
             Editor.runImgui()
@@ -246,12 +251,16 @@ class Main : ApplicationAdapter() {
         ImGui.begin("ClientServer Menu")
         if (ImGui.button("Host")) {
             val hostLayout = hostLayout()
-
             val server = Server(PORT, hostLayout)
             server.start()
         }
-        if (ImGui.button("Connect")) {
-            logger.error("I am client") // TODO
+        ImGui.end()
+    }
+
+    private fun renderClientMenu() {
+        ImGui.begin("Client Menu")
+        if (clientAction.runImgui()) {
+            clientAction.runAction(Editor.layout)
         }
         ImGui.end()
     }
