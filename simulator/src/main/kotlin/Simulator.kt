@@ -1,12 +1,10 @@
-import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import mu.KotlinLogging
-import network.Lane
 import network.Network
 import opendrive.ERoadLinkElementType
 import network.Road
 import opendrive.OpenDRIVE
-import path_builder.IPathBuilder
+import path.algorithms.IPathBuilder
 import route_generator.IRouteGenerator
 import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
@@ -18,7 +16,6 @@ import vehicle.model.MOBIL
 import java.time.LocalTime
 import kotlin.collections.ArrayList
 import kotlin.math.abs
-import kotlin.math.sign
 import kotlin.random.Random
 
 // Route - source point and destination point.
@@ -61,8 +58,8 @@ class Simulator(openDrive: OpenDRIVE,
                 1) Mandatory lane changes (to be able to go to destination)
                 2) Non-mandatory lane changes (to speed up vehicle flow)
          */
-        processMandatoryLaneChanges()
-        processNonmandatoryLaneChanges()
+        vehicles.forEach { it.processMLC() }
+        vehicles.forEach { it.processNMLC() }
 
         /*
             Vehicles movement logic
@@ -81,6 +78,9 @@ class Simulator(openDrive: OpenDRIVE,
         }
         vehicles.removeAll { it.despawned == true}
 
+        // delete paths of all vehicles for dynamic path calculation:
+        // vehicles.forEach { veh -> veh.pathBuilder.removePath(veh) }
+
         /*
             Vehicle generation logic.
                 1) Spawn new vehicles
@@ -96,74 +96,6 @@ class Simulator(openDrive: OpenDRIVE,
 
         currentTime += dt
         return vehicles
-    }
-
-    // TODO: what to do if: in the end of the road vehicle use non mandatory lane change,
-    //       And how to control that it has available distance to mandatory lane change after it
-    //       Also timer logic makes sence
-    fun processMandatoryLaneChanges() {
-        vehicles.forEach { it ->
-
-            // Vehicle will stop before closeset MLC by itself, have to just find moment and transfer it to needed lane
-            // Самая дальняя позиция, где точно нужно перестроиться...
-            // Может быть только перестроение на 1 полосу...
-            // Перестраиваемся только на дороге длиной больше MLC_MIN_DISTANCE.
-            // Начинаем задумываться о перестроении за MLC_MAX_DISTANCE.
-            val laneChange: IPathBuilder.PathWaypoint? = it.pathBuilder.getNextPathLane(it)
-            if (laneChange == null || laneChange.type != IPathBuilder.PWType.MLC) {
-                return@forEach
-            }
-            assert(it.lane.road.junction == "-1")
-
-            if (it.isInLaneChange()) {
-                return@forEach
-            }
-
-            // Find possible lanes to change
-            val lanesToChange = it.lane.road.lanes.filter { newLane -> abs(newLane.laneId - it.lane.laneId) == 1}
-            assert(lanesToChange.contains(laneChange.lane))
-
-            val toLane = laneChange.lane
-            if (MOBIL.checkMLCAbility(it, toLane)) {
-                logger.info { "Veh@${it.vehicleId} is mandatory lane changing from @${it.lane.roadId}:${it.lane.laneId} to @${toLane.roadId}:${toLane.laneId}." }
-                it.pathBuilder.removePath(it)
-                it.performLaneChange(toLane)
-                return@forEach
-            }
-        }
-    }
-
-    // When doing nmlc pay respect to mls: increase initPostition and TODO: how to prevent from stupid LC?
-    fun processNonmandatoryLaneChanges() {
-        vehicles.forEach { it ->
-            // Lane changes on junctions are prohibited
-            if (it.isInLaneChange() || it.lane.road.junction != "-1") {
-                return@forEach
-            }
-
-            // Find possible lanes to change
-            val lanesToChange = it.lane.road.lanes.filter { newLane -> abs(newLane.laneId - it.lane.laneId) == 1}
-
-            for (toLane in lanesToChange) {
-                // Step 1: allow non-mandatory lane changes only to lanes from which the path exists.
-                it.pathBuilder.removePath(it)
-                val oldLane = it.lane
-                it.lane = toLane
-                val reachable = it.pathBuilder.isDestinationReachable(it, it.position + 2 * it.getLaneChangePenalty() + 20.0) // TODO: very bad constant, what's wrong with that?
-                it.pathBuilder.removePath(it)
-                it.lane = oldLane
-                if (!reachable) {
-                    continue
-                }
-
-                if (MOBIL.checkNMLCAbility(it, toLane)) {
-                    println("Vehicle ${it.vehicleId} is non-mandatory lane changing @${it.lane.roadId}:${it.lane.laneId} to @${toLane.roadId}:${toLane.laneId}.")
-                    it.pathBuilder.removePath(it)
-                    it.performLaneChange(toLane)
-                    return@forEach
-                }
-            }
-        }
     }
 
     fun gatherStatistics() {

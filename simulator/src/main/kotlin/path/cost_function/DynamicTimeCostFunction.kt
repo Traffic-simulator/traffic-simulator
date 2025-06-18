@@ -1,4 +1,4 @@
-package path_builder.cost_function
+package path.cost_function
 
 import network.Lane
 import kotlin.math.sign

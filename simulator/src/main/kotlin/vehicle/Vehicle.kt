@@ -6,20 +6,22 @@ import Waypoint
 import mu.KotlinLogging
 import network.Lane
 import network.Network
-import path_builder.IPathBuilder
-import path_builder.DijkstraPathBuilder
-import path_builder.cost_function.DynamicTimeCostFunction
-import path_builder.cost_function.StaticLengthCostFunction
+import path.Path
+import path.PathManager
+import path.algorithms.DijkstraPathBuilder
+import path.cost_function.DynamicTimeCostFunction
 import route_generator.RouteGeneratorDespawnListener
 import signals.SignalState
 import vehicle.model.IDM
+import vehicle.model.MOBIL
+import kotlin.math.abs
 
 class Vehicle(
     val vehicleId: Int,
     val network: Network,
     val source: Waypoint,
     val destination: Waypoint,
-    val pathBuilder: IPathBuilder,
+    val pathManager: PathManager,
     val despawnCallback: RouteGeneratorDespawnListener,
     val maxSpeed: Double = 30.0,
     val maxAcc: Double = 2.0
@@ -127,9 +129,9 @@ class Vehicle(
         }
 
         // nextVehicle
-        val nextVeh = pathBuilder.getNextVehicle(this)
+        val nextVeh = pathManager.getNextVehicle(this)
         // nextMandatoryLaneChange
-        var nextMLCDistance = pathBuilder.getNextMLCDistance(this)
+        var nextMLCDistance = pathManager.getNextMLCDistance(this)
         if (nextMLCDistance == null) {
             nextMLCDistance = SimulationConfig.INF
         }
@@ -145,12 +147,12 @@ class Vehicle(
 
     // Get next junction on path, if currently on junction return the next one
     private fun getClosestJunction(): ClosestJunction? {
-        var tmp_lane: IPathBuilder.PathWaypoint? = pathBuilder.getNextPathLane(this)
+        var tmp_lane: Path.PathWaypoint? = pathManager.getNextPathLane(this)
         var accDist = lane.road.troad.length - position
 
         while (tmp_lane != null && tmp_lane.lane.road.junction == "-1") {
             accDist += tmp_lane.lane.length
-            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.lane)
+            tmp_lane = pathManager.getNextPathLane(this, tmp_lane.lane)
         }
         if (tmp_lane == null) {
             return null
@@ -160,19 +162,19 @@ class Vehicle(
 
     // TODO: implement this!
 //    private fun getClosestLaneAfterJunction(): Lane? {
-//        var tmp_lane: IPathBuilder.PathWaypoint? = pathBuilder.getNextPathLane(this)
+//        var tmp_lane: IpathManager.PathWaypoint? = pathManager.getNextPathLane(this)
 //        var tmp_dir: Direction = direction
 //
 //        while (tmp_lane != null && tmp_lane.lane.road.junction == "-1") {
 //            tmp_dir = tmp_dir.opposite(tmp_lane.isDirectionOpposite)
 //
-//            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.lane, tmp_dir)
+//            tmp_lane = pathManager.getNextPathLane(this, tmp_lane.lane, tmp_dir)
 //        }
 //        if (tmp_lane == null) {
 //            return null
 //        }
 //        tmp_dir = tmp_dir.opposite(tmp_lane.second)
-//        tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
+//        tmp_lane = pathManager.getNextPathLane(this, tmp_lane.first, tmp_dir)
 //
 //        if (tmp_lane == null) {
 //            return null
@@ -180,10 +182,68 @@ class Vehicle(
 //        return tmp_lane.first
 //    }
 
+
+    // TODO: what to do if: in the end of the road vehicle use non mandatory lane change,
+    //       And how to control that it has available distance to mandatory lane change after it
+    //       Also timer logic makes sence
+    fun processMLC() {
+        val laneChange = pathManager.getNextPathLane(this)
+        if (laneChange == null || laneChange.type != Path.PWType.MLC) {
+            return
+        }
+        assert(lane.road.junction == "-1")
+
+        if (isInLaneChange()) {
+            return
+        }
+
+        // Find possible lanes to change
+        val lanesToChange = lane.road.lanes.filter { newLane -> abs(newLane.laneId - lane.laneId) == 1}
+        assert(lanesToChange.contains(laneChange.lane))
+
+        val toLane = laneChange.lane
+        if (MOBIL.checkMLCAbility(this, toLane)) {
+            logger.info { "Veh@$vehicleId is mandatory lane changing from @${lane.roadId}:${lane.laneId} to @${toLane.roadId}:${toLane.laneId}." }
+            pathManager.removePath(this)
+            performLaneChange(toLane)
+        }
+    }
+
+    // When doing nmlc pay respect to mls: increase initPostition and TODO: how to prevent from stupid LC?
+    fun processNMLC() {
+        // Lane changes on junctions are prohibited
+        if (isInLaneChange() || lane.road.junction != "-1") {
+            return
+        }
+
+        // Find possible lanes to change
+        val lanesToChange = lane.road.lanes.filter { newLane -> abs(newLane.laneId - lane.laneId) == 1}
+
+        for (toLane in lanesToChange) {
+            // Step 1: allow non-mandatory lane changes only to lanes from which the path exists.
+            pathManager.removePath(this)
+            val oldLane = lane
+            lane = toLane
+            val reachable = pathManager.isDestinationReachable(this, this.position + 2 * this.getLaneChangePenalty() + 20.0) // TODO: very bad constant, what's wrong with that?
+            pathManager.removePath(this)
+            lane = oldLane
+            if (!reachable) {
+                continue
+            }
+
+            if (MOBIL.checkNMLCAbility(this, toLane)) {
+                println("Vehicle ${vehicleId} is non-mandatory lane changing @${lane.roadId}:${lane.laneId} to @${toLane.roadId}:${toLane.laneId}.")
+                pathManager.removePath(this)
+                performLaneChange(toLane)
+                return
+            }
+        }
+    }
+
     private fun moveToNextLane(): Boolean {
         val newPosition = position - lane.road.troad.length
 
-        val nextLane = pathBuilder.getNextPathLane(this)
+        val nextLane = pathManager.getNextPathLane(this)
         if (nextLane != null) {
 
             // If was blocking junction have to unlock
@@ -254,7 +314,7 @@ class Vehicle(
     companion object {
         var counter: Int = 0
         val costFunction = DynamicTimeCostFunction()
-        val pathBuilder: IPathBuilder = DijkstraPathBuilder(costFunction)
+        val pathManager = PathManager(DijkstraPathBuilder(costFunction))
 
         fun NewVehicle(
             network: Network,
@@ -263,7 +323,7 @@ class Vehicle(
             despawnCallback: RouteGeneratorDespawnListener,
             maxSpeed: Double, maxAcc: Double
         ): Vehicle {
-            return Vehicle(counter++, network, source, destination, pathBuilder, despawnCallback, maxSpeed, maxAcc)
+            return Vehicle(counter++, network, source, destination, pathManager, despawnCallback, maxSpeed, maxAcc)
         }
 
         fun NewVehicle(
@@ -272,7 +332,7 @@ class Vehicle(
             destination: Waypoint,
             despawnCallback: RouteGeneratorDespawnListener
         ): Vehicle {
-            return Vehicle(counter++, network, source, destination, pathBuilder, despawnCallback)
+            return Vehicle(counter++, network, source, destination, pathManager, despawnCallback)
         }
     }
 

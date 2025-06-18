@@ -43,33 +43,33 @@ class MOBIL {
             // Check results if me will be in toLane.
             // Building whole path will be too long, so later have to do something another
             // So, calculate it temporary moving our vehicle to toLane
-            me.pathBuilder.removePath(me)
+            me.pathManager.removePath(me)
             val oldLane = me.lane
             me.lane = toLane
 
             // New Front
             // TODO: check is it working that way or need to explicitly delete vehicle from lane.
-            val newFront = me.pathBuilder.getNextVehicle(me)
+            val newFront = me.pathManager.getNextVehicle(me)
             if (newFront.first?.isInLaneChange() ?: false || newFront.second < SimulationConfig.MIN_GAP) {
-                me.pathBuilder.removePath(me)
+                me.pathManager.removePath(me)
                 me.lane = oldLane
                 return null
             }
             // New Back
             val newBack = me.lane.getPrevVehicle(me)
             if (newBack.first?.isInLaneChange() ?: false || newBack.second < SimulationConfig.MIN_GAP) {
-                me.pathBuilder.removePath(me)
+                me.pathManager.removePath(me)
                 me.lane = oldLane
                 return null
             }
 
             // Moving to initial lane
-            me.pathBuilder.removePath(me)
+            me.pathManager.removePath(me)
             me.lane = oldLane
 
 
             // Cur Front
-            val curFront = me.pathBuilder.getNextVehicle(me)
+            val curFront = me.pathManager.getNextVehicle(me)
             if (curFront.first?.isInLaneChange() ?: false) {
                 return null
             }
