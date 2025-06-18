@@ -106,11 +106,10 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
                     queue.add(toWaypoint to newDist)
                     par.put(toWaypoint, curRoadWaypoint)
                 }
-            }
 
             // Explore the next lanes
             curRoadWaypoint.lane.getNextLane()?.forEach {
-                (toLane, dirChange) ->
+                toLane ->
                     val toWaypoint = RoadWaypoint(toLane, IPathBuilder.PWType.NORMAL)
                     // We can not consider initPosition in cost, as first road will be fully traversed in every situation
                     val weight = costFunction.getLaneCost(curRoadWaypoint.lane)
@@ -225,18 +224,18 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         return roadLength - numLC * SimulationConfig.MLC_MIN_DISTANCE - 15.0 * (roadLanes - Math.abs(fromLaneId))
     }
 
-    override fun removePath(vehicle: Vehicle) {
+    fun removePath(vehicle: Vehicle) {
         if (vehiclesPaths.containsKey(vehicle.vehicleId)) {
             vehiclesPaths.remove(vehicle.vehicleId)
         }
     }
 
     // TODO: Do not think that vehicle is in the beggining of the road
-    override fun getNextPathLane(vehicle: Vehicle): IPathBuilder.PathWaypoint? {
+    fun getNextPathLane(vehicle: Vehicle): IPathBuilder.PathWaypoint? {
         return getNextPathLane(vehicle, vehicle.lane)
     }
 
-    override fun getNextPathLane(vehicle: Vehicle, lane: Lane): IPathBuilder.PathWaypoint? {
+    fun getNextPathLane(vehicle: Vehicle, lane: Lane): IPathBuilder.PathWaypoint? {
         createPathIfNotExists(vehicle, vehicle.position)
 
         for(i in 0 until vehiclesPaths[vehicle.vehicleId]!!.size) {
@@ -252,7 +251,7 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         return null
     }
 
-    private fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
+    fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
         var curLane = lane
 
         // initial lane
@@ -281,13 +280,13 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         }
     }
 
-    override fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
+    fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
         createPathIfNotExists(vehicle, vehicle.position)
 
         return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, vehicle.lane))
     }
 
-    private fun createPathIfNotExists(vehicle: Vehicle, initPosition: Double) {
+    fun createPathIfNotExists(vehicle: Vehicle, initPosition: Double) {
         if (!vehiclesPaths.containsKey(vehicle.vehicleId)) {
             vehiclesPaths[vehicle.vehicleId] = getDijkstraShortestPath(
                 vehicle.network,

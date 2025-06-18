@@ -46,7 +46,7 @@ class Main : ApplicationAdapter() {
     private val inputMultiplexer = InputMultiplexer()
 
     private lateinit var visualizer: Visualizer
-    
+
     // It's 1 / FPS, duration of one frame in milliseconds
     private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
 
@@ -85,7 +85,7 @@ class Main : ApplicationAdapter() {
         OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto, null, LocalTime.ofSecondOfDay(60 * 60 * 8),500)
+        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, LocalTime.ofSecondOfDay(60 * 60 * 8), 500)
     }
 
     override fun render() {
