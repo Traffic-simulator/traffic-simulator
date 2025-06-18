@@ -3,6 +3,7 @@ package ru.nsu.trafficsimulator.server
 import OpenDriveWriter
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.LayoutMerger
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -21,6 +22,8 @@ class Server(private val port: Int, private val startLayout: Layout) {
     private val lock = Object()
 
     fun start(): Layout {
+        val clientHandlers = mutableListOf<Thread>()
+
         val serverSocket = ServerSocket(port)
         logger.info { "Server started, listening on $port..." }
 
@@ -29,11 +32,13 @@ class Server(private val port: Int, private val startLayout: Layout) {
 
             logger.info { "Accept client: ${clientSocket.inetAddress.hostAddress}" }
 
-            Thread {
-                handleClient(clientSocket)
-            }.start()
-
             clients.add(clientSocket)
+
+            val thread = Thread {
+                handleClient(clientSocket, clients.size) // 1<=..<=DISTRICTS_NUMBER
+            }
+            clientHandlers.add(thread)
+            thread.start()
         }
 
         logger.info { "Server is no longer accepting connections" }
@@ -43,41 +48,45 @@ class Server(private val port: Int, private val startLayout: Layout) {
             list.add(receivedLayouts.take())
         }
 
-        setResultLayout(Layout()) // should be LayoutMerger().merge(list)
+        setResultLayout(LayoutMerger().merge(list)) // should be LayoutMerger().merge(list)
+
+        clientHandlers.forEach { it.join() }
 
         return resultLayout!!
     }
 
 
-    private fun handleClient(clientSocket: Socket) {
+    private fun handleClient(clientSocket: Socket, districtId: Int) {
         clientSocket.use { client ->
-            val xodrString = OpenDriveWriter().toString(serializeLayout(startLayout))
-
-            println("tmp $xodrString")
-
             PrintWriter(client.getOutputStream(), true).use { writer ->
-                writer.println(xodrString)
-            }
+                BufferedReader(InputStreamReader(client.getInputStream())).use { reader ->
+                    writer.println("DISTRICT: $districtId")
 
-            val resultXodr = StringBuilder()
-            BufferedReader(InputStreamReader(client.getInputStream())).use { reader ->
-                var line: String?
+                    val initXodrString = OpenDriveWriter().toString(serializeLayout(startLayout))
 
-                while (true) {
-                    line = reader.readLine() ?: break
-                    if (line.isEmpty()) {
-                        break
+                    writer.println(initXodrString)
+                    writer.println("END OF INIT LAYOUT")
+
+                    val resultXodr = StringBuilder()
+
+                    var line: String?
+
+                    while (true) {
+                        line = reader.readLine() ?: break
+                        if (line == "END OF DISTRICT LAYOUT") {
+                            break
+                        }
+                        resultXodr.append(line).append("\n")
                     }
-                    resultXodr.append(line).append("\n")
                 }
-            }
 
-            val result = waitForResultLayout()
+                val result = waitForResultLayout()
 
-            val resultXodrString = OpenDriveWriter().toString(serializeLayout(result))
+                val resultXodrString = OpenDriveWriter().toString(serializeLayout(result))
 
-            PrintWriter(client.getOutputStream(), true).use { writer ->
                 writer.println(resultXodrString)
+                writer.println("END OF RESULT LAYOUT")
+                writer.flush()
             }
         }
     }
