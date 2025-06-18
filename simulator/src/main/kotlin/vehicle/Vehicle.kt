@@ -20,7 +20,7 @@ class Vehicle(
     val destination: Waypoint,
     val pathBuilder: IPathBuilder,
     val despawnCallback: RouteGeneratorDespawnListener,
-    val maxSpeed: Double = 33.0,
+    val maxSpeed: Double = 30.0,
     val maxAcc: Double = 2.0
 ) {
 
@@ -36,12 +36,22 @@ class Vehicle(
     var direction = source.direction
     var speed = 0.0
     var acc = 0.0
-    var laneChangeTimer = 0.0
+    var laneChangeDistance = -0.1
+    var laneChangeFullDistance = 0.0
+    var laneChangeFromLaneId = 0
     var position = 1.0
     var despawned = false
 
     init {
         lane.addVehicle(this)
+    }
+
+    fun getLaneChangePenalty(): Double {
+        val res = SimulationConfig.LANE_CHANGE_DISTANCE_GAP + speed / 1.5
+
+        // HAVE TO BE STRICTLY SMALLER THAN MLC_MIN_DISTANCE - 10.0!!!!
+        assert(res < SimulationConfig.MLC_MIN_DISTANCE)
+        return res
     }
 
     // Have to be called only after updateAcceleration!!!
@@ -51,14 +61,15 @@ class Vehicle(
         if (speed < SimulationConfig.EPS) {
             speed = 0.0
         }
-        position += speed * deltaTime
-        laneChangeTimer -= deltaTime
+        val deltaPos = speed * deltaTime
+        position += deltaPos
+        laneChangeDistance -= deltaPos
 
         while (position > lane.road.troad.length) {
             if (!moveToNextLane())
                 break
         }
-        logger.info {
+        logger.debug {
             "Veh@$vehicleId, RoadId: ${lane.roadId}, LineId: ${lane.laneId}, " +
                 "Position: ${"%.3f".format(position)}, " +
                 "Speed: ${"%.3f".format(speed)}, " +
@@ -69,6 +80,14 @@ class Vehicle(
 
     // Possible problem here: in case of very close junctions vehicle can not get enough time to break before the next one,
     //  as we check only the closest one.
+    // TODO: prove that mandatory lane change border starts to be stop point not only in the last road
+    // TODO: vehicle all the time has to find the worst situation for braking!!!
+    /*
+        1) Traffic Lights (TODO: high speed walktrough!!)
+        2) Junctions   (TODO: high speed walkthrough!)
+        3) Other vehicles
+        4) MLC
+     */
     fun updateAcceleration() {
         val closestJunction = getClosestJunction()
         var junctionAcc = SimulationConfig.INF
@@ -91,12 +110,11 @@ class Vehicle(
             if (lane.getMaxPositionVehicle()!! == this) {
 
                 // If Vehicle will get stuck on junction road it have to stop before junction to do not block it.
-                val laneAfterJunction: Lane = getClosestLaneAfterJunction()!!
-                if (lane.roadId == "16" && lane.laneId == 1) {
-                    println(laneAfterJunction.roadId + " " + laneAfterJunction.laneId)
-                }
-                val minPosVeh = laneAfterJunction.getMinPositionVehicle()
-                val hasFreePlace: Boolean = minPosVeh == null || minPosVeh.position > 2 * MIN_GAP + minPosVeh.length
+                // TODO: return this staff
+                // val laneAfterJunction: Lane = getClosestLaneAfterJunction()!!
+                // val minPosVeh = laneAfterJunction.getMinPositionVehicle()
+                // val hasFreePlace: Boolean = minPosVeh == null || minPosVeh.position > 2 * MIN_GAP + minPosVeh.length
+                val hasFreePlace: Boolean = true
 
                 if (hasFreePlace && junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
                     // Trajectory was succesfully blocked by us, can continue driving
@@ -108,52 +126,61 @@ class Vehicle(
             }
         }
 
-        val nextVeh = pathBuilder.getNextVehicle(this, this.lane, this.direction)
-        acc = Math.min(junctionAcc, IDM.getAcceleration(this, nextVeh.first, nextVeh.second))
+        // nextVehicle
+        val nextVeh = pathBuilder.getNextVehicle(this)
+        // nextMandatoryLaneChange
+        var nextMLCDistance = pathBuilder.getNextMLCDistance(this)
+        if (nextMLCDistance == null) {
+            nextMLCDistance = SimulationConfig.INF
+        }
+
+        acc = minOf(
+            junctionAcc,
+            IDM.getAcceleration(this, nextVeh.first, nextVeh.second),
+            IDM.getAcceleration(this, this.speed, nextMLCDistance, 0.0)
+        )
     }
 
-    data class ClosestJunction(val junctionId: String, val distance: Double, val connectingRoadId: String) {
-
-    }
+    data class ClosestJunction(val junctionId: String, val distance: Double, val connectingRoadId: String)
 
     // Get next junction on path, if currently on junction return the next one
     private fun getClosestJunction(): ClosestJunction? {
-        var tmp_lane: Pair<Lane, Boolean>? = pathBuilder.getNextPathLane(this)
+        var tmp_lane: IPathBuilder.PathWaypoint? = pathBuilder.getNextPathLane(this)
         var tmp_dir: Direction = direction
         var accDist = lane.road.troad.length - position
 
-        while (tmp_lane != null && tmp_lane.first.road.junction == "-1") {
-            tmp_dir = tmp_dir.opposite(tmp_lane.second)
+        while (tmp_lane != null && tmp_lane.lane.road.junction == "-1") {
+            tmp_dir = tmp_dir.opposite(tmp_lane.isDirectionOpposite)
 
-            accDist += tmp_lane.first.road.troad.length
-            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
+            accDist += tmp_lane.lane.length
+            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.lane)
         }
         if (tmp_lane == null) {
             return null
         }
-        return ClosestJunction(tmp_lane.first.road.junction, accDist, tmp_lane.first.roadId)
+        return ClosestJunction(tmp_lane.lane.road.junction, accDist, tmp_lane.lane.roadId)
     }
 
-    private fun getClosestLaneAfterJunction(): Lane? {
-        var tmp_lane: Pair<Lane, Boolean>? = pathBuilder.getNextPathLane(this)
-        var tmp_dir: Direction = direction
-
-        while (tmp_lane != null && tmp_lane.first.road.junction == "-1") {
-            tmp_dir = tmp_dir.opposite(tmp_lane.second)
-
-            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
-        }
-        if (tmp_lane == null) {
-            return null
-        }
-        tmp_dir = tmp_dir.opposite(tmp_lane.second)
-        tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
-
-        if (tmp_lane == null) {
-            return null
-        }
-        return tmp_lane.first
-    }
+//    private fun getClosestLaneAfterJunction(): Lane? {
+//        var tmp_lane: IPathBuilder.PathWaypoint? = pathBuilder.getNextPathLane(this)
+//        var tmp_dir: Direction = direction
+//
+//        while (tmp_lane != null && tmp_lane.lane.road.junction == "-1") {
+//            tmp_dir = tmp_dir.opposite(tmp_lane.isDirectionOpposite)
+//
+//            tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.lane, tmp_dir)
+//        }
+//        if (tmp_lane == null) {
+//            return null
+//        }
+//        tmp_dir = tmp_dir.opposite(tmp_lane.second)
+//        tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.first, tmp_dir)
+//
+//        if (tmp_lane == null) {
+//            return null
+//        }
+//        return tmp_lane.first
+//    }
 
     private fun moveToNextLane(): Boolean {
         val newPosition = position - lane.road.troad.length
@@ -163,14 +190,12 @@ class Vehicle(
             // println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
 
             // If was blocking junction have to unlock
-            if (lane.road.junction != "-1" && nextLane.first.road.junction != lane.road.junction) {
+            if (lane.road.junction != "-1" && nextLane.lane.road.junction != lane.road.junction) {
                 network.getJunctionById(lane.road.junction).unlockTrajectoryVehicle(lane.roadId, vehicleId)
             }
 
-            if (nextLane.second) {
-                direction = direction.opposite(direction)
-            }
-            setNewLane(nextLane.first)
+            direction = direction.opposite(nextLane.isDirectionOpposite)
+            setNewLane(nextLane.lane)
             position = newPosition
         } else {
             // Despawn vehicle
@@ -195,7 +220,7 @@ class Vehicle(
     }
 
     fun isInLaneChange(): Boolean {
-        return laneChangeTimer > 0.0
+        return laneChangeDistance > 0.0
     }
 
     fun getLaneNumber(): Int {
@@ -213,8 +238,9 @@ class Vehicle(
     fun performLaneChange(_lane: Lane) {
         if (_lane == this.lane) return
 
-        logger.info("Veh@$vehicleId changed it's lane from ${lane.laneId} to ${_lane.laneId}")
-        laneChangeTimer = SimulationConfig.LANE_CHANGE_DELAY
+        laneChangeDistance = getLaneChangePenalty()
+        laneChangeFullDistance = laneChangeDistance
+        laneChangeFromLaneId = lane.laneId
         // TODO: We don't need to traverse all junction, only the closest one...
         network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
         setNewLane(_lane)

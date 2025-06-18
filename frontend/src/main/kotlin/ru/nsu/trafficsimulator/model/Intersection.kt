@@ -56,7 +56,9 @@ class Intersection(
             }
         }
 
-        removeRoad(road)
+        intersectionRoads.values.toList().forEach {
+            if (it.toRoad === road || it.fromRoad === road) intersectionRoads.remove(it.id)
+        }
 
         for (incomingRoad in incomingRoads) {
             if (incomingRoad !== road) {
@@ -64,6 +66,7 @@ class Intersection(
                 addIntersectionRoad(incomingRoad, road)
             }
         }
+
         addRoad(road)
     }
 

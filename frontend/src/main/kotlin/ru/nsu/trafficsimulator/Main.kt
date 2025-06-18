@@ -31,7 +31,7 @@ class Main : ApplicationAdapter() {
         Simulator,
     }
 
-    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Double = 1.0)
+    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Long = 1)
 
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
@@ -46,8 +46,9 @@ class Main : ApplicationAdapter() {
     private val inputMultiplexer = InputMultiplexer()
 
     private lateinit var visualizer: Visualizer
-
-    private val FRAMETIME = 0.01 // It's 1 / FPS, duration of one frame in seconds
+    
+    // It's 1 / FPS, duration of one frame in milliseconds
+    private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
 
     override fun create() {
         val windowHandle = (Gdx.graphics as Lwjgl3Graphics).window.windowHandle
@@ -94,6 +95,7 @@ class Main : ApplicationAdapter() {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
             visualizer.updateCars(simState.backend.getVehicles())
             visualizer.updateSignals(simState.backend.getSignalStates())
+            visualizer.updateHeatmap(simState.backend.getSegments())
         }
 
         if (tmpInputProcessor != null) {
@@ -136,10 +138,10 @@ class Main : ApplicationAdapter() {
 
         val currentTime = System.nanoTime()
         val iterationsMillis = (currentTime - frameStartTime) / 1_000_000.0
-//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME * 1000 - iterationsMillis).toFloat()} ms")
+//        logger.debug("Render iteration took $iterationsMillis ms, will spin for ${(FRAMETIME - iterationsMillis).toFloat()} ms")
 
         // Spinning for the rest of frame time
-        while ((System.nanoTime() - frameStartTime) / 1_000_000_000.0 < FRAMETIME) {
+        while ((System.nanoTime() - frameStartTime) / 1_000_000.0 < FRAMETIME.toDouble()) {
         }
     }
 
@@ -156,6 +158,7 @@ class Main : ApplicationAdapter() {
                 ApplicationState.Simulator -> ApplicationState.Editor
             }
             if (state == ApplicationState.Editor) {
+                visualizer.cleanup()
                 inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
                 inputMultiplexer.removeProcessor(editorInputProcess)
@@ -169,15 +172,18 @@ class Main : ApplicationAdapter() {
             }
             ImGui.sameLine()
             if (ImGui.button(">")) {
-                simState.speed = 1.0
+                simState.speed = 1
             }
             ImGui.sameLine()
             if (ImGui.button(">>")) {
-                simState.speed = 2.0
+                simState.speed = 2
             }
             ImGui.sameLine()
             if (ImGui.button(">>>")) {
-                simState.speed = 5.0
+                simState.speed = 5
+            }
+            if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
+                visualizer.heatmapMode = !visualizer.heatmapMode
             }
         }
         ImGui.end()
