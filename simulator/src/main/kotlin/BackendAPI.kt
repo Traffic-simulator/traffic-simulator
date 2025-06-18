@@ -18,7 +18,6 @@ class BackendAPI : ISimulation {
 
 
     override fun updateSimulation(deltaTimeMillis: Long) {
-
         if (simulator == null)
             return
 
@@ -30,7 +29,7 @@ class BackendAPI : ISimulation {
         for (i in 0 until iters) {
             simulator!!.update(frametime.toDouble() / 1000.0)
         }
-        logger.info("Update took ${(System.nanoTime() - startNanos) / 1000000.0} milliseconds")
+        logger.info("Update took ${(System.nanoTime() - startNanos) / 1_000_000.0} milliseconds")
     }
 
     override fun getVehicles(): List<ISimulation.VehicleDTO> {
