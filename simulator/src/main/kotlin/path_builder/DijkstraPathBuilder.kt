@@ -106,6 +106,7 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
                     queue.add(toWaypoint to newDist)
                     par.put(toWaypoint, curRoadWaypoint)
                 }
+            }
 
             // Explore the next lanes
             curRoadWaypoint.lane.getNextLane()?.forEach {
@@ -167,7 +168,7 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
                 path.add(IPathBuilder.PathWaypoint(
                     IPathBuilder.PWType.MLC,
                     curWaypoint.lane,
-                    getMLCMaxRoadOffset(curWaypoint.lane.length, 1, roadLanes, toLaneId))) // to be find path using available space. TODO: another logic!
+                    getMLCMaxRoadOffset(curWaypoint.lane.length, 1, roadLanes, toLaneId)))
 
                 var i = 2
                 while(toLaneId != fromLaneId) {
@@ -224,18 +225,18 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         return roadLength - numLC * SimulationConfig.MLC_MIN_DISTANCE - 15.0 * (roadLanes - Math.abs(fromLaneId))
     }
 
-    fun removePath(vehicle: Vehicle) {
+    override fun removePath(vehicle: Vehicle) {
         if (vehiclesPaths.containsKey(vehicle.vehicleId)) {
             vehiclesPaths.remove(vehicle.vehicleId)
         }
     }
 
     // TODO: Do not think that vehicle is in the beggining of the road
-    fun getNextPathLane(vehicle: Vehicle): IPathBuilder.PathWaypoint? {
+    override fun getNextPathLane(vehicle: Vehicle): IPathBuilder.PathWaypoint? {
         return getNextPathLane(vehicle, vehicle.lane)
     }
 
-    fun getNextPathLane(vehicle: Vehicle, lane: Lane): IPathBuilder.PathWaypoint? {
+    override fun getNextPathLane(vehicle: Vehicle, lane: Lane): IPathBuilder.PathWaypoint? {
         createPathIfNotExists(vehicle, vehicle.position)
 
         for(i in 0 until vehiclesPaths[vehicle.vehicleId]!!.size) {
@@ -280,7 +281,7 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         }
     }
 
-    fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
+    override fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
         createPathIfNotExists(vehicle, vehicle.position)
 
         return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, vehicle.lane))
