@@ -78,6 +78,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
                         line = reader.readLine()
                         if (line == null) {
                             logger.warn { "Did not receive the whole layout from the client!" }
+                            break
                         }
                         if (line == "END OF DISTRICT LAYOUT") {
                             break
