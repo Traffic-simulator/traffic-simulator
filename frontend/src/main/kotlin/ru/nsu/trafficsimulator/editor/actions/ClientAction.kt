@@ -29,6 +29,7 @@ class ClientAction : IAction {
             val address = address.toString()
             val port = port.toString().toInt()
             val newLayout = client.connect(address, port)
+            println(newLayout.toString())
             layout.copy(newLayout)
             return true
         } catch (e: Exception) {

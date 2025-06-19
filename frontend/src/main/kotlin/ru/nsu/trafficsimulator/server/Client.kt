@@ -6,21 +6,24 @@ import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.PrintWriter
+import java.io.*
 import java.net.Socket
 
 class Client {
     private var connected = false
     private var currentSocket: Socket? = null
     private var districtId: Int = -1
+    private var outputStream: OutputStream? = null
+    private var inputStream: InputStream? = null
 
     fun connect(serverHost: String, serverPort: Int): Layout {
         if (connected) {
             throw IllegalStateException("Client is already connected to a server")
         }
-        currentSocket = Socket(serverHost, serverPort)
+        currentSocket = Socket(serverHost, serverPort).also {
+            outputStream = it.getOutputStream()
+            inputStream = it.getInputStream()
+        }
         connected = true
         return try {
             val initialLayout = receiveInitialLayout(currentSocket!!)
@@ -47,19 +50,23 @@ class Client {
 
     private fun disconnect() {
         try {
+            inputStream?.close()
+            outputStream?.close()
             currentSocket?.close()
         } catch (e: Exception) {
             logger.error(e) { "Error while disconnecting" }
         } finally {
             currentSocket = null
+            inputStream = null
+            outputStream = null
             connected = false
             districtId = -1
         }
     }
 
     private fun receiveResultLayout(): Layout {
-        val socket = currentSocket ?: throw IllegalStateException("Client is not connected to any server")
-        BufferedReader(InputStreamReader(socket.getInputStream())).use { reader ->
+        val input = inputStream ?: throw IllegalStateException("No input stream available")
+        BufferedReader(InputStreamReader(input)).use { reader ->
             val xodrString = StringBuilder()
             var line: String?
             while (true) {
@@ -73,7 +80,8 @@ class Client {
     }
 
     private fun receiveInitialLayout(socket: Socket): Layout {
-        BufferedReader(InputStreamReader(socket.getInputStream())).use { reader ->
+        val input = inputStream ?: throw IllegalStateException("No input stream available")
+        BufferedReader(InputStreamReader(input)).use { reader ->
             val districtLine = reader.readLine() ?: throw IllegalStateException("No district ID received")
             districtId = districtLine.removePrefix("DISTRICT: ").toInt()
 
@@ -92,8 +100,8 @@ class Client {
     }
 
     private fun sendLayoutToServer(layout: Layout) {
-        val socket = currentSocket ?: throw IllegalStateException("Client is not connected to any server")
-        PrintWriter(socket.getOutputStream(), true).use { writer ->
+        val output = outputStream ?: throw IllegalStateException("No output stream available")
+        PrintWriter(output, true).use { writer ->
             val xodrString = OpenDriveWriter().toString(serializeLayout(layout))
             writer.println(xodrString)
             writer.println("END OF DISTRICT LAYOUT")
