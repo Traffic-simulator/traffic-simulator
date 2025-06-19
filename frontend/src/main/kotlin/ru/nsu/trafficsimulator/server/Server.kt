@@ -36,9 +36,10 @@ class Server(private val port: Int, private val startLayout: Layout) {
 
             clients.add(clientSocket)
 
-            val thread = Thread(ThreadGroup("Client handler ${clients.size}")) {
+            val thread = Thread {
                 handleClient(clientSocket, clients.size) // 1<=..<=DISTRICTS_NUMBER
             }
+            thread.name = "Client handler thread: ${clients.size}"
             clientHandlers.add(thread)
             thread.start()
         }
