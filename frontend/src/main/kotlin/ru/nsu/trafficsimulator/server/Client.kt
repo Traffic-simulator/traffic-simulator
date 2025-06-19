@@ -13,21 +13,22 @@ class Client {
     private var connected = false
     private var currentSocket: Socket? = null
     private var districtId: Int = -1
-    private var outputStream: OutputStream? = null
-    private var inputStream: InputStream? = null
+    private var reader: BufferedReader? = null
+    private var writer: PrintWriter? = null
 
     fun connect(serverHost: String, serverPort: Int): Layout {
         if (connected) {
             throw IllegalStateException("Client is already connected to a server")
         }
-        currentSocket = Socket(serverHost, serverPort).also {
-            outputStream = it.getOutputStream()
-            inputStream = it.getInputStream()
-        }
-        connected = true
-        return try {
-            val initialLayout = receiveInitialLayout(currentSocket!!)
-            initialLayout
+
+        try {
+            currentSocket = Socket(serverHost, serverPort).also {
+                reader = BufferedReader(InputStreamReader(it.getInputStream()))
+                writer = PrintWriter(it.getOutputStream(), true)
+            }
+            connected = true
+
+            return receiveInitialLayout()
         } catch (e: Exception) {
             disconnect()
             throw IllegalStateException("Error while connecting to $serverHost:$serverPort", e)
@@ -35,78 +36,73 @@ class Client {
     }
 
     fun sendLayout(layout: Layout): Layout {
-        if (!connected || currentSocket == null) {
+        if (!connected) {
             throw IllegalStateException("Client is not connected to any server")
         }
+
         return try {
             sendLayoutToServer(layout)
-            val resultLayout = receiveResultLayout()
-            resultLayout
+            receiveResultLayout()
         } catch (e: Exception) {
             disconnect()
-            throw e
+            throw IllegalStateException("Failed to send layout", e)
         }
     }
 
     private fun disconnect() {
         try {
-            inputStream?.close()
-            outputStream?.close()
+            reader?.close()
+            writer?.close()
             currentSocket?.close()
         } catch (e: Exception) {
             logger.error(e) { "Error while disconnecting" }
         } finally {
             currentSocket = null
-            inputStream = null
-            outputStream = null
+            reader = null
+            writer = null
             connected = false
             districtId = -1
         }
     }
 
     private fun receiveResultLayout(): Layout {
-        val input = inputStream ?: throw IllegalStateException("No input stream available")
-        BufferedReader(InputStreamReader(input)).use { reader ->
-            val xodrString = StringBuilder()
-            var line: String?
-            while (true) {
-                line = reader.readLine() ?: throw IllegalStateException("Unexpected end of stream")
-                if (line == "END OF RESULT LAYOUT") break
-                xodrString.append(line).append("\n")
-            }
-            val xodr = OpenDriveReader().readUsingFileReader(xodrString.toString().byteInputStream())
-            return Deserializer.deserialize(xodr)
+        val r = reader ?: throw IllegalStateException("No reader available")
+
+        val xodrString = StringBuilder()
+        while (true) {
+            val line = r.readLine() ?: throw IllegalStateException("Unexpected end of stream")
+            if (line == "END OF RESULT LAYOUT") break
+            xodrString.append(line).append("\n")
         }
+
+        val xodr = OpenDriveReader().readUsingFileReader(xodrString.toString().byteInputStream())
+        return Deserializer.deserialize(xodr)
     }
 
-    private fun receiveInitialLayout(socket: Socket): Layout {
-        val input = inputStream ?: throw IllegalStateException("No input stream available")
-        BufferedReader(InputStreamReader(input)).use { reader ->
-            val districtLine = reader.readLine() ?: throw IllegalStateException("No district ID received")
-            districtId = districtLine.removePrefix("DISTRICT: ").toInt()
+    private fun receiveInitialLayout(): Layout {
+        val r = reader ?: throw IllegalStateException("No reader available")
 
-            val xodrString = StringBuilder()
-            var line: String?
-            while (true) {
-                line = reader.readLine() ?: throw IllegalStateException("Unexpected end of stream")
-                if (line == "END OF INIT LAYOUT") break
-                xodrString.append(line).append("\n")
-            }
+        val districtLine = r.readLine() ?: throw IllegalStateException("No district ID received")
+        districtId = districtLine.removePrefix("DISTRICT: ").toInt()
 
-
-            val xodr = OpenDriveReader().readUsingFileReader(xodrString.toString().byteInputStream())
-            return Deserializer.deserialize(xodr)
+        val xodrString = StringBuilder()
+        while (true) {
+            val line = r.readLine() ?: throw IllegalStateException("Unexpected end of stream")
+            if (line == "END OF INIT LAYOUT") break
+            xodrString.append(line).append("\n")
         }
+
+        val xodr = OpenDriveReader().readUsingFileReader(xodrString.toString().byteInputStream())
+        return Deserializer.deserialize(xodr)
     }
 
     private fun sendLayoutToServer(layout: Layout) {
-        val output = outputStream ?: throw IllegalStateException("No output stream available")
-        PrintWriter(output, true).use { writer ->
-            val xodrString = OpenDriveWriter().toString(serializeLayout(layout))
-            writer.println(xodrString)
-            writer.println("END OF DISTRICT LAYOUT")
-            writer.flush()
-        }
+        val w = writer ?: throw IllegalStateException("No writer available")
+
+        val xodrString = OpenDriveWriter().toString(serializeLayout(layout))
+        w.println(xodrString)
+        w.println("END OF DISTRICT LAYOUT")
+        w.flush()
     }
 
     fun getConnected(): Boolean {
