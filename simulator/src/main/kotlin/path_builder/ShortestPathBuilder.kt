@@ -1,7 +1,7 @@
 package path_builder
 
 import SimulationConfig
-import Waypoint
+import network.Waypoint
 import network.Lane
 import network.Network
 import vehicle.Vehicle

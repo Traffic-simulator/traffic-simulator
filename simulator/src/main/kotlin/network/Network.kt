@@ -5,10 +5,7 @@ import junction_intersection.Intersection
 import network.junction.Connection
 import network.junction.Junction
 import network.signals.Signal
-import opendrive.EContactPoint
-import opendrive.ERoadLinkElementType
-import opendrive.TJunction
-import opendrive.TRoad
+import opendrive.*
 import vehicle.Direction
 import kotlin.math.E
 
@@ -162,16 +159,24 @@ class Network(
             }
         }
 
+        fun isRoadEnd(roadLink: TRoadLinkPredecessorSuccessor?): Boolean {
+            if (roadLink == null) {
+                return true
+            }
+            if (roadLink.elementType != ERoadLinkElementType.JUNCTION) {
+                return false
+            }
+            return getJunctionById(roadLink.elementId).connections.size == 0
+        }
+
         getAllLanes().forEach{
             lane ->
-                directionAutoDetectionPossible = true
-                visited.add(lane)
-                bfsQueue.add(lane)
-                if (lane.road.successor != null) {
-                    lane.direction = getLaneDirection(true, lane.laneId, drivingSide)
-                } else
-                if (lane.road.predecessor != null) {
-                    lane.direction = getLaneDirection(true, lane.laneId, drivingSide)
+                if (isRoadEnd(lane.road.successor) || isRoadEnd(lane.road.predecessor)) {
+                    directionAutoDetectionPossible = true
+                    visited.add(lane)
+                    bfsQueue.add(lane)
+
+                    lane.direction = getLaneDirection(isRoadEnd(lane.road.successor), lane.laneId, drivingSide)
                 }
         }
 

@@ -2,8 +2,7 @@ package vehicle
 
 import SimulationConfig
 import SimulationConfig.Companion.JUNCTION_BLOCK_DISTANCE
-import SimulationConfig.Companion.MIN_GAP
-import Waypoint
+import network.Waypoint
 import mu.KotlinLogging
 import network.Lane
 import network.Network
