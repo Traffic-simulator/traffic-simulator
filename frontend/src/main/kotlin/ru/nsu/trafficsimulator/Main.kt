@@ -21,6 +21,7 @@ import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.editor.actions.ClientAction
 import ru.nsu.trafficsimulator.editor.actions.SendLayoutAction
+import ru.nsu.trafficsimulator.editor.actions.ServerAction
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
@@ -32,8 +33,6 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 val logger = KotlinLogging.logger("FRONTEND")
-
-const val PORT = 8080
 
 class Main : ApplicationAdapter() {
     private enum class ApplicationState {
@@ -62,9 +61,6 @@ class Main : ApplicationAdapter() {
     private val inputMultiplexer = InputMultiplexer()
 
     private lateinit var visualizer: Visualizer
-
-    private val clientAction = ClientAction()
-    private val sendLayoutAction = SendLayoutAction()
 
     // It's 1 / FPS, duration of one frame in milliseconds
     private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
@@ -131,9 +127,6 @@ class Main : ApplicationAdapter() {
         ImGui.newFrame()
 
         renderSimulationMenu()
-
-        renderClientServerMenu()
-        renderClientMenu()
 
         if (state == ApplicationState.Editor) {
             Editor.runImgui()
@@ -236,29 +229,6 @@ class Main : ApplicationAdapter() {
             if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
                 visualizer.heatmapMode = !visualizer.heatmapMode
             }
-        }
-        ImGui.end()
-    }
-
-    private fun renderClientServerMenu() {
-        ImGui.begin("ClientServer Menu")
-        if (ImGui.button("Host")) {
-            val hostLayout = hostLayout()
-            val server = Server(PORT, hostLayout)
-            val resultLayout = server.start()
-
-            Editor.layout.copy(resultLayout)
-        }
-        ImGui.end()
-    }
-
-    private fun renderClientMenu() {
-        ImGui.begin("Client Menu")
-        if (clientAction.runImgui()) {
-            clientAction.runAction(Editor.layout)
-        }
-        if (sendLayoutAction.runImgui()) {
-            sendLayoutAction.runAction(Editor.layout, clientAction.client)
         }
         ImGui.end()
     }
