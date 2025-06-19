@@ -1,9 +1,11 @@
 package ru.nsu.trafficsimulator.server
 
+import OpenDriveReader
 import OpenDriveWriter
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.LayoutMerger
+import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -34,7 +36,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
 
             clients.add(clientSocket)
 
-            val thread = Thread {
+            val thread = Thread(ThreadGroup("Client handler ${clients.size}")) {
                 handleClient(clientSocket, clients.size) // 1<=..<=DISTRICTS_NUMBER
             }
             clientHandlers.add(thread)
@@ -73,13 +75,20 @@ class Server(private val port: Int, private val startLayout: Layout) {
                     var line: String?
 
                     while (true) {
-                        line = reader.readLine() ?: break
+                        line = reader.readLine()
+                        if (line == null) {
+                            logger.warn { "Did not receive the whole layout from the client!" }
+                        }
                         if (line == "END OF DISTRICT LAYOUT") {
                             break
                         }
                         resultXodr.append(line).append("\n")
                     }
                     logger.info { "Get layout from client with district ID: $districtId" }
+
+                    val receivedOpenDrive =
+                        OpenDriveReader().readUsingFileReader(resultXodr.toString().byteInputStream())
+                    receivedLayouts.add(Deserializer.deserialize(receivedOpenDrive))
 
                     val result = waitForResultLayout()
 
