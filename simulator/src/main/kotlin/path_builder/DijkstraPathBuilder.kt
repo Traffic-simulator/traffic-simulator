@@ -2,16 +2,15 @@ package path_builder
 
 import SimulationConfig
 import Waypoint
-import jakarta.validation.Path
 import network.Lane
 import network.Network
+import path_builder.cost_function.ICostFunction
 import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.VehicleDetector
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.random.Random
 
 
 // TODO: Use proxy or dectorator pattern
@@ -31,7 +30,7 @@ import kotlin.random.Random
         2) TODO: I can imagine scenarios where vehicle can use single Lane object twice, but it's very rare I think.
  */
 // TODO: because of MOBIL logic we will rebuild path every nmlc/mlc try, maybe somehow optimize it?
-class ShortestPathBuilder: IPathBuilder {
+class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder {
 
     val vehiclesPaths = HashMap<Int, ArrayList<IPathBuilder.PathWaypoint>>()
 
@@ -79,7 +78,8 @@ class ShortestPathBuilder: IPathBuilder {
         return SimulationConfig.INF
     }
 
-    private fun getDijkstraShortestPath(network: Network, source: Waypoint, destination: Waypoint, initPosition: Double): ArrayList<IPathBuilder.PathWaypoint> {
+    private fun getDijkstraShortestPath(network: Network, source: Waypoint, destination: Waypoint, initPosition_: Double): ArrayList<IPathBuilder.PathWaypoint> {
+        var initPosition = initPosition_
         data class RoadWaypoint (
             val lane: Lane,
             val direction: Direction,
@@ -87,36 +87,41 @@ class ShortestPathBuilder: IPathBuilder {
         )
 
         val queue = PriorityQueue<Pair<RoadWaypoint, Double>>(compareBy { it.second })
-        val dist = mutableMapOf<RoadWaypoint, Double>().withDefault { Double.MAX_VALUE }
+        val cost = mutableMapOf<RoadWaypoint, Double>().withDefault { Double.MAX_VALUE }
         val par = mutableMapOf<RoadWaypoint, RoadWaypoint>()
-        var first = true
         val srcLane = network.getLaneById(source.roadId, source.laneId)
-        dist[RoadWaypoint(srcLane, source.direction, IPathBuilder.PWType.NORMAL)] = 0.0
+        cost[RoadWaypoint(srcLane, source.direction, IPathBuilder.PWType.NORMAL)] = 0.0
         queue.add(RoadWaypoint(srcLane, source.direction, IPathBuilder.PWType.NORMAL) to 0.0)
 
         // States with type.MLC are the same, and imply that MLC can be done before the end of the road.
         //                               No matter from distance reserve.
         //                               For some sort of reality each MLC costs 10 meters of simple path.
         while (queue.isNotEmpty()) {
-            val (curRoadWaypoint, curDist) = queue.poll()
+            val (curRoadWaypoint, curCost) = queue.poll()
 
             // Skip if we already found a better path
-            if (curDist > dist.getValue(curRoadWaypoint)) continue
+            if (curCost > cost.getValue(curRoadWaypoint)) continue
+
+            fun updateDijkstraState(toWaypoint: RoadWaypoint, weight: Double) {
+                val newDist = curCost + weight
+                val oldDist = cost.getValue(toWaypoint)
+                if (newDist < oldDist) {
+                    cost.put(toWaypoint, newDist)
+                    queue.add(toWaypoint to newDist)
+                    par.put(toWaypoint, curRoadWaypoint)
+                }
+            }
 
             // Explore the next lanes
             curRoadWaypoint.lane.getNextLane(curRoadWaypoint.direction)?.forEach {
                 (toLane, dirChange) ->
                     val toWaypoint = RoadWaypoint(toLane, curRoadWaypoint.direction.opposite(dirChange), IPathBuilder.PWType.NORMAL)
-                    val newDist = curDist + curRoadWaypoint.lane.road.troad.length - (if (first) initPosition else 0.0) // TODO: Think about it
-                    val oldDist = dist.getValue(toWaypoint)
-                    if (newDist < oldDist) {
-                        dist.put(toWaypoint, newDist)
-                        queue.add(toWaypoint to newDist)
-                        par.put(toWaypoint, curRoadWaypoint)
-                    }
+                    // We can not consider initPosition in cost, as first road will be fully traversed in every situation
+                    val weight = costFunction.getLaneCost(curRoadWaypoint.lane)
+                    updateDijkstraState(toWaypoint, weight)
             }
 
-            // Explore MLC.
+            // Explore MLC
             curRoadWaypoint.lane.road.lanes.filter { toLane ->
                 // Lanes that have the same direction...
                 toLane.laneId * curRoadWaypoint.lane.laneId > 0
@@ -125,31 +130,28 @@ class ShortestPathBuilder: IPathBuilder {
             }.forEach {
                 toLane ->
                     val numLaneChanges = Math.abs(toLane.laneId - curRoadWaypoint.lane.laneId)
-                    val availablePosition = toLane.road.troad.length - (if (first) initPosition else 0.0)
+                    val availablePosition = toLane.road.troad.length - initPosition
                     val roadLanes = curRoadWaypoint.lane.road.lanes.filter { it.laneId * curRoadWaypoint.lane.laneId > 0 }.size
 
                     if (! isMLCPossible(availablePosition, roadLanes, curRoadWaypoint.lane.laneId, toLane.laneId))
                         return@forEach
 
                     val toWaypoint = RoadWaypoint(toLane, curRoadWaypoint.direction, IPathBuilder.PWType.MLC)
-
-                    // Add some distance to do not create cycles with mandatory lane changes
-                    val newDist = curDist + 10.0 * numLaneChanges
-                    val oldDist = dist.getValue(toWaypoint)
-                    if (newDist < oldDist) {
-                        dist.put(toWaypoint, newDist)
-                        queue.add(toWaypoint to newDist)
-                        par.put(toWaypoint, curRoadWaypoint)
-                    }
+                    val weight = costFunction.getLaneChangeCost(numLaneChanges)
+                    updateDijkstraState(toWaypoint, weight)
             }
-            first = false
+
+            // init position make sense only in first road.
+            // Interesting detail is that MLC does not change initPosition and leave vehicle on the same road
+            // but due to MLC non-zero cost there can't be done two MLC's inside one road - i.e. initPosition can be used only once
+            initPosition = 0.0
         }
 
         // Path recovery
         val path = ArrayList<IPathBuilder.PathWaypoint>()
         val dstLane = network.getLaneById(destination.roadId, destination.laneId)
 
-        // TODO: Currently assume building can be reached without MLC on the last lane
+        // TODO: Currently assume building can be reached without MLC on the last lane, it's not right during region simulation
         var curWaypoint = RoadWaypoint(dstLane, destination.direction, IPathBuilder.PWType.NORMAL)
         if (!par.containsKey(curWaypoint)) {
             return path
