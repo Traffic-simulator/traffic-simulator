@@ -101,7 +101,7 @@ class PathManager(private val algorithm: IPathBuilder) {
         return null
     }
 
-    fun getNextVehicle(vehicle: Vehicle): Pair<Vehicle?, Double> {
+    fun getNextRoads(vehicle: Vehicle): Sequence<VehicleDetector.VehicleLaneSequence> {
         createPathIfNotExists(vehicle, vehicle.position)
 
         fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
@@ -133,7 +133,7 @@ class PathManager(private val algorithm: IPathBuilder) {
             }
         }
 
-        return VehicleDetector.getNextVehicle(vehicle, generateNextRoads(vehicle, vehicle.lane))
+        return generateNextRoads(vehicle, vehicle.lane)
     }
 
     fun createPathIfNotExists(vehicle: Vehicle, initPosition: Double) {

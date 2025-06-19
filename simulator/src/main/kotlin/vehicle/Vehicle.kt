@@ -129,7 +129,7 @@ class Vehicle(
         }
 
         // nextVehicle
-        val nextVeh = pathManager.getNextVehicle(this)
+        val nextVeh = getNextVehicle()
         // nextMandatoryLaneChange
         var nextMLCDistance = pathManager.getNextMLCDistance(this)
         if (nextMLCDistance == null) {
@@ -141,6 +141,10 @@ class Vehicle(
             IDM.getAcceleration(this, nextVeh.first, nextVeh.second),
             IDM.getAcceleration(this, this.speed, nextMLCDistance, 0.0)
         )
+    }
+
+    fun getNextVehicle(): Pair<Vehicle?, Double> {
+        return VehicleDetector.getNextVehicle(this, pathManager.getNextRoads(this))
     }
 
     data class ClosestJunction(val junctionId: String, val distance: Double, val connectingRoadId: String)

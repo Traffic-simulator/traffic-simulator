@@ -49,7 +49,7 @@ class MOBIL {
 
             // New Front
             // TODO: check is it working that way or need to explicitly delete vehicle from lane.
-            val newFront = me.pathManager.getNextVehicle(me)
+            val newFront = me.getNextVehicle()
             if (newFront.first?.isInLaneChange() ?: false || newFront.second < SimulationConfig.MIN_GAP) {
                 me.pathManager.removePath(me)
                 me.lane = oldLane
@@ -69,7 +69,7 @@ class MOBIL {
 
 
             // Cur Front
-            val curFront = me.pathManager.getNextVehicle(me)
+            val curFront = me.getNextVehicle()
             if (curFront.first?.isInLaneChange() ?: false) {
                 return null
             }
