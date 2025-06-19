@@ -5,11 +5,13 @@ import imgui.ImGui
 import imgui.type.ImString
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.Deserializer
+import ru.nsu.trafficsimulator.server.Client
 
 class LoadAction : IAction {
     private val str = ImString()
     private var errorMessage = ""
     override fun isStructuralAction(): Boolean = true
+    override fun runAction(layout: Layout, client: Client): Boolean = true
 
     override fun runImgui(): Boolean {
         ImGui.text("Filename:")

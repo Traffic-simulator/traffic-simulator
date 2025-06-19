@@ -22,6 +22,7 @@ import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.editor.actions.ClientAction
+import ru.nsu.trafficsimulator.editor.actions.SendLayoutAction
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
@@ -65,6 +66,7 @@ class Main : ApplicationAdapter() {
     private lateinit var visualizer: Visualizer
 
     private val clientAction = ClientAction()
+    private val sendLayoutAction = SendLayoutAction()
 
     // It's 1 / FPS, duration of one frame in milliseconds
     private val FRAMETIME = ISimulation.Constants.SIMULATION_FRAME_MILLIS
@@ -254,6 +256,9 @@ class Main : ApplicationAdapter() {
         ImGui.begin("Client Menu")
         if (clientAction.runImgui()) {
             clientAction.runAction(Editor.layout)
+        }
+        if (sendLayoutAction.runImgui()) {
+            sendLayoutAction.runAction(Editor.layout, clientAction.client)
         }
         ImGui.end()
     }

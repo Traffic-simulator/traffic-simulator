@@ -67,7 +67,7 @@ class Client {
                 if (line == "END OF RESULT LAYOUT") break
                 xodrString.append(line).append("\n")
             }
-            val xodr = OpenDriveReader().read(xodrString.toString())
+            val xodr = OpenDriveReader().readUsingFileReader(xodrString.toString().byteInputStream())
             return Deserializer.deserialize(xodr)
         }
     }
@@ -99,5 +99,9 @@ class Client {
             writer.println("END OF DISTRICT LAYOUT")
             writer.flush()
         }
+    }
+
+    fun getConnected(): Boolean {
+        return connected
     }
 }
