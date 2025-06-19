@@ -10,10 +10,13 @@ import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
+import com.badlogic.gdx.math.MathUtils.clamp
 import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
+import imgui.type.ImInt
 import mu.KotlinLogging
+import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
 import ru.nsu.trafficsimulator.model.Layout
@@ -31,7 +34,13 @@ class Main : ApplicationAdapter() {
         Simulator,
     }
 
-    private data class SimulationState(val backend: ISimulation, var isPaused: Boolean = false, var speed: Long = 1)
+    private data class SimulationState(
+        val backend: ISimulation,
+        var isPaused: Boolean = false,
+        var speed: Long = 1,
+        var startTime: LocalTime = LocalTime.ofSecondOfDay(60 * 60 * 8),
+        var currentTime: LocalTime = startTime
+    )
 
     private var image: Texture? = null
     private var imGuiGlfw: ImGuiImplGlfw = ImGuiImplGlfw()
@@ -56,6 +65,7 @@ class Main : ApplicationAdapter() {
         ImGui.styleColorsDark()
         imGuiGlfw.init(windowHandle, true)
         imGuiGl3.init()
+        GLFW.glfwSwapInterval(0)
 
         visualizer = Visualizer(Editor.layout)
 
@@ -95,6 +105,9 @@ class Main : ApplicationAdapter() {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
             visualizer.updateCars(simState.backend.getVehicles())
             visualizer.updateSignals(simState.backend.getSignalStates())
+            visualizer.updateHeatmap(simState.backend.getSegments())
+
+            simState.currentTime = simState.backend.getSimulationTime()
         }
 
         if (tmpInputProcessor != null) {
@@ -151,12 +164,35 @@ class Main : ApplicationAdapter() {
         } else {
             "Stop"
         }
+        if (state == ApplicationState.Editor) {
+            ImGui.pushItemWidth(80.0f)
+            ImGui.labelText("##TimeLabel", "Time: ")
+            ImGui.sameLine()
+            ImGui.pushItemWidth(80.0f)
+            val hours = ImInt(simState.startTime.hour)
+            ImGui.inputInt("##hours", hours)
+            ImGui.sameLine()
+            val minutes = ImInt(simState.startTime.minute)
+            ImGui.inputInt("##minutes", minutes)
+            ImGui.sameLine()
+            val seconds = ImInt(simState.startTime.second)
+            ImGui.inputInt("##seconds", seconds)
+            ImGui.popItemWidth()
+
+            simState.startTime = simState.startTime
+                .withHour(clamp(hours.get(), 0, 23))
+                .withMinute(clamp(minutes.get(), 0, 59))
+                .withSecond(clamp(seconds.get(), 0, 59))
+        } else {
+            ImGui.labelText("##TimeLabel", "Time: ${simState.currentTime}")
+        }
         if (ImGui.button(startStopText)) {
             state = when (state) {
                 ApplicationState.Editor -> ApplicationState.Simulator
                 ApplicationState.Simulator -> ApplicationState.Editor
             }
             if (state == ApplicationState.Editor) {
+                visualizer.cleanup()
                 inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
                 inputMultiplexer.removeProcessor(editorInputProcess)
@@ -179,6 +215,9 @@ class Main : ApplicationAdapter() {
             ImGui.sameLine()
             if (ImGui.button(">>>")) {
                 simState.speed = 5
+            }
+            if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
+                visualizer.heatmapMode = !visualizer.heatmapMode
             }
         }
         ImGui.end()

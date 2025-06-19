@@ -72,6 +72,12 @@ class Layout {
             road.endIntersection.signals[road] = Signal()
         }
 
+        if (!intersections.containsKey(road.startIntersection.id)) {
+            throw Exception("Adding road with intersection outside the layout")
+        }
+        if (!intersections.containsKey(road.endIntersection.id)) {
+            throw Exception("Adding road with intersection outside the layout")
+        }
         road.startIntersection.connectRoad(road)
         road.endIntersection.connectRoad(road)
 
@@ -82,9 +88,15 @@ class Layout {
         intersection: Intersection, intersectionDirection: Vec3,
         buildingPosition: Vec3, buildingDirection: Vec3,
         building: BuildingIntersectionSettings
-    ): Road {
+    ): Pair<Intersection, Road> {
         val buildingIntersection = addIntersection(buildingPosition, building)
-        return addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
+        try {
+            val road = addRoad(intersection, intersectionDirection, buildingIntersection, buildingDirection)
+            return buildingIntersection to road
+        } catch (e: Exception) {
+            deleteIntersection(buildingIntersection)
+            throw e
+        }
     }
 
     fun moveIntersection(intersection: Intersection, newPosition: Vec3) {

@@ -17,6 +17,7 @@ import vehicle.model.MOBIL
 import java.time.LocalTime
 import kotlin.collections.ArrayList
 import kotlin.math.abs
+import kotlin.math.sign
 import kotlin.random.Random
 
 // Route - source point and destination point.
@@ -88,8 +89,9 @@ class Simulator(openDrive: OpenDRIVE,
         /*
             Statistics gathering:
                 1) Update segments for heatmap on this cycle
+                2) Update road-side average speed
         */
-        updateSegments()
+        gatherStatistics()
 
         currentTime += dt
         return vehicles
@@ -163,12 +165,19 @@ class Simulator(openDrive: OpenDRIVE,
         }
     }
 
-    fun updateSegments() {
+    fun gatherStatistics() {
         val roads: List<Road> = network.roads
         for (road in roads) {
+
+            // Compute segments
             for (lane in road.lanes) {
                 lane.vehicles.forEach {
-                    val segmentIndex = (it.position / lane.lenOfSegment).toInt()
+                    val posFromStart = if (it.direction == Direction.BACKWARD) {
+                        lane.length - it.position
+                    } else {
+                        it.position
+                    }
+                    val segmentIndex = (posFromStart / lane.lenOfSegment).toInt()
                     if (segmentIndex < lane.segments.size) {
                         lane.segments[segmentIndex].addVehicleSpeed(it)
                     } else {
@@ -177,6 +186,26 @@ class Simulator(openDrive: OpenDRIVE,
                 }
                 lane.segments.forEach { it.update() }
             }
+
+            // Roads avg speed
+            fun getRoadSideAvgSpeed(roadSide: Int): Double {
+                var sumSegments = 0.0
+                var cntSegments = 0
+
+                road.lanes.filter { it.laneId * roadSide > 0}.forEach {
+                        itLane->
+                    itLane.segments.forEach {
+                            seg ->
+                        sumSegments += seg.getAverageSpeed()
+                        cntSegments ++
+                    }
+                }
+
+                return sumSegments / cntSegments
+            }
+
+            road.positiveSideAvgSpeed = getRoadSideAvgSpeed(1)
+            road.negativeSideAvgSpeed = getRoadSideAvgSpeed(-1)
         }
     }
 

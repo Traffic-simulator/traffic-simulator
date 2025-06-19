@@ -7,7 +7,8 @@ import mu.KotlinLogging
 import network.Lane
 import network.Network
 import path_builder.IPathBuilder
-import path_builder.ShortestPathBuilder
+import path_builder.DijkstraPathBuilder
+import path_builder.cost_function.DynamicTimeCostFunction
 import route_generator.RouteGeneratorDespawnListener
 import signals.SignalState
 import vehicle.model.IDM
@@ -251,7 +252,8 @@ class Vehicle(
 
     companion object {
         var counter: Int = 0
-        val pathBuilder: IPathBuilder = ShortestPathBuilder()
+        val costFunction = DynamicTimeCostFunction()
+        val pathBuilder: IPathBuilder = DijkstraPathBuilder(costFunction)
 
         fun NewVehicle(
             network: Network,
