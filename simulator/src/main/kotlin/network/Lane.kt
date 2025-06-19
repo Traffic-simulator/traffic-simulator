@@ -3,8 +3,10 @@ package network
 import SimulationConfig
 import heatmap.Segment
 import network.signals.Signal
+import opendrive.EUnitSpeed
 import opendrive.TRoadLanesLaneSectionLcrLaneLink
 import opendrive.TRoadLanesLaneSectionLrLane
+import opendrive.TRoadTypeSpeed
 import vehicle.Direction
 import vehicle.Vehicle
 import kotlin.math.max
@@ -31,11 +33,13 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
 
     fun getMaxSpeed(): Double {
         val defaultMaxSpeed = 30.0
-        val res = road.troad.type
-        if (res != null && !res.isEmpty()) {
-            return res.get(0)?.speed?.max?.toDouble() ?: defaultMaxSpeed
+        val speed = road.troad.type?.firstOrNull()?.speed ?: return defaultMaxSpeed
+
+        return when (speed.unit) {
+            EUnitSpeed.M_S -> speed.max.toDouble()
+            EUnitSpeed.KM_H, null -> speed.max.toDouble() / 3.6
+            EUnitSpeed.MPH -> speed.max.toDouble() / 2.237
         }
-        return defaultMaxSpeed
     }
 
     override fun addVehicle(vehicle: Vehicle) {
