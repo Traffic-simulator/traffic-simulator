@@ -23,9 +23,11 @@ import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
 import ru.nsu.trafficsimulator.serializer.Deserializer
+import ru.nsu.trafficsimulator.model.BuildingType
 import signals.SignalState
 import vehicle.Direction
 import java.lang.Math.clamp
+import java.util.HashMap
 import kotlin.math.*
 
 class Visualizer(private var layout: Layout) {
@@ -41,8 +43,16 @@ class Visualizer(private var layout: Layout) {
         GLBLoader().load(Gdx.files.internal("models/Jeep.glb"))!!.scene.model,
         GLBLoader().load(Gdx.files.internal("models/Car.glb"))!!.scene.model,
     )
+    private val buildingModels: HashMap<BuildingType, Model> = hashMapOf(
+        BuildingType.HOME to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
+        BuildingType.SHOPPING to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
+        BuildingType.EDUCATION to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
+        BuildingType.WORK to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
+        BuildingType.ENTERTAINMENT to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model
+    )
     private val buildingModel = GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model
-    private var trafficLightModel: Model = GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
+    private var trafficLightModel: Model =
+        GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
 
     private val carInstances = mutableMapOf<Int, Scene>()
     private val buildingScenes = mutableListOf<Scene>()
@@ -211,7 +221,7 @@ class Visualizer(private var layout: Layout) {
 
         val lcInfo = vehicle.laneChangeInfo!!
         val base = abs(lcInfo.toLaneId) - 0.5
-        val addition = 1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance, )
+        val addition = 1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance)
         if (abs(lcInfo.toLaneId) < abs(lcInfo.fromLaneId)) {
             return base + addition
         }
@@ -230,11 +240,11 @@ class Visualizer(private var layout: Layout) {
         if (lcInfo.laneChangeCurrentDistance < lcInfo.laneChangeFullDistance / 3.0) {
             angle = customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance)
         } else
-        if (lcInfo.laneChangeCurrentDistance < 2.0 * lcInfo.laneChangeFullDistance / 3.0){
-            angle = middlePartLaneChangeAngle
-        } else {
-            angle = (1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance))
-        }
+            if (lcInfo.laneChangeCurrentDistance < 2.0 * lcInfo.laneChangeFullDistance / 3.0) {
+                angle = middlePartLaneChangeAngle
+            } else {
+                angle = (1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance))
+            }
 
         if (abs(lcInfo.toLaneId) < abs(lcInfo.fromLaneId)) {
             return angle
@@ -327,9 +337,11 @@ class Visualizer(private var layout: Layout) {
                     continue
                 }
 
-                val getOffsetAndLane = {vertexIndex: Short ->
-                    val offset = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
-                    val lane = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
+                val getOffsetAndLane = { vertexIndex: Short ->
+                    val offset =
+                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
+                    val lane =
+                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
                     offset to lane
                 }
 
@@ -347,9 +359,12 @@ class Visualizer(private var layout: Layout) {
                     } else {
                         laneC.toInt()
                     }
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] = getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] = getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] = getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] =
+                        getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] =
+                        getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] =
+                        getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
                 }
             }
         }
@@ -359,7 +374,12 @@ class Visualizer(private var layout: Layout) {
 
     // Valid heatmap values lie in range [1.0, 2.0], offset by 1 from [0.0, 1.0]
     // heatmap value of 0.0 is an invalid value
-    private fun getHeatmapValue(segments: List<ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
+    private fun getHeatmapValue(
+        segments: List<ISimulation.SegmentDTO>,
+        roadId: Long,
+        laneId: Int,
+        offset: Float
+    ): Double {
         val segment = segments.find { it.road.id.toLong() == roadId && it.laneId == laneId } ?: return 0.0
         return segment.segments[min(floor(offset / segment.segmentLen).toInt(), segment.segments.size - 1)] + 1.0
     }
@@ -397,7 +417,11 @@ class Visualizer(private var layout: Layout) {
             }
             for (road in intersection.incomingRoads) {
                 val isStart = road.startIntersection == intersection
-                val distFromStart = if (isStart) { 0.0 } else { road.length }
+                val distFromStart = if (isStart) {
+                    0.0
+                } else {
+                    road.length
+                }
                 val key = road to isStart
                 visited.add(key)
                 if (!trafficLights.containsKey(key)) {
@@ -408,7 +432,11 @@ class Visualizer(private var layout: Layout) {
                 val scene = trafficLights[key]!!
                 val centerPos = road.getPoint(distFromStart)
                 val roadDirection = road.getDirection(distFromStart)
-                val laneId = if (isStart) { -road.leftLane } else { road.rightLane }.toDouble()
+                val laneId = if (isStart) {
+                    -road.leftLane
+                } else {
+                    road.rightLane
+                }.toDouble()
                 val offsetLen = if (isStart) {
                     road.leftLane
                 } else {
@@ -442,11 +470,17 @@ class Visualizer(private var layout: Layout) {
 
         layout.intersections.values.forEach { intersection ->
             if (intersection.isBuilding) {
-                val buildingScene = Scene(buildingModel)
+                val road = intersection.incomingRoads.first()
+                val direction = road.getDirection(road.length - 0.1)
+                val normalizedDirection = direction.normalized()
+                val angle = atan2(normalizedDirection.z, normalizedDirection.x).toFloat()
+
+                val buildingScene = Scene(buildingModels[intersection.building!!.type])
 
                 val center = intersection.position.toVec3()
                 buildingScene.modelInstance.transform
                     .setToTranslation(center.toGdxVec())
+                    .rotate(0f, 1f, 0f, Math.toDegrees(-angle.toDouble() - 90f).toFloat())
                     .scale(0.7f, 0.7f, 0.7f)
 
                 sceneManager.addScene(buildingScene)
