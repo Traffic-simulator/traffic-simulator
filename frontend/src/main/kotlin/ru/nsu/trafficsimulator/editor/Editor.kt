@@ -7,8 +7,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import imgui.ImGui
-import ru.nsu.trafficsimulator.editor.actions.LoadAction
-import ru.nsu.trafficsimulator.editor.actions.SaveAction
+import ru.nsu.trafficsimulator.editor.actions.*
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.logger
@@ -28,6 +27,9 @@ class Editor {
         private var nextChange = 0
 
         private val actions = listOf(LoadAction(), SaveAction())
+        private val serverAction = ServerAction()
+        private val clientAction = ClientAction()
+        private val sendLayoutAction = SendLayoutAction()
         private val tools = listOf(EditTool(), AddRoadTool(), AddBuildingTool(), DeleteRoadTool(), InspectorTool())
 
         private var currentTool = tools[0]
@@ -42,6 +44,8 @@ class Editor {
         }
 
         fun runImgui() {
+            renderServerMenu()
+            renderClientMenu()
             ImGui.begin("Editor")
             ImGui.labelText("##actions", "Available Actions:")
             for (action in actions) {
@@ -84,6 +88,30 @@ class Editor {
             }
         }
 
+        private fun renderServerMenu() {
+            ImGui.begin("Server Menu")
+            if (serverAction.runImgui()) {
+                if (serverAction.runAction(layout)) {
+                    onLayoutChange(serverAction.isStructuralAction(), true)
+                }
+            }
+            ImGui.end()
+        }
+
+        private fun renderClientMenu() {
+            ImGui.begin("Client Menu")
+            if (clientAction.runImgui()) {
+                if (clientAction.runAction(layout)) {
+                    onLayoutChange(clientAction.isStructuralAction(), true)
+                }
+            }
+            if (sendLayoutAction.runImgui()) {
+                if (sendLayoutAction.runAction(layout, clientAction.client)) {
+                    onLayoutChange(sendLayoutAction.isStructuralAction(), true)
+                }
+            }
+            ImGui.end()
+        }
 
         fun render(modelBatch: ModelBatch) {
             currentTool.render(modelBatch)
