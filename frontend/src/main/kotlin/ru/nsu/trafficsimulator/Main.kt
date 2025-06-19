@@ -16,7 +16,6 @@ import imgui.ImGui
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import imgui.type.ImInt
-import imgui.type.ImString
 import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
@@ -254,7 +253,9 @@ class Main : ApplicationAdapter() {
         if (ImGui.button("Host")) {
             val hostLayout = hostLayout()
             val server = Server(PORT, hostLayout)
-            server.start()
+            val resultLayout = server.start()
+
+            Editor.layout.copy(resultLayout)
         }
         ImGui.end()
     }
