@@ -51,6 +51,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
         setResultLayout(LayoutMerger().merge(list)) // should be LayoutMerger().merge(list)
 
         clientHandlers.forEach { it.join() }
+        logger.info { "Sent result layout to clients" }
 
         return resultLayout!!
     }
@@ -78,6 +79,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
                         }
                         resultXodr.append(line).append("\n")
                     }
+                    logger.info { "Get layout from client with district ID: $districtId" }
 
                     val result = waitForResultLayout()
 
