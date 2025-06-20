@@ -340,7 +340,7 @@ class Visualizer(private var layout: Layout) {
                     val (offsetA, laneA) = getOffsetAndLane(vertexIndexA)
                     val (offsetB, laneB) = getOffsetAndLane(vertexIndexB)
                     val (offsetC, laneC) = getOffsetAndLane(vertexIndexC)
-                    val lane = -if (abs(laneA) >= abs(laneB) && abs(laneA) >= abs(laneC)) {
+                    val lane = if (abs(laneA) >= abs(laneB) && abs(laneA) >= abs(laneC)) {
                         laneA.toInt()
                     } else if (abs(laneB) >= abs(laneA) && abs(laneB) >= abs(laneC)) {
                         laneB.toInt()
