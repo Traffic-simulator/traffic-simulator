@@ -4,12 +4,8 @@ import imgui.ImGui
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 
-interface InspectorItem<T> {
-    fun runImguiItem(subj: T): IStateChange?
-}
-
 class InspectorMenuBuilder<T>(private val name: String) {
-    private val items: MutableList<InspectorItem<T>> = mutableListOf()
+    private val items: MutableList<(subj: T) -> IStateChange?> = mutableListOf()
     private val filters: MutableList<(subj: T) -> Boolean> = mutableListOf()
 
     fun withFilter(filter: (subj: T) -> Boolean): InspectorMenuBuilder<T> {
@@ -18,43 +14,34 @@ class InspectorMenuBuilder<T>(private val name: String) {
     }
 
     fun withItem(title: String, text: (subj: T) -> Any): InspectorMenuBuilder<T> {
-        items.add(object : InspectorItem<T> {
-            override fun runImguiItem(subj: T): IStateChange? {
-                ImGui.tableNextRow()
+        items.add { subject ->
+            ImGui.tableNextRow()
 
-                ImGui.tableSetColumnIndex(0)
-                ImGui.text(title)
-                ImGui.tableSetColumnIndex(1)
-                ImGui.text(text(subj).toString())
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text(title)
+            ImGui.tableSetColumnIndex(1)
+            ImGui.text(text(subject).toString())
 
-                return null
-            }
-        })
+            null
+        }
         return this
     }
 
     fun withCustomItem(title: String, imgui: (subj: T) -> IStateChange?): InspectorMenuBuilder<T> {
-        items.add(object: InspectorItem<T> {
-            override fun runImguiItem(subj: T): IStateChange? {
-                ImGui.tableNextRow()
+        items.add { subject ->
+            ImGui.tableNextRow()
 
-                ImGui.tableSetColumnIndex(0)
-                ImGui.text(title)
-                ImGui.tableSetColumnIndex(1)
-                return imgui(subj)
-            }
-        })
+            ImGui.tableSetColumnIndex(0)
+            ImGui.text(title)
+            ImGui.tableSetColumnIndex(1)
+            imgui(subject)
+        }
 
         return this
     }
 
     fun withCustomBlock(imgui: (subj: T) -> IStateChange?): InspectorMenuBuilder<T> {
-        items.add(object: InspectorItem<T> {
-            override fun runImguiItem(subj: T): IStateChange? {
-                return imgui(subj)
-            }
-        })
-
+        items.add(imgui)
         return this
     }
 
@@ -65,7 +52,7 @@ class InspectorMenuBuilder<T>(private val name: String) {
 
 class InspectorMenu<T>(
     private val name: String,
-    private val items: List<InspectorItem<T>>,
+    private val items: List<(subj: T) -> IStateChange?>,
     private val filters: List<(subj: T) -> Boolean>,
 ) {
 
@@ -92,7 +79,7 @@ class InspectorMenu<T>(
 
         var change: IStateChange? = null
         for (item in items) {
-            val itemRes = item.runImguiItem(subject)
+            val itemRes = item(subject)
             change = change ?: itemRes
         }
 

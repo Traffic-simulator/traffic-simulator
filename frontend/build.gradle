@@ -10,7 +10,6 @@ dependencies {
   api "io.github.libktx:ktx-preferences:$ktxVersion"
   api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
-
   implementation "io.github.spair:imgui-java-app:1.87.4"
   implementation(project(":xodr_parser"))
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"

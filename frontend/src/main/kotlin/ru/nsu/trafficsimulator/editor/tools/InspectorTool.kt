@@ -24,18 +24,15 @@ import ru.nsu.trafficsimulator.model.*
 import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.reflect.KClass
-import kotlin.reflect.full.*
 
 class InspectorTool : IEditingTool {
     private val name = "Inspector"
     private lateinit var layout: Layout
     private lateinit var camera: Camera
 
-    // TODO: hold a variant somehow? Maybe make abstract class Inspector and override for each primitive?
     private var selectedSubject: Any? = null
     private var lastClickPos: Vec2? = null
 
-//    private val menuMap: MutableMap<KClass<*>, InspectorMenu<*>> = mutableMapOf()
     private val menus: MutableList<Pair<KClass<*>, InspectorMenu<*>>> = mutableListOf()
 
     private val incomingLanes = mutableListOf<LaneSphere>()

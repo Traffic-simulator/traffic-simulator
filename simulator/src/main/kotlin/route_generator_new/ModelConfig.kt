@@ -16,16 +16,11 @@ class ModelConfig {
         init {
             //мапа содержит рамки времени которое надо провести в здании определенного типа
             // ключ - тип | 1st - от | 2nd - до
-//            stayTimeMap[BuildingTypes.HOME] = Pair(0.0, 60 * 10.0)
-//            stayTimeMap[BuildingTypes.ENTERTAINMENT] = Pair(60 * 30.0, 60 * 120.0)
-//            stayTimeMap[BuildingTypes.EDUCATION] = Pair(60 * 90.0, 60 * 360.0)
-//            stayTimeMap[BuildingTypes.SHOPPING] = Pair(60 * 40.0, 60 * 120.0)
-//            stayTimeMap[BuildingTypes.WORK] = Pair(60 * 240.0, 60 * 480.0)
-            stayTimeMap[BuildingTypes.HOME] = Pair(0.0, 10.0)
-            stayTimeMap[BuildingTypes.ENTERTAINMENT] = Pair(30.0, 120.0)
-            stayTimeMap[BuildingTypes.EDUCATION] = Pair(30.0, 120.0)
-            stayTimeMap[BuildingTypes.SHOPPING] = Pair(30.0, 120.0)
-            stayTimeMap[BuildingTypes.WORK] = Pair(30.0, 120.0)
+            stayTimeMap[BuildingTypes.HOME] = Pair(0.0, 60 * 10.0)
+            stayTimeMap[BuildingTypes.ENTERTAINMENT] = Pair(60 * 30.0, 60 * 120.0)
+            stayTimeMap[BuildingTypes.EDUCATION] = Pair(60 * 90.0, 60 * 360.0)
+            stayTimeMap[BuildingTypes.SHOPPING] = Pair(60 * 40.0, 60 * 120.0)
+            stayTimeMap[BuildingTypes.WORK] = Pair(60 * 240.0, 60 * 480.0)
         }
     }
 }
