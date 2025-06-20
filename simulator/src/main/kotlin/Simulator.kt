@@ -105,7 +105,12 @@ class Simulator(openDrive: OpenDRIVE,
             // Compute segments
             for (lane in road.lanes) {
                 lane.vehicles.forEach {
-                    val segmentIndex = (it.position / lane.lenOfSegment).toInt()
+                    val posFromStart = if (it.direction == Direction.BACKWARD) {
+                        lane.length - it.position
+                    } else {
+                        it.position
+                    }
+                    val segmentIndex = (posFromStart / lane.lenOfSegment).toInt()
                     if (segmentIndex < lane.segments.size) {
                         lane.segments[segmentIndex].addVehicleSpeed(it)
                     } else {

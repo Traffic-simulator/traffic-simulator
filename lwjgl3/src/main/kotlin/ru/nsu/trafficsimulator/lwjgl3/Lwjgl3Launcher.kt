@@ -16,5 +16,6 @@ fun main() {
         setWindowedMode(640, 480)
         setWindowIcon(*(arrayOf(128, 64, 32, 16).map { "libgdx$it.png" }.toTypedArray()))
         setBackBufferConfig(8, 8, 8, 8, 16, 0, 2)
+        setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.GL30, 3, 2)
     })
 }

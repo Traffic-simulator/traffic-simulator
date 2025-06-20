@@ -44,7 +44,7 @@ class Segment(lane: Lane) {
     private fun customCenteredSigmoid(
         t: Double,
         xEnd: Double = 1.0,
-        steepness: Double = 6.0,
+        steepness: Double = 20.0,
         midpointRatio: Double = 0.5
     ): Double {
         val midpoint = xEnd * midpointRatio
