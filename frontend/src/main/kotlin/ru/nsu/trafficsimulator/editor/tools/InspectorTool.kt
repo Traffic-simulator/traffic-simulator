@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.editor.tools
 
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelBatch
@@ -191,81 +192,11 @@ class InspectorTool : IEditingTool {
     override fun getButtonName(): String = name
 
     override fun handleDown(screenPos: Vec2, button: Int): Boolean {
+        if (button != Input.Buttons.LEFT) return false
         val groundPoint = getIntersectionWithGround(screenPos, camera) ?: return false
 
-        if (incomingLanes.isNotEmpty()) {
-            if (selectedSubject is Intersection) {
-                val intersection = selectedSubject as Intersection
-                if (isNear(groundPoint, intersection, Layout.LANE_WIDTH / 2) { it.position.toVec3() }) {
-                    incomingLanes.clear()
-                    outgoingLanesSphere.clear()
-                    selectedFromRoad = null
-                    connectLanesChange = null
-                    disconnectLanesChange = null
-
-                    drawIncomingConnections(intersection)
-
-                    return true
-                }
-            }
-
-            if (outgoingLanesSphere.isEmpty()) {
-                // only incoming lines are displayed
-
-                selectedFromRoad = findNearestObject(groundPoint, incomingLanes, Layout.LANE_WIDTH / 2) {
-                    it.model.transform.getTranslation(Vector3()).toVec3()
-                }
-
-                selectedFromRoad?.also {
-                    incomingLanes.clear()
-                    incomingLanes.add(it)
-                    drawOutgoingConnections(it.intersection)
-                } ?: cleanUpIntersectionRoadsSettings()
-
-                return true
-            } else {
-                // one incoming and all outgoing lines are displayed
-
-                val toRoad = findNearestObject(groundPoint, outgoingLanesSphere, Layout.LANE_WIDTH / 2) {
-                    it.transform.getTranslation(Vector3()).toVec3()
-                }
-
-                if (toRoad == null) {
-                    cleanUpIntersectionRoadsSettings()
-                    return true
-                }
-
-                val fromRoad = if (selectedFromRoad != null) {
-                    selectedFromRoad!!
-                } else {
-                    logger.warn { "No selected from road when there are outgoing lanes?" }
-                    return true
-                }
-
-                if (selectedSubject is Intersection) {
-                    val intersection = selectedSubject as Intersection
-                    val connectingRoad = intersection.findConnectingRoad(fromRoad.road, fromRoad.lane, toRoad.road, toRoad.lane)
-                    if (connectingRoad == null) {
-                        connectLanesChange = ConnectLanesChange(
-                            fromRoad.intersection,
-                            fromRoad.road,
-                            fromRoad.lane,
-                            toRoad.road,
-                            toRoad.lane
-                        )
-                    } else {
-                        disconnectLanesChange = DisconnectLanesChange(
-                            fromRoad.intersection,
-                            fromRoad.road,
-                            fromRoad.lane,
-                            toRoad.road,
-                            toRoad.lane
-                        )
-                    }
-                }
-
-                return true
-            }
+        if (handleIntersectionConfiguration(groundPoint)) {
+            return true
         }
 
         selectedSubject = null
@@ -276,10 +207,90 @@ class InspectorTool : IEditingTool {
             selectedSubject = intersection
             drawIncomingConnections(intersection)
             return true
+        } else {
+            cleanUpIntersectionRoadsSettings()
         }
         val road = findRoad(layout, groundPoint)
         if (road != null) {
             selectedSubject = road
+            return true
+        }
+        return false
+    }
+
+    private fun handleIntersectionConfiguration(groundPoint: Vec3): Boolean {
+        if (incomingLanes.isEmpty()) {
+            return false
+        }
+
+        if (selectedSubject is Intersection) {
+            val intersection = selectedSubject as Intersection
+            if (isNear(groundPoint, intersection, Layout.LANE_WIDTH / 2) { it.position.toVec3() }) {
+                incomingLanes.clear()
+                outgoingLanesSphere.clear()
+                selectedFromRoad = null
+                connectLanesChange = null
+                disconnectLanesChange = null
+
+                drawIncomingConnections(intersection)
+
+                return true
+            }
+        }
+
+        if (outgoingLanesSphere.isEmpty()) {
+            // only incoming lines are displayed
+
+            selectedFromRoad = findNearestObject(groundPoint, incomingLanes, Layout.LANE_WIDTH / 2) {
+                it.model.transform.getTranslation(Vector3()).toVec3()
+            }
+
+            selectedFromRoad?.also {
+                incomingLanes.clear()
+                incomingLanes.add(it)
+                drawOutgoingConnections(it.intersection)
+                return true
+            }
+        } else {
+            // one incoming and all outgoing lines are displayed
+
+            val toRoad = findNearestObject(groundPoint, outgoingLanesSphere, Layout.LANE_WIDTH / 2) {
+                it.transform.getTranslation(Vector3()).toVec3()
+            }
+
+            if (toRoad == null) {
+                return false
+            }
+
+            val fromRoad = if (selectedFromRoad != null) {
+                selectedFromRoad!!
+            } else {
+                logger.warn { "No selected from road when there are outgoing lanes?" }
+                return true
+            }
+
+            if (selectedSubject is Intersection) {
+                val intersection = selectedSubject as Intersection
+                val connectingRoad = intersection.findConnectingRoad(fromRoad.road, fromRoad.lane, toRoad.road, toRoad.lane)
+                if (connectingRoad == null) {
+                    connectLanesChange = ConnectLanesChange(
+                        fromRoad.intersection,
+                        fromRoad.road,
+                        fromRoad.lane,
+                        toRoad.road,
+                        toRoad.lane
+                    )
+                } else {
+                    disconnectLanesChange = DisconnectLanesChange(
+                        fromRoad.intersection,
+                        fromRoad.road,
+                        fromRoad.lane,
+                        toRoad.road,
+                        toRoad.lane
+                    )
+                }
+            }
+
             return true
         }
         return false
