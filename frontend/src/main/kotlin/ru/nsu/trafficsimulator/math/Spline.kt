@@ -1,6 +1,5 @@
 package ru.nsu.trafficsimulator.math
 
-import java.lang.Math.pow
 import java.util.*
 import kotlin.math.*
 
@@ -244,44 +243,21 @@ class Spline {
             throw IllegalArgumentException("Padding sum must be between 0 and length")
         }
 
-        val newSpline = Spline()
-
         val startIdx = splineParts.indexOfFirst { it.offset + it.length > startPadding }
         val endIdx = splineParts.indexOfLast { it.offset < length - endPadding }
 
         if (startIdx == endIdx) {
             val sp = splineParts[startIdx]
 
-            val gamma = (length - startPadding - endPadding) / length
-            val delta = startPadding / length
-
-            val x: Poly3
-            val y: Poly3
-            sp.x.let {
-                x = Poly3(
-                    it.a + it.b * delta + it.c * delta * delta + it.d * delta * delta * delta,
-                    gamma * (it.b + 2.0 * it.c * delta + 3.0 * it.d * delta * delta),
-                    gamma * gamma * (it.c + 3.0 * it.d * delta),
-                    gamma * gamma * gamma * it.d
-                )
-            }
-            sp.y.let {
-                y = Poly3(
-                    it.a + it.b * delta + it.c * delta * delta + it.d * delta * delta * delta,
-                    gamma * (it.b + 2.0 * it.c * delta + 3.0 * it.d * delta * delta),
-                    gamma * gamma * (it.c + 3.0 * it.d * delta),
-                    gamma * gamma * gamma * it.d
-                )
-            }
-            val partLength = calculateLength(x, y)
-            newSpline.splineParts.add(SplinePart(x, y, 0.0, partLength, true))
-            newSpline.length = partLength
-
-            return newSpline
+            return Spline(
+                sp.getPoint(startPadding),
+                sp.getPoint(startPadding) + sp.getDirection(startPadding),
+                sp.getPoint(length - endPadding),
+                sp.getPoint(length - endPadding) + sp.getDirection(length - endPadding)
+            )
         }
 
-
-        return newSpline
+        TODO("multisplinepart")
     }
 
 

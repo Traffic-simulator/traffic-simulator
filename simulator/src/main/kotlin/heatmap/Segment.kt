@@ -9,29 +9,39 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 class Segment(lane: Lane) {
-    val lastStates = SumTrackingArrayDeque(5000)
-    val speedLimit = lane.getMaxSpeed()
-    var currentState: Double = 0.0
-    var currentIterVehiclesSum: Double = 0.0
-    var currentIterVehiclesCount: Int = 0
+    private val lastStates = SumTrackingArrayDeque(2000)
+    private val speedLimit = lane.getMaxSpeed()
+
+    private var currentIterVehiclesSum: Double = 0.0
+    private var currentIterVehiclesCount: Int = 0
+
+    private var averageSpeed = speedLimit
+    private var heatmapScore = 1.0
+
+    fun getAverageSpeed() = averageSpeed
+    fun getHeatmapScore() = heatmapScore
 
     fun update() {
-        var meanSpeed = 1.0
+        var meanSpeed = speedLimit
         if (currentIterVehiclesCount != 0) {
-            // [Simulation] For now vehicles can move faster than maxspeed :(
-            meanSpeed = customCenteredSigmoid(currentIterVehiclesSum / currentIterVehiclesCount, speedLimit)
+            meanSpeed = currentIterVehiclesSum / currentIterVehiclesCount
         }
 
         // чистим машинки для след апдейта
         currentIterVehiclesSum = 0.0
         currentIterVehiclesCount = 0
 
-        // закидываем новое значение к последним и высчитываем среднее
         lastStates.add(meanSpeed)
-        currentState = lastStates.average
+        averageSpeed = lastStates.average
+        heatmapScore = customCenteredSigmoid(lastStates.average, speedLimit).coerceIn(0.0, 1.0)
     }
 
-    fun customCenteredSigmoid(
+    fun addVehicleSpeed(vehicle: Vehicle) {
+        currentIterVehiclesSum += vehicle.speed
+        currentIterVehiclesCount += 1
+    }
+
+    private fun customCenteredSigmoid(
         t: Double,
         xEnd: Double = 1.0,
         steepness: Double = 20.0,
@@ -50,12 +60,7 @@ class Segment(lane: Lane) {
         return (sig - sig0) / (sigEnd - sig0)
     }
 
-    fun addVehicleSpeed(vehicle: Vehicle) {
-        currentIterVehiclesSum += vehicle.speed
-        currentIterVehiclesCount += 1
-    }
-
-    class SumTrackingArrayDeque(private val limit: Int) {
+    private class SumTrackingArrayDeque(private val limit: Int) {
         private val deque = ArrayDeque<Double>(limit + 1)
         private var currentSum: Double = 0.0
 
