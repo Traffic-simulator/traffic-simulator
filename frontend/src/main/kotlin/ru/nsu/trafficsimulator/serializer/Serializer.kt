@@ -20,8 +20,11 @@ fun serializeLayout(layout: Layout): OpenDRIVE {
 
     var irId = layout.roads.values.maxBy { it.id }.id + 1
     for (intersection in layout.intersections.values) {
-        for (intersectionRoad in intersection.intersectionRoads.values) {
-            intersectionRoad.id = irId++
+        val roads = intersection.intersectionRoads.values.toList()
+        intersection.intersectionRoads.clear()
+        for (road in roads) {
+            val id = irId++
+            intersection.intersectionRoads[id] = road.copy(id = id)
         }
     }
 

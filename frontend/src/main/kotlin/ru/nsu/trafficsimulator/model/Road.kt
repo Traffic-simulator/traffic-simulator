@@ -126,16 +126,16 @@ class Road(
 
     fun getIncomingLaneCount(intersection: Intersection): Int {
         return when (intersection) {
-            endIntersection -> leftLane
-            startIntersection -> -rightLane
+            startIntersection -> leftLane
+            endIntersection -> -rightLane
             else -> throw IllegalArgumentException("Invalid intersection")
         }
     }
 
     fun getOutgoingLaneCount(intersection: Intersection): Int {
         return when (intersection) {
-            endIntersection -> -rightLane
-            startIntersection -> leftLane
+            startIntersection -> -rightLane
+            endIntersection -> leftLane
             else -> throw IllegalArgumentException("Invalid intersection")
         }
     }
