@@ -23,7 +23,7 @@ class VehicleDetector {
 
             for (it in laneSeq) {
                 if (it.initial_iteration) {
-                    it.lane.vehicles.forEach{
+                    it.lane.vehicles.forEach {
                         if (it.position > vehicle.position) {
                             if (closestVehicle == null) {
                                 closestVehicle = it

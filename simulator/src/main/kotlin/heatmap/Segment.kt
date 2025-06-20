@@ -61,7 +61,7 @@ class Segment(lane: Lane) {
     }
 
     private class SumTrackingArrayDeque(private val limit: Int) {
-        private val deque = ArrayDeque<Double>()
+        private val deque = ArrayDeque<Double>(limit + 1)
         private var currentSum: Double = 0.0
 
         val size: Int get() = deque.size

@@ -18,7 +18,6 @@ import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
-import ru.nsu.trafficsimulator.model.BuildingType
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
@@ -386,7 +385,7 @@ class InspectorTool : IEditingTool {
     private fun drawIncomingConnections(intersection: Intersection) {
         incomingLanes.clear()
         for (road in intersection.incomingRoads) {
-            for (i in 1..abs(road.getIncomingLaneNumber(intersection))) {
+            for (i in 1..abs(road.getIncomingLaneCount(intersection))) {
                 val sphereModel = createSphere(Color.GREEN, 1.0)
                 val sphereInstance = ModelInstance(sphereModel)
                 val position = road.getIntersectionPoint(intersection, (i.toDouble() - 0.5))
@@ -396,7 +395,7 @@ class InspectorTool : IEditingTool {
                     LaneSphere(
                         intersection,
                         road,
-                        i * road.getIncomingLaneNumber(intersection).sign,
+                        i * road.getIncomingLaneCount(intersection).sign,
                         sphereInstance
                     )
                 )
@@ -407,8 +406,8 @@ class InspectorTool : IEditingTool {
     private fun drawOutgoingConnections(intersection: Intersection) {
         outgoingLanesSphere.clear()
         for (road in intersection.incomingRoads) {
-            for (i in 1..abs(road.getOutgoingLaneNumber(intersection))) {
-                val realLaneNumber = i * road.getOutgoingLaneNumber(intersection).sign
+            for (i in 1..abs(road.getOutgoingLaneCount(intersection))) {
+                val realLaneNumber = i * road.getOutgoingLaneCount(intersection).sign
 
                 outgoingLanesSphere.add(
                     OutgoingLaneSphere(intersection, road, realLaneNumber)

@@ -49,17 +49,23 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         Get distance to next MLC on path.
      */
     override fun getNextMLCDistance(vehicle: Vehicle): Double {
-        var curLane = vehicle.lane
+        createPathIfNotExists(vehicle, vehicle.position)
+
         var first = true
         var acc_distance = 0.0
+        var curLane = vehicle.lane
         var tmpAcc = curLane.length - vehicle.position
 
+        val path = vehiclesPaths[vehicle.vehicleId]!!
+        var curWaypointIndex = path.indexOfFirst { it.lane == curLane }
+        if (curWaypointIndex == -1) {
+            return SimulationConfig.INF
+        }
+
         // next path lanes
-        while (acc_distance < SimulationConfig.MAX_VALUABLE_DISTANCE) {
-            val nextLane = getNextPathLane(vehicle, curLane)
-            if (nextLane == null) {
-                return SimulationConfig.INF
-            }
+        while (acc_distance < SimulationConfig.MAX_VALUABLE_DISTANCE && curWaypointIndex < path.size - 1) {
+            curWaypointIndex += 1
+            val nextLane = path[curWaypointIndex]
             if (nextLane.type == IPathBuilder.PWType.MLC) {
                 if (first) {
                     return nextLane.mlcMaxRoadOffset - vehicle.position
@@ -242,7 +248,7 @@ class DijkstraPathBuilder(private val costFunction: ICostFunction): IPathBuilder
         createPathIfNotExists(vehicle, vehicle.position)
 
         for(i in 0 until vehiclesPaths[vehicle.vehicleId]!!.size) {
-            if (vehiclesPaths[vehicle.vehicleId]!!.get(i).lane == lane) {
+            if (vehiclesPaths[vehicle.vehicleId]!![i].lane == lane) {
                 if (i < vehiclesPaths[vehicle.vehicleId]!!.size - 1) {
                     return vehiclesPaths[vehicle.vehicleId]?.get((i + 1))
                 } else {
