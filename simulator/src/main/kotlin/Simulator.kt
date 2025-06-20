@@ -11,6 +11,7 @@ import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
 import route_generator_new.RouteGeneratorImpl
 import route_generator_new.discrete_function.Building
+import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.model.MOBIL
 import java.time.LocalTime
@@ -105,7 +106,7 @@ class Simulator(openDrive: OpenDRIVE,
             // Compute segments
             for (lane in road.lanes) {
                 lane.vehicles.forEach {
-                    val posFromStart = if (it.direction == Direction.BACKWARD) {
+                    val posFromStart = if (it.lane.direction == Direction.BACKWARD) {
                         lane.length - it.position
                     } else {
                         it.position
