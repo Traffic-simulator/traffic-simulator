@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import com.badlogic.gdx.math.Matrix4
+import com.badlogic.gdx.math.collision.BoundingBox
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute
@@ -43,13 +44,14 @@ class Visualizer(private var layout: Layout) {
         pathToModel("models/Jeep.glb"),
         pathToModel("models/Car.glb"),
     )
-    private val buildingModels: HashMap<BuildingType, Model> = hashMapOf(
-        BuildingType.HOME to pathToModel("models/building.glb"),
-        BuildingType.SHOPPING to pathToModel("models/building.glb"),
-        BuildingType.EDUCATION to pathToModel("models/building.glb"),
-        BuildingType.WORK to pathToModel("models/building.glb"),
-        BuildingType.ENTERTAINMENT to pathToModel("models/building.glb")
+    private val buildingSettings: HashMap<BuildingType, Triple<Model, Float, Float>> = hashMapOf(
+        BuildingType.HOME to Triple(pathToModel("models/HOME.glb"), 2.0f, 0.0f),
+        BuildingType.SHOPPING to Triple(pathToModel("models/SHOPPING.glb"), 10.0f, 0.0f),
+        BuildingType.EDUCATION to Triple(pathToModel("models/EDUCATION.glb"), 2.0f, 0.0f),
+        BuildingType.WORK to Triple(pathToModel("models/WORK.glb"), 15.0f, 1.0f),
+        BuildingType.ENTERTAINMENT to Triple(pathToModel("models/ENTERTAINMENT.glb"), 10.0f, 1.0f)
     )
+
     private val buildingModel = GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model
     private var trafficLightModel: Model =
         GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
@@ -475,17 +477,22 @@ class Visualizer(private var layout: Layout) {
         layout.intersections.values.forEach { intersection ->
             if (intersection.isBuilding) {
                 val road = intersection.incomingRoads.first()
-                val direction = road.getDirection(road.length - 0.1)
-                val normalizedDirection = direction.normalized()
-                val angle = atan2(normalizedDirection.z, normalizedDirection.x).toFloat()
+                val direction = road.getDirection(road.length - 0.1).normalized()
+                val angle = atan2(direction.z, direction.x).toFloat()
 
-                val buildingScene = Scene(buildingModels[intersection.building!!.type])
+                val buildingScene = Scene(buildingSettings[intersection.building!!.type]!!.first)
+                val buildingSize = buildingSettings[intersection.building!!.type]!!.second
+                val bbox = BoundingBox()
+                buildingScene.modelInstance.calculateBoundingBox(bbox)
+                val modelHeight = bbox.height
+                val yOffset = modelHeight * buildingSize / 2.0
 
                 val center = intersection.position.toVec3()
+                    .plus(Vec3(0.0, yOffset * buildingSettings[intersection.building!!.type]!!.third, 0.0))
                 buildingScene.modelInstance.transform
                     .setToTranslation(center.toGdxVec())
                     .rotate(0f, 1f, 0f, Math.toDegrees(-angle.toDouble() - 90f).toFloat())
-                    .scale(0.7f, 0.7f, 0.7f)
+                    .scale(buildingSize, buildingSize, buildingSize)
 
                 sceneManager.addScene(buildingScene)
                 buildingScenes.add(buildingScene)
