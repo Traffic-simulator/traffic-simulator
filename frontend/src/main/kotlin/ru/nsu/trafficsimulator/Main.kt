@@ -3,13 +3,13 @@ package ru.nsu.trafficsimulator
 import BackendAPI
 import ISimulation
 import OpenDriveWriter
-import com.badlogic.gdx.Application
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.math.MathUtils.clamp
 import imgui.ImGui
@@ -19,13 +19,18 @@ import imgui.type.ImInt
 import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
+import ru.nsu.trafficsimulator.editor.actions.ClientAction
+import ru.nsu.trafficsimulator.editor.actions.SendLayoutAction
+import ru.nsu.trafficsimulator.editor.actions.ServerAction
 import ru.nsu.trafficsimulator.graphics.Visualizer
+import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.intsettings.MergingIntersectionSettings
 import ru.nsu.trafficsimulator.serializer.serializeLayout
+import ru.nsu.trafficsimulator.server.Server
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-
 
 val logger = KotlinLogging.logger("FRONTEND")
 
@@ -96,7 +101,7 @@ class Main : ApplicationAdapter() {
         OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto, null, simState.startTime,500)
+        simState.backend.init(dto, null, simState.startTime, 500)
     }
 
     override fun render() {
@@ -201,7 +206,11 @@ class Main : ApplicationAdapter() {
             }
         }
         if (state == ApplicationState.Simulator) {
-            val pauseLabel = if (simState.isPaused) { "|>" } else { "||" }
+            val pauseLabel = if (simState.isPaused) {
+                "|>"
+            } else {
+                "||"
+            }
             if (ImGui.button(pauseLabel)) {
                 simState.isPaused = !simState.isPaused
             }
@@ -242,5 +251,15 @@ class Main : ApplicationAdapter() {
 
     override fun resize(width: Int, height: Int) {
         visualizer.onResize(width, height)
+    }
+
+    private fun hostLayout(): Layout {
+        val result = Layout(0)
+        result.addIntersection(Vec3(150.0, 0.0, 0.0), MergingIntersectionSettings(4, 1))
+        result.addIntersection(Vec3(0.0, 0.0, 150.0), MergingIntersectionSettings(1, 2))
+        result.addIntersection(Vec3(-150.0, 0.0, 0.0), MergingIntersectionSettings(2, 3))
+        result.addIntersection(Vec3(0.0, 0.0, -150.0), MergingIntersectionSettings(3, 4))
+
+        return result
     }
 }
