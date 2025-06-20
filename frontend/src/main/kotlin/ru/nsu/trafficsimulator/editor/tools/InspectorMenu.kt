@@ -17,7 +17,7 @@ class InspectorMenuBuilder<T>(private val name: String) {
         return this
     }
 
-    fun withItem(title: String, text: (subj: T) -> String): InspectorMenuBuilder<T> {
+    fun withItem(title: String, text: (subj: T) -> Any): InspectorMenuBuilder<T> {
         items.add(object : InspectorItem<T> {
             override fun runImguiItem(subj: T): IStateChange? {
                 ImGui.tableNextRow()
@@ -25,7 +25,7 @@ class InspectorMenuBuilder<T>(private val name: String) {
                 ImGui.tableSetColumnIndex(0)
                 ImGui.text(title)
                 ImGui.tableSetColumnIndex(1)
-                ImGui.text(text(subj))
+                ImGui.text(text(subj).toString())
 
                 return null
             }
@@ -41,6 +41,16 @@ class InspectorMenuBuilder<T>(private val name: String) {
                 ImGui.tableSetColumnIndex(0)
                 ImGui.text(title)
                 ImGui.tableSetColumnIndex(1)
+                return imgui(subj)
+            }
+        })
+
+        return this
+    }
+
+    fun withCustomBlock(imgui: (subj: T) -> IStateChange?): InspectorMenuBuilder<T> {
+        items.add(object: InspectorItem<T> {
+            override fun runImguiItem(subj: T): IStateChange? {
                 return imgui(subj)
             }
         })

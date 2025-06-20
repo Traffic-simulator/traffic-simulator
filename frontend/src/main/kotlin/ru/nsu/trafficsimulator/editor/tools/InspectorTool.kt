@@ -75,6 +75,119 @@ class InspectorTool : IEditingTool {
                 }
                 .finish()
         )
+
+        registerMenu(
+            InspectorMenuBuilder<Road>("Road")
+                .withItem("ID") { it.id }
+                .withItem("Start junction ID") { it.startIntersection.id }
+                .withItem("End junction ID") { it.endIntersection.id }
+                .withCustomItem("Left lane count") {
+                    val leftLaneCnt = ImInt(it.leftLane)
+                    if (ImGui.inputInt("##left", leftLaneCnt)) {
+                        leftLaneCnt.set(leftLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
+                    }
+                    if (leftLaneCnt.get() != it.leftLane) {
+                        EditRoadStateChange(it, leftLaneCnt.get(), it.rightLane)
+                    } else {
+                        null
+                    }
+                }
+                .withCustomItem("Right lane count") {
+                    val rightLaneCnt = ImInt(it.rightLane)
+                    if (ImGui.inputInt("##right", rightLaneCnt)) {
+                        rightLaneCnt.set(rightLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
+                    }
+                    if (rightLaneCnt.get() != it.rightLane) {
+                        EditRoadStateChange(it, it.leftLane, rightLaneCnt.get())
+                    } else {
+                        null
+                    }
+                }
+                .finish()
+        )
+
+        registerMenu(
+            InspectorMenuBuilder<Intersection>("Intersection")
+                .withFilter { !it.isBuilding }
+                .withItem("ID") { it.id }
+                .withItem("Incoming roads IDs") { it.incomingRoads.map { it.id } }
+                .withItem("Inner roads IDs") { it.intersectionRoads.values.map { it.id } }
+                .withCustomItem("Has signals") { intersection ->
+                    val hasSignalsChanged = ImGui.radioButton("##signals", intersection.hasSignals)
+                    if (!hasSignalsChanged) {
+                        return@withCustomItem null
+                    }
+
+                    val newSignals = HashMap<Road, Signal>()
+                    if (!intersection.hasSignals) {
+                        for (road in intersection.incomingRoads) {
+                            newSignals[road] = Signal()
+                        }
+                    }
+
+                    ReplaceIntersectionSignalsStateChange(intersection, newSignals)
+                }
+                .withCustomItem("Padding") { intersection ->
+                    val padding = ImDouble(intersection.padding)
+                    if (ImGui.inputDouble("##padding", padding)) {
+                        padding.set(padding.get().coerceIn(0.0, Double.MAX_VALUE))
+                    }
+                    if (padding.get() != intersection.padding) {
+                        IntersectionPaddingStateChange(intersection, padding.get())
+                    } else {
+                        null
+                    }
+                }
+                .withCustomBlock { intersection ->
+                    if (!intersection.hasSignals) {
+                        return@withCustomBlock null
+                    }
+                    var stateChange: IStateChange? = null
+                    for (road in intersection.incomingRoads) {
+                        ImGui.pushID(road.id)
+                        ImGui.tableNextRow()
+                        ImGui.tableSetColumnIndex(0)
+                        ImGui.text("Signal for road #${road.id}")
+                        ImGui.tableSetColumnIndex(1)
+                        val signal = intersection.signals[road]
+                        if (signal == null) {
+                            ImGui.textColored(1.0f, 0.0f, 0.0f, 1.0f, "ERROR: no signal found")
+                            continue
+                        } else {
+                            val currentOffset = ImInt(signal.redOffsetOnStartSecs)
+                            val currentRed = ImInt(signal.redTimeSecs)
+                            val currentGreen = ImInt(signal.greenTimeSecs)
+                            ImGui.pushItemWidth(80.0f)
+                            if (ImGui.inputInt("##offset", currentOffset)) {
+                                currentOffset.set(Signal.clampOffsetTime(currentOffset.get()))
+                            }
+                            ImGui.sameLine()
+                            if (ImGui.inputInt("##red", currentRed)) {
+                                currentRed.set(Signal.clampSignalTime(currentRed.get()))
+                            }
+                            ImGui.sameLine()
+                            if (ImGui.inputInt("##green", currentGreen)) {
+                                currentGreen.set(Signal.clampSignalTime(currentGreen.get()))
+                            }
+                            ImGui.popItemWidth()
+                            if (currentOffset.get() != signal.redOffsetOnStartSecs
+                                || currentRed.get() != signal.redTimeSecs
+                                || currentGreen.get() != signal.greenTimeSecs
+                            ) {
+                                stateChange = ChangeSignalStateChange(
+                                    signal,
+                                    currentOffset.get(),
+                                    currentRed.get(),
+                                    currentGreen.get()
+                                )
+                            }
+                        }
+                        ImGui.popID()
+                    }
+                    stateChange
+                }
+                .finish()
+        )
     }
 
     override fun getButtonName(): String = name
@@ -215,210 +328,6 @@ class InspectorTool : IEditingTool {
         return null
     }
 
-    private fun runRoadMenu(road: Road): IStateChange? {
-        if (lastClickPos != null) {
-            ImGui.setNextWindowPos(lastClickPos!!.x.toFloat(), lastClickPos!!.y.toFloat())
-            lastClickPos = null
-        }
-        ImGui.begin("Road settings")
-
-        val leftLaneCnt = ImInt(road.leftLane)
-        val rightLaneCnt = ImInt(road.rightLane)
-        if (ImGui.beginTable("##Road", 2)) {
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("ID")
-            ImGui.tableSetColumnIndex(1)
-            ImGui.text(road.id.toString())
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Start junction ID")
-            ImGui.tableSetColumnIndex(1)
-            ImGui.text(road.startIntersection.id.toString())
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("End junction ID")
-            ImGui.tableSetColumnIndex(1)
-            ImGui.text(road.endIntersection.id.toString())
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Left lane count")
-            ImGui.tableSetColumnIndex(1)
-            if (ImGui.inputInt("##left", leftLaneCnt)) {
-                leftLaneCnt.set(leftLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
-            }
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Right lane count")
-            ImGui.tableSetColumnIndex(1)
-            if (ImGui.inputInt("##right", rightLaneCnt)) {
-                rightLaneCnt.set(rightLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
-            }
-
-            ImGui.endTable()
-        }
-        ImGui.textDisabled("Acceptable range: ${Road.MIN_LANE_COUNT}..${Road.MAX_LANE_COUNT}")
-        ImGui.end()
-
-        if (leftLaneCnt.get() != road.leftLane || rightLaneCnt.get() != road.rightLane) {
-            return EditRoadStateChange(road, leftLaneCnt.get(), rightLaneCnt.get())
-        }
-
-        return null
-    }
-
-    private fun runBuildingMenu(intersection: Intersection): IStateChange? {
-        if (lastClickPos != null) {
-            ImGui.setNextWindowPos(lastClickPos!!.x.toFloat(), lastClickPos!!.y.toFloat())
-            lastClickPos = null
-        }
-
-        ImGui.begin("Building settings")
-        val buildingCapacity = ImInt(intersection.building!!.capacity)
-        val types = arrayOf(
-            "Home",
-            "Shopping",
-            "Education",
-            "Work",
-            "Entertainment"
-        )
-        val selectedType = ImInt(intersection.building!!.type.ordinal)
-        if (ImGui.beginTable("##Building", 2)) {
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Building capacity")
-            ImGui.tableSetColumnIndex(1)
-            if (ImGui.inputInt("##capacity", buildingCapacity)) {
-                buildingCapacity.set(buildingCapacity.get().coerceIn(0, 1000))
-            }
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Building type")
-            ImGui.tableSetColumnIndex(1)
-            ImGui.combo("##type", selectedType, types)
-
-            ImGui.endTable()
-        }
-        ImGui.end()
-
-        if (buildingCapacity.get() != intersection.building!!.capacity || types[selectedType.get()].uppercase() != intersection.building!!.type.toString()) {
-            return EditBuildingStateChange(
-                intersection,
-                buildingCapacity.get(),
-                types[selectedType.get()].uppercase()
-            )
-        }
-
-        return null
-    }
-
-    private fun runIntersectionMenu(intersection: Intersection): IStateChange? {
-        ImGui.begin("Intersection settings")
-
-        var stateChange: IStateChange? = null
-        val padding = ImDouble(intersection.padding)
-        if (ImGui.beginTable("##Intersection", 2)) {
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("ID")
-            ImGui.tableSetColumnIndex(1)
-            ImGui.text(intersection.id.toString())
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Incoming roads IDs")
-            ImGui.tableSetColumnIndex(1)
-            ImGui.text(intersection.incomingRoads.map { it.id }.toString())
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Inner roads IDs")
-            ImGui.tableSetColumnIndex(1)
-            ImGui.text(intersection.intersectionRoads.keys.toString())
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Has signals")
-            ImGui.tableSetColumnIndex(1)
-            val hasSignalsChanged = ImGui.radioButton("##signals", intersection.hasSignals)
-            if (hasSignalsChanged) {
-                val newSignals = HashMap<Road, Signal>()
-                if (!intersection.hasSignals) {
-                    for (road in intersection.incomingRoads) {
-                        newSignals[road] = Signal()
-                    }
-                }
-                stateChange = ReplaceIntersectionSignalsStateChange(intersection, newSignals)
-            }
-
-            if (intersection.hasSignals) {
-                for (road in intersection.incomingRoads) {
-                    ImGui.pushID(road.id)
-                    ImGui.tableNextRow()
-                    ImGui.tableSetColumnIndex(0)
-                    ImGui.text("Signal for road #${road.id}")
-                    ImGui.tableSetColumnIndex(1)
-                    val signal = intersection.signals[road]
-                    if (signal == null) {
-                        ImGui.textColored(1.0f, 0.0f, 0.0f, 1.0f, "ERROR: no signal found")
-                    } else {
-                        val currentOffset = ImInt(signal.redOffsetOnStartSecs)
-                        val currentRed = ImInt(signal.redTimeSecs)
-                        val currentGreen = ImInt(signal.greenTimeSecs)
-                        ImGui.pushItemWidth(80.0f)
-                        if (ImGui.inputInt("##offset", currentOffset)) {
-                            currentOffset.set(Signal.clampOffsetTime(currentOffset.get()))
-                        }
-                        ImGui.sameLine()
-                        if (ImGui.inputInt("##red", currentRed)) {
-                            currentRed.set(Signal.clampSignalTime(currentRed.get()))
-                        }
-                        ImGui.sameLine()
-                        if (ImGui.inputInt("##green", currentGreen)) {
-                            currentGreen.set(Signal.clampSignalTime(currentGreen.get()))
-                        }
-                        ImGui.popItemWidth()
-                        if (currentOffset.get() != signal.redOffsetOnStartSecs
-                            || currentRed.get() != signal.redTimeSecs
-                            || currentGreen.get() != signal.greenTimeSecs
-                        ) {
-                            stateChange = ChangeSignalStateChange(
-                                signal,
-                                currentOffset.get(),
-                                currentRed.get(),
-                                currentGreen.get()
-                            )
-                        }
-                    }
-                    ImGui.popID()
-                }
-            }
-            ImGui.text(intersection.intersectionRoads.keys.toString())
-
-            ImGui.tableNextRow()
-            ImGui.tableSetColumnIndex(0)
-            ImGui.text("Intersection padding")
-            ImGui.tableSetColumnIndex(1)
-            if (ImGui.inputDouble("##padding", padding)) {
-                padding.set(padding.get().coerceIn(0.0, Double.MAX_VALUE))
-            }
-
-            ImGui.endTable()
-        }
-
-        ImGui.end()
-
-        if (padding.get() != intersection.padding) {
-            return IntersectionPaddingStateChange(intersection, padding.get())
-        }
-
-        return stateChange
-    }
 
     private fun drawIncomingConnections(intersection: Intersection) {
         incomingLanes.clear()
