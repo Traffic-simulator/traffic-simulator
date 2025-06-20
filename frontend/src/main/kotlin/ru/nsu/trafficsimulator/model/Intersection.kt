@@ -110,8 +110,8 @@ class Intersection(
 
 
     private fun addIntersectionRoad(fromRoad: Road, toRoad: Road) {
-        val incomingLaneNumber = fromRoad.getIncomingLaneNumber(this)
-        val outgoingLaneNumber = toRoad.getOutgoingLaneNumber(this)
+        val incomingLaneNumber = fromRoad.getIncomingLaneCount(this)
+        val outgoingLaneNumber = toRoad.getOutgoingLaneCount(this)
 
         val incomingSign = incomingLaneNumber.sign
         val outgoingSign = outgoingLaneNumber.sign
