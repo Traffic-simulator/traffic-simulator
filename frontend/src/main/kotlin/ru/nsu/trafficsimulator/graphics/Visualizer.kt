@@ -35,20 +35,20 @@ class Visualizer(private var layout: Layout) {
     private val camera: PerspectiveCamera
 
     private val carModels = listOf(
-        GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Ambulance.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Mazda RX-7.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Convertible.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/cartoon banana car.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Jeep.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Car.glb"))!!.scene.model,
+        pathToModel("models/racer_big.glb"),
+        pathToModel("models/Ambulance.glb"),
+        pathToModel("models/Mazda RX-7.glb"),
+        pathToModel("models/Convertible.glb"),
+        pathToModel("models/cartoon banana car.glb"),
+        pathToModel("models/Jeep.glb"),
+        pathToModel("models/Car.glb"),
     )
     private val buildingModels: HashMap<BuildingType, Model> = hashMapOf(
-        BuildingType.HOME to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
-        BuildingType.SHOPPING to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
-        BuildingType.EDUCATION to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
-        BuildingType.WORK to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model,
-        BuildingType.ENTERTAINMENT to GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model
+        BuildingType.HOME to pathToModel("models/building.glb"),
+        BuildingType.SHOPPING to pathToModel("models/building.glb"),
+        BuildingType.EDUCATION to pathToModel("models/building.glb"),
+        BuildingType.WORK to pathToModel("models/building.glb"),
+        BuildingType.ENTERTAINMENT to pathToModel("models/building.glb")
     )
     private val buildingModel = GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model
     private var trafficLightModel: Model =
@@ -136,6 +136,10 @@ class Visualizer(private var layout: Layout) {
                 material.remove(attribute)
             }
         }
+    }
+
+    private fun pathToModel(path: String): Model {
+        return GLBLoader().load(Gdx.files.internal(path))!!.scene.model
     }
 
     fun getCamera() = camera
