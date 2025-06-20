@@ -19,12 +19,7 @@ class SplitRoadStateChange(
     private lateinit var oldIntersections: Pair<Intersection, Intersection>
     private lateinit var newRoadIntersection: Pair<Intersection, Intersection>
 
-    // Добавляем всего одно поле
-    private var originalRoadWasPresent = true
-
     override fun apply(layout: Layout) {
-        originalRoadWasPresent = layout.roads.containsKey(originalRoad.id)
-
         if (addRoadStateChange != null && splitIntersection == null) {
             newRoadIntersection = addRoadStateChange!!.apply(layout)
             val newIntersection: Intersection = if (isEndSplit) {
