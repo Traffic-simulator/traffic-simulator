@@ -18,12 +18,11 @@ import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
-import ru.nsu.trafficsimulator.model.Intersection
-import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model.Road
-import ru.nsu.trafficsimulator.model.Signal
+import ru.nsu.trafficsimulator.model.*
 import kotlin.math.abs
 import kotlin.math.sign
+import kotlin.reflect.KClass
+import kotlin.reflect.full.*
 
 class InspectorTool : IEditingTool {
     private val name = "Inspector"
@@ -31,9 +30,14 @@ class InspectorTool : IEditingTool {
     private lateinit var camera: Camera
 
     // TODO: hold a variant somehow? Maybe make abstract class Inspector and override for each primitive?
+    private var selectedSubject: Any? = null
     private var selectedRoad: Road? = null
     private var selectedIntersection: Intersection? = null
     private var lastClickPos: Vec2? = null
+
+//    private val menuMap: MutableMap<KClass<*>, InspectorMenu<*>> = mutableMapOf()
+    private val menus: MutableList<Pair<KClass<*>, InspectorMenu<*>>> = mutableListOf()
+
 
     private val incomingLanes = mutableListOf<LaneSphere>()
 
@@ -42,94 +46,125 @@ class InspectorTool : IEditingTool {
     private var connectLanesChange: ConnectLanesChange? = null
     private var disconnectLanesChange: DisconnectLanesChange? = null
 
+    init {
+        registerMenu(
+            InspectorMenuBuilder<Intersection>("Building")
+                .withFilter { it.isBuilding }
+                .withCustomItem("Building capacity") {
+                    val capacity = ImInt(it.building!!.capacity)
+                    if (ImGui.inputInt("##capacity", capacity)) {
+                        EditBuildingStateChange(
+                            it,
+                            capacity.get().coerceIn(0, 1000),
+                            it.building!!.type.toString(),
+                        )
+                    } else {
+                        null
+                    }
+                }
+                .withCustomItem("Building Type") {
+                    val types = BuildingType.entries.map { it.name }.toTypedArray()
+                    val prevType = it.building!!.type.ordinal
+                    val selectedType = ImInt(prevType)
+                    ImGui.combo("##type", selectedType, types)
+                    if (selectedType.get() != prevType) {
+                        EditBuildingStateChange(it, it.building!!.capacity, types[selectedType.get()])
+                    } else {
+                        null
+                    }
+                }
+                .finish()
+        )
+    }
 
     override fun getButtonName(): String = name
 
     override fun handleDown(screenPos: Vec2, button: Int): Boolean {
         lastClickPos = screenPos
 
-        if (incomingLanes.isNotEmpty()) {
-            getIntersectionWithGround(screenPos, camera)?.let { groundPoint ->
-                selectedIntersection?.let { intersection ->
-                    if (isNear(groundPoint, intersection, Layout.LANE_WIDTH / 2) { it.position.toVec3() }) {
-                        incomingLanes.clear()
-                        outgoingLanesSphere.clear()
-                        selectedFromRoad = null
-                        connectLanesChange = null
-                        disconnectLanesChange = null
+//        if (incomingLanes.isNotEmpty()) {
+//            getIntersectionWithGround(screenPos, camera)?.let { groundPoint ->
+//                selectedIntersection?.let { intersection ->
+//                    if (isNear(groundPoint, intersection, Layout.LANE_WIDTH / 2) { it.position.toVec3() }) {
+//                        incomingLanes.clear()
+//                        outgoingLanesSphere.clear()
+//                        selectedFromRoad = null
+//                        connectLanesChange = null
+//                        disconnectLanesChange = null
+//
+//                        drawIncomingConnections(intersection)
+//
+//                        return true
+//                    }
+//                }
+//
+//                if (outgoingLanesSphere.isEmpty()) {
+//                    // only incoming lines are displayed
+//
+//                    selectedFromRoad = findNearestObject(groundPoint, incomingLanes, Layout.LANE_WIDTH / 2) {
+//                        it.model.transform.getTranslation(Vector3()).toVec3()
+//                    }
+//
+//                    selectedFromRoad?.also {
+//                        incomingLanes.clear()
+//                        incomingLanes.add(it)
+//                        drawOutgoingConnections(it.intersection)
+//                    } ?: cleanUpIntersectionRoadsSettings()
+//
+//                    return true
+//                } else {
+//                    // one incoming and all outgoing lines are displayed
+//
+//                    val toSwitch = findNearestObject(groundPoint, outgoingLanesSphere, Layout.LANE_WIDTH / 2) {
+//                        it.transform.getTranslation(Vector3()).toVec3()
+//                    }
+//
+//                    toSwitch?.also { toRoad ->
+//                        selectedFromRoad?.let { fromRoad ->
+//                            selectedIntersection?.let { intersection ->
+//                                if (intersection.findConnectingRoad(
+//                                        fromRoad.road,
+//                                        fromRoad.lane,
+//                                        toRoad.road,
+//                                        toRoad.lane
+//                                    ) == null
+//                                ) {
+//                                    connectLanesChange = ConnectLanesChange(
+//                                        fromRoad.intersection,
+//                                        fromRoad.road,
+//                                        fromRoad.lane,
+//                                        toRoad.road,
+//                                        toRoad.lane
+//                                    )
+//                                } else {
+//                                    disconnectLanesChange = DisconnectLanesChange(
+//                                        fromRoad.intersection,
+//                                        fromRoad.road,
+//                                        fromRoad.lane,
+//                                        toRoad.road,
+//                                        toRoad.lane
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    } ?: cleanUpIntersectionRoadsSettings()
+//
+//                    return true
+//                }
+//            }
+//        }
 
-                        drawIncomingConnections(intersection)
-
-                        return true
-                    }
-                }
-
-                if (outgoingLanesSphere.isEmpty()) {
-                    // only incoming lines are displayed
-
-                    selectedFromRoad = findNearestObject(groundPoint, incomingLanes, Layout.LANE_WIDTH / 2) {
-                        it.model.transform.getTranslation(Vector3()).toVec3()
-                    }
-
-                    selectedFromRoad?.also {
-                        incomingLanes.clear()
-                        incomingLanes.add(it)
-                        drawOutgoingConnections(it.intersection)
-                    } ?: cleanUpIntersectionRoadsSettings()
-
-                    return true
-                } else {
-                    // one incoming and all outgoing lines are displayed
-
-                    val toSwitch = findNearestObject(groundPoint, outgoingLanesSphere, Layout.LANE_WIDTH / 2) {
-                        it.transform.getTranslation(Vector3()).toVec3()
-                    }
-
-                    toSwitch?.also { toRoad ->
-                        selectedFromRoad?.let { fromRoad ->
-                            selectedIntersection?.let { intersection ->
-                                if (intersection.findConnectingRoad(
-                                        fromRoad.road,
-                                        fromRoad.lane,
-                                        toRoad.road,
-                                        toRoad.lane
-                                    ) == null
-                                ) {
-                                    connectLanesChange = ConnectLanesChange(
-                                        fromRoad.intersection,
-                                        fromRoad.road,
-                                        fromRoad.lane,
-                                        toRoad.road,
-                                        toRoad.lane
-                                    )
-                                } else {
-                                    disconnectLanesChange = DisconnectLanesChange(
-                                        fromRoad.intersection,
-                                        fromRoad.road,
-                                        fromRoad.lane,
-                                        toRoad.road,
-                                        toRoad.lane
-                                    )
-                                }
-                            }
-                        }
-                    } ?: cleanUpIntersectionRoadsSettings()
-
-                    return true
-                }
-            }
-        }
-
-        val intersection = getIntersectionWithGround(screenPos, camera) ?: return false
-        selectedIntersection = findRoadIntersectionAt(layout, intersection)
-        if (selectedIntersection != null) {
-            selectedRoad = null
-            drawIncomingConnections(selectedIntersection!!)
+        selectedSubject = null
+        val groundPoint = getIntersectionWithGround(screenPos, camera) ?: return false
+        val intersection = findRoadIntersectionAt(layout, groundPoint)
+        if (intersection != null) {
+            selectedSubject = intersection
+//            drawIncomingConnections(intersection)
             return true
         }
-        selectedRoad = findRoad(layout, intersection)
-        if (selectedRoad != null) {
-            selectedIntersection = null
+        val road = findRoad(layout, groundPoint)
+        if (road != null) {
+            selectedSubject = road
             return true
         }
         return false
@@ -165,13 +200,16 @@ class InspectorTool : IEditingTool {
     }
 
     override fun runImgui(): IStateChange? {
-        if (selectedRoad != null) {
-            return runRoadMenu(selectedRoad!!)
-        } else if (selectedIntersection != null) {
-            return if (selectedIntersection!!.isBuilding) {
-                runBuildingMenu(selectedIntersection!!)
-            } else {
-                runIntersectionMenu(selectedIntersection!!)
+        val subject = selectedSubject ?: return null
+        for ((klass, menu) in menus) {
+            if (klass == subject::class) {
+                @Suppress("UNCHECKED_CAST")
+                val menu = (menu as InspectorMenu<Any>)
+                if (menu.fits(subject)) {
+                    val change = menu.runImgui(subject, lastClickPos)
+                    lastClickPos = null
+                    return change
+                }
             }
         }
         return null
@@ -473,5 +511,9 @@ class InspectorTool : IEditingTool {
             }
             return turnModel
         }
+    }
+
+    private inline fun <reified T> registerMenu(menu: InspectorMenu<T>) {
+        menus.add(T::class to menu)
     }
 }
