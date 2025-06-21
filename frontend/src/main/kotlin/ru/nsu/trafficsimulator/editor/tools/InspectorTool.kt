@@ -41,14 +41,19 @@ class InspectorTool : IEditingTool {
     private var selectedFromRoad: LaneSphere? = null
     private var connectLanesChange: ConnectLanesChange? = null
     private var disconnectLanesChange: DisconnectLanesChange? = null
+    var viewOnly = false
 
     init {
         registerMenu(
             InspectorMenuBuilder<Intersection>("Building")
                 .withFilter { it.isBuilding }
+                .withItem("ID") { it.id }
                 .withCustomItem("Building capacity") {
                     val capacity = ImInt(it.building!!.capacity)
-                    if (ImGui.inputInt("##capacity", capacity)) {
+                    if (viewOnly) {
+                        ImGui.text(capacity.toString())
+                        null
+                    } else if (ImGui.inputInt("##capacity", capacity)) {
                         EditBuildingStateChange(
                             it,
                             capacity.get().coerceIn(0, 1000),
@@ -59,6 +64,10 @@ class InspectorTool : IEditingTool {
                     }
                 }
                 .withCustomItem("Building Type") {
+                    if (viewOnly) {
+                        ImGui.text(it.building!!.type.toString())
+                        return@withCustomItem null
+                    }
                     val types = BuildingType.entries.map { it.name }.toTypedArray()
                     val prevType = it.building!!.type.ordinal
                     val selectedType = ImInt(prevType)
@@ -79,7 +88,9 @@ class InspectorTool : IEditingTool {
                 .withItem("End junction ID") { it.endIntersection.id }
                 .withCustomItem("Left lane count") {
                     val leftLaneCnt = ImInt(it.leftLane)
-                    if (ImGui.inputInt("##left", leftLaneCnt)) {
+                    if (viewOnly) {
+                        ImGui.text(leftLaneCnt.toString())
+                    } else if (ImGui.inputInt("##left", leftLaneCnt)) {
                         leftLaneCnt.set(leftLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
                     }
                     if (leftLaneCnt.get() != it.leftLane) {
@@ -90,7 +101,9 @@ class InspectorTool : IEditingTool {
                 }
                 .withCustomItem("Right lane count") {
                     val rightLaneCnt = ImInt(it.rightLane)
-                    if (ImGui.inputInt("##right", rightLaneCnt)) {
+                    if (viewOnly) {
+                        ImGui.text(rightLaneCnt.toString())
+                    } else if (ImGui.inputInt("##right", rightLaneCnt)) {
                         rightLaneCnt.set(rightLaneCnt.get().coerceIn(Road.MIN_LANE_COUNT, Road.MAX_LANE_COUNT))
                     }
                     if (rightLaneCnt.get() != it.rightLane) {
@@ -110,7 +123,7 @@ class InspectorTool : IEditingTool {
                 .withItem("Inner roads IDs") { it.intersectionRoads.values.map { it.id } }
                 .withCustomItem("Has signals") { intersection ->
                     val hasSignalsChanged = ImGui.radioButton("##signals", intersection.hasSignals)
-                    if (!hasSignalsChanged) {
+                    if (!hasSignalsChanged || viewOnly) {
                         return@withCustomItem null
                     }
 
@@ -125,7 +138,9 @@ class InspectorTool : IEditingTool {
                 }
                 .withCustomItem("Padding") { intersection ->
                     val padding = ImDouble(intersection.padding)
-                    if (ImGui.inputDouble("##padding", padding)) {
+                    if (viewOnly) {
+                        ImGui.text(padding.toString())
+                    } else if (ImGui.inputDouble("##padding", padding)) {
                         padding.set(padding.get().coerceIn(0.0, Double.MAX_VALUE))
                     }
                     if (padding.get() != intersection.padding) {
@@ -154,15 +169,21 @@ class InspectorTool : IEditingTool {
                             val currentRed = ImInt(signal.redTimeSecs)
                             val currentGreen = ImInt(signal.greenTimeSecs)
                             ImGui.pushItemWidth(80.0f)
-                            if (ImGui.inputInt("##offset", currentOffset)) {
+                            if (viewOnly) {
+                                ImGui.text(currentOffset.toString())
+                            } else if (ImGui.inputInt("##offset", currentOffset)) {
                                 currentOffset.set(Signal.clampOffsetTime(currentOffset.get()))
                             }
                             ImGui.sameLine()
-                            if (ImGui.inputInt("##red", currentRed)) {
+                            if (viewOnly) {
+                                ImGui.text(currentRed.toString())
+                            } else if (ImGui.inputInt("##red", currentRed)) {
                                 currentRed.set(Signal.clampSignalTime(currentRed.get()))
                             }
                             ImGui.sameLine()
-                            if (ImGui.inputInt("##green", currentGreen)) {
+                            if (viewOnly) {
+                                ImGui.text(currentGreen.toString())
+                            } else if (ImGui.inputInt("##green", currentGreen)) {
                                 currentGreen.set(Signal.clampSignalTime(currentGreen.get()))
                             }
                             ImGui.popItemWidth()

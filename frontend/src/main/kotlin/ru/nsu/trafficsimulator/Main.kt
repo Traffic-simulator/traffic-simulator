@@ -123,9 +123,8 @@ class Main : ApplicationAdapter() {
 
         renderSimulationMenu()
 
-        if (state == ApplicationState.Editor) {
-            Editor.runImgui()
-        }
+        Editor.runImgui()
+
         ImGui.render()
         if (ImGui.getIO().wantCaptureKeyboard or ImGui.getIO().wantCaptureMouse) {
             tmpInputProcessor = Gdx.input.inputProcessor
@@ -194,9 +193,11 @@ class Main : ApplicationAdapter() {
             }
             if (state == ApplicationState.Editor) {
                 visualizer.cleanup()
-                inputMultiplexer.addProcessor(0, editorInputProcess)
+                Editor.viewOnlyMode(false)
+//                inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
-                inputMultiplexer.removeProcessor(editorInputProcess)
+//                inputMultiplexer.removeProcessor(editorInputProcess)
+                Editor.viewOnlyMode(true)
                 initializeSimulation(Editor.layout)
             }
         }
