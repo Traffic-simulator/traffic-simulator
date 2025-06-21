@@ -12,7 +12,7 @@ import vehicle.Vehicle
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: Int) {
+class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: Int, numFramesHeatmapMemory: Long) {
 
     val vehicles: ArrayList<Vehicle> = ArrayList()
     var laneLink: TRoadLanesLaneSectionLcrLaneLink? = tlane.link
@@ -28,7 +28,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     val lenOfSegment: Double = 10.0
     var segments: List<Segment> = List(max(length.div(lenOfSegment).roundToInt(), 1)) {
         index ->
-        Segment(this)
+        Segment(this, numFramesHeatmapMemory)
     }
 
     fun getMaxSpeed(): Double {

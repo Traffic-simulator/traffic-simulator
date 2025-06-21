@@ -17,9 +17,10 @@ class Network(
     drivingSide: ISimulation.DrivingSide,
     troads: List<TRoad>,
     tjunctions: List<TJunction>,
-    val intersections: MutableList<Intersection>) {
+    val intersections: MutableList<Intersection>,
+    numFramesHeatmapMemory: Long) {
 
-    val roads: List<Road> = troads.map{ Road(it) }
+    val roads: List<Road> = troads.map{ Road(it, numFramesHeatmapMemory) }
     val junctions: List<Junction> = tjunctions.map { Junction(it, intersections, this) }
 
     // Junctions that have Road in key as an incomingRoad

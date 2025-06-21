@@ -8,8 +8,8 @@ import kotlin.math.tanh
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-class Segment(lane: Lane) {
-    private val lastStates = SumTrackingArrayDeque(2000)
+class Segment(lane: Lane, numFramesMemory: Long) {
+    private val lastStates = SumTrackingArrayDeque(numFramesMemory)
     private val speedLimit = lane.getMaxSpeed()
 
     private var currentIterVehiclesSum: Double = 0.0
@@ -41,6 +41,10 @@ class Segment(lane: Lane) {
         currentIterVehiclesCount += 1
     }
 
+    fun clearMemory() {
+        lastStates.clear()
+    }
+
     private fun customCenteredSigmoid(
         t: Double,
         xEnd: Double = 1.0,
@@ -60,7 +64,7 @@ class Segment(lane: Lane) {
         return (sig - sig0) / (sigEnd - sig0)
     }
 
-    private class SumTrackingArrayDeque(private val limit: Int) {
+    private class SumTrackingArrayDeque(private val limit: Long) {
         private val deque = ArrayDeque<Double>()
         private var currentSum: Double = 0.0
 
@@ -72,6 +76,11 @@ class Segment(lane: Lane) {
             deque.addLast(value)
             currentSum += value
             enforceLimit()
+        }
+
+        fun clear() {
+            deque.clear()
+            currentSum = 0.0
         }
 
         private fun enforceLimit() {

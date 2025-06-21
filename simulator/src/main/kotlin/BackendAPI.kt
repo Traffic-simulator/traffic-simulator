@@ -2,6 +2,9 @@ import mu.KotlinLogging
 import network.Lane
 import network.signals.Signal
 import opendrive.OpenDRIVE
+import opendrive.TJunction
+import opendrive.TRoad
+import opendrive.TUserData
 import route_generator_new.ModelConfig
 import vehicle.Vehicle
 import java.time.LocalTime
@@ -14,6 +17,54 @@ class BackendAPI : ISimulation {
     override fun init(layout: OpenDRIVE, drivingSide: ISimulation.DrivingSide, regionId: Int?, startingTime: LocalTime, seed: Long): Error? {
         simulator = Simulator(layout,  drivingSide, startingTime, seed)
         return null
+    }
+
+    override fun gatherSimulationStats(layout: OpenDRIVE, seed: Long): OpenDRIVE {
+        println("I'm here")
+        logger.info { "Starting gathering stats "}
+        val framerate: Long = 50      // in milliseconds
+        val logPeriod: Long = 20 * 60 // in seconds (20 min)
+        val SECONDS_IN_DAY: Long = 24 * 60 * 60
+        val numFramesHeatmapMemory: Long = logPeriod * 1000 / framerate // Have to store heatmap values for each logging step
+
+        val sim = Simulator(layout, ISimulation.DrivingSide.RIGHT, LocalTime.of(0, 0, 0), seed, numFramesHeatmapMemory)
+
+            // roadId, <negativeSideAvgSpeed, positiveSideAvgSpeed>
+        val roadSideFlowSpeed = HashMap<String, ArrayList<Pair<Double, Double>>>()
+
+        // TODO: спрашивать время у симулятора...
+        for (currentTime in 0 until SECONDS_IN_DAY * 1000 step framerate) {
+            sim.update(framerate.toDouble() / 1000.0)
+            if (currentTime % (logPeriod * 1000) == 0L) {
+
+                // getRoadLaneSideFlowSpeed
+                for(road in sim.network.roads) {
+                    if (!roadSideFlowSpeed.containsKey(road.id)) {
+                        roadSideFlowSpeed[road.id] = ArrayList<Pair<Double, Double>>()
+                    }
+                    roadSideFlowSpeed[road.id]!!.add(Pair(road.negativeSideAvgSpeed, road.positiveSideAvgSpeed))
+                }
+                sim.clearHeatmapData()
+                logger.info { "${currentTime.toDouble() / SECONDS_IN_DAY}% of stats gathering passed."}
+                println("${currentTime.toDouble() / SECONDS_IN_DAY}%")
+            }
+        }
+
+        // store stats in layout
+        layout.getRoad().forEach {
+            if (!roadSideFlowSpeed.containsKey(it.id)) {
+                throw RuntimeException("Backend stats gathering exception")
+            }
+            it.addUserData("avgFlowLogPeriodSeconds", logPeriod.toString())
+            val negativeSideList = roadSideFlowSpeed.get(it.id)!!.map { it.first }
+            val positiveSideList = roadSideFlowSpeed.get(it.id)!!.map { it.second }
+
+            it.addUserData("negativeSideAvgFlowSpeed", serializeList(negativeSideList))
+            it.addUserData("positiveSideAvgFlowSpeed", serializeList(positiveSideList))
+        }
+
+        logger.info { "Stats gathering successfully finished. "}
+        return layout
     }
 
 
@@ -108,3 +159,15 @@ class BackendAPI : ISimulation {
         )
     }
 }
+
+fun createUserData(key: String, value: String) = TUserData().apply {
+    this.code = key
+    this.value = value
+}
+
+private fun serializeList(list: List<Double>) = list.toString()
+
+private fun TRoad.addUserData(key: String, value: String) =
+    this.getGAdditionalData().add(createUserData(key, value))
+
+

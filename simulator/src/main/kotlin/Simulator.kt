@@ -25,12 +25,13 @@ class Simulator(openDrive: OpenDRIVE,
                 drivingSide: ISimulation.DrivingSide,
                 startingTime: LocalTime,
                 seed: Long,
+                numFramesHeatmapMemory: Long = 2000
 ) {
 
     val finder = JunctionIntersectionFinder(openDrive)
     private val logger = KotlinLogging.logger("SIMULATOR")
     val intersections = finder.findIntersection()
-    val network: Network = Network(drivingSide, openDrive.road, openDrive.junction, intersections)
+    val network: Network = Network(drivingSide, openDrive.road, openDrive.junction, intersections, numFramesHeatmapMemory)
     val rnd = Random(seed)
     val routeGeneratorAPI: IRouteGenerator
 
@@ -99,6 +100,7 @@ class Simulator(openDrive: OpenDRIVE,
         return vehicles
     }
 
+    // We can do it not each frame (but be careful with gatherSimStats in BackendAPI)
     fun gatherStatistics() {
         val roads: List<Road> = network.roads
         for (road in roads) {
@@ -140,6 +142,14 @@ class Simulator(openDrive: OpenDRIVE,
 
             road.positiveSideAvgSpeed = getRoadSideAvgSpeed(1)
             road.negativeSideAvgSpeed = getRoadSideAvgSpeed(-1)
+        }
+    }
+
+    fun clearHeatmapData() {
+        for (road in network.roads) {
+            for (lane in road.lanes) {
+                lane.segments.forEach { it.clearMemory() }
+            }
         }
     }
 

@@ -6,7 +6,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
-class Road(val troad: TRoad) {
+class Road(val troad: TRoad, numFramesHeatmapMemory: Long) {
 
     val numLanes: Int
     var lanes: ArrayList<Lane> = ArrayList()
@@ -21,10 +21,10 @@ class Road(val troad: TRoad) {
     init {
 
         if (troad.lanes.laneSection[0].left != null) {
-            lanes.addAll(troad.lanes.laneSection[0].left.lane.filter { /* usingRoadTypes.contains(it.type) */ true }.map{ it -> Lane(it, this, it.id.toInt())})
+            lanes.addAll(troad.lanes.laneSection[0].left.lane.filter { /* usingRoadTypes.contains(it.type) */ true }.map{ it -> Lane(it, this, it.id.toInt(), numFramesHeatmapMemory)})
         }
         if (troad.lanes.laneSection[0].right != null) {
-            lanes.addAll(troad.lanes.laneSection[0].right.lane.filter { /* usingRoadTypes.contains(it.type) */ true  }.map{ it -> Lane(it, this, it.id.toInt())})
+            lanes.addAll(troad.lanes.laneSection[0].right.lane.filter { /* usingRoadTypes.contains(it.type) */ true  }.map{ it -> Lane(it, this, it.id.toInt(), numFramesHeatmapMemory)})
         }
 
         val laneSectionSize = troad.lanes.laneSection.size
