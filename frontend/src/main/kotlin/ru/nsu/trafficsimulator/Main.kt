@@ -1,9 +1,8 @@
 package ru.nsu.trafficsimulator
 
-import BackendAPI
+import ru.nsu.trafficsimulator.backend.BackendAPI
 import ISimulation
 import OpenDriveWriter
-import com.badlogic.gdx.Application
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -96,10 +95,7 @@ class Main : ApplicationAdapter() {
 
         val dto2 = simState.backend.gatherSimulationStats(dto, 500)
         OpenDriveWriter().write(dto2, "export_$formattedDateTime.xodr")
-//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
-
-        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, LocalTime.ofSecondOfDay(60 * 60 * 8), 500)
+        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, simState.startTime, 500)
     }
 
     override fun render() {
@@ -214,11 +210,19 @@ class Main : ApplicationAdapter() {
             }
             ImGui.sameLine()
             if (ImGui.button(">>")) {
-                simState.speed = 2
+                simState.speed = 5
             }
             ImGui.sameLine()
             if (ImGui.button(">>>")) {
-                simState.speed = 5
+                simState.speed = 10
+            }
+            ImGui.sameLine()
+            if (ImGui.button(">>>>")) {
+                simState.speed = 60
+            }
+            ImGui.sameLine()
+            if (ImGui.button("kchau")) {
+                simState.speed = 480
             }
             if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
                 visualizer.heatmapMode = !visualizer.heatmapMode

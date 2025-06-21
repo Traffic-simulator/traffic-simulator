@@ -1,8 +1,8 @@
 package trafficsim
 
 import OpenDriveReader
-import Simulator
-import Waypoint
+import ru.nsu.trafficsimulator.backend.Simulator
+import ru.nsu.trafficsimulator.backend.network.Waypoint
 import vehicle.Direction
 import java.util.*
 
