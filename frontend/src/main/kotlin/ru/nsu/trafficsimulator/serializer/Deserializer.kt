@@ -296,13 +296,25 @@ class Deserializer {
 }
 
 private fun parseVec2(str: String): Vec2 {
-    val regex = Regex("^[(]([-+]?[0-9]*\\.?[0-9]+);([-+]?[0-9]*\\.?[0-9]+)[)]$")
-    val matchResult = regex.find(str)
+    val parts = str.replace("(", "")
+        .replace(")", "")
+        .split(";")
 
-    if (matchResult != null) {
-        val (x, y) = matchResult.destructured
-        return Vec2(x.toDouble(), y.toDouble())
-    } else {
-        throw IllegalArgumentException("Vec2 must be in the format (x;y).")
+    if (parts.size != 2) {
+        throw IllegalArgumentException("Vec2 must be in the format (x;y). Input: $str")
     }
+
+    return Vec2(parts[0].toDouble(), parts[1].toDouble())
 }
+
+//private fun parseVec2(str: String): Vec2 {
+//    val regex = Regex("^[(]([-+]?[0-9]*\\.?[0-9]+);([-+]?[0-9]*\\.?[0-9]+)[)]$")
+//    val matchResult = regex.find(str)
+//
+//    if (matchResult != null) {
+//        val (x, y) = matchResult.destructured
+//        return Vec2(x.toDouble(), y.toDouble())
+//    } else {
+//        throw IllegalArgumentException("Vec2 must be in the format (x;y).")
+//    }
+//}

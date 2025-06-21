@@ -1,9 +1,10 @@
 package route_generator_new
 
-import BuildingsParser
+import ru.nsu.trafficsimulator.backend.BuildingsParser
 import OpenDriveReader
 import opendrive.OpenDRIVE
 import org.junit.jupiter.api.Test
+import ru.nsu.trafficsimulator.backend.route_generator_new.BuildingTypes
 import java.io.FileNotFoundException
 import kotlin.test.assertEquals
 

@@ -2966,9 +2966,29 @@
             <laneLink from="1" to="-1"/>
         </connection>
     </junction>
-    <junction id="11"/>
-    <junction id="12"/>
-    <junction id="13"/>
-    <junction id="14"/>
-    <junction id="15"/>
+    <junction id="11">
+        <userData code="buildingType" value="WORK"/>
+        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingFullness" value="0"/>
+    </junction>
+    <junction id="12">
+        <userData code="buildingType" value="WORK"/>
+        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingFullness" value="0"/>
+    </junction>
+    <junction id="13">
+        <userData code="buildingType" value="HOME"/>
+        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="14">
+        <userData code="buildingType" value="HOME"/>
+        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingFullness" value="100"/>
+    </junction>
+    <junction id="15">
+        <userData code="buildingType" value="HOME"/>
+        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingFullness" value="100"/>
+    </junction>
 </OpenDRIVE>
