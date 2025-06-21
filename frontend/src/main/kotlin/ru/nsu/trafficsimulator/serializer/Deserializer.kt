@@ -9,6 +9,7 @@ import ru.nsu.trafficsimulator.model.*
 import ru.nsu.trafficsimulator.model.intsettings.BuildingIntersectionSettings
 import ru.nsu.trafficsimulator.model.intsettings.BuildingType
 import ru.nsu.trafficsimulator.model.intsettings.MergingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.SplitDistrictsIntersectionSettings
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -218,6 +219,18 @@ class Deserializer {
                 if (isMerging.toBoolean()) {
                     intersection.intersectionSettings =
                         MergingIntersectionSettings(
+                            userParameters["firstDistrict"]?.toInt()
+                                ?: throw IllegalArgumentException("There is no first district"),
+                            userParameters["secondDistrict"]?.toInt()
+                                ?: throw IllegalArgumentException("There is no second district")
+                        )
+                }
+            }
+
+            userParameters["splitIntersection"]?.let { isSplit ->
+                if (isSplit.toBoolean()) {
+                    intersection.intersectionSettings =
+                        SplitDistrictsIntersectionSettings(
                             userParameters["firstDistrict"]?.toInt()
                                 ?: throw IllegalArgumentException("There is no first district"),
                             userParameters["secondDistrict"]?.toInt()

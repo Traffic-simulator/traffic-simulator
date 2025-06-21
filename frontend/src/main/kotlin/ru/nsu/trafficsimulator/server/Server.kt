@@ -90,6 +90,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
 
                     val receivedOpenDrive =
                         OpenDriveReader().readUsingFileReader(resultXodr.toString().byteInputStream())
+                    OpenDriveWriter().write(receivedOpenDrive, "client-$districtId.xodr")
                     receivedLayouts.add(Deserializer.deserialize(receivedOpenDrive))
 
                     val result = waitForResultLayout()

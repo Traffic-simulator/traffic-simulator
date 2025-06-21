@@ -263,6 +263,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
     }
 
     intersection.splitSettings?.let { splitting ->
+        tJunction.addUserData("splitIntersection", "true")
         tJunction.addUserData("firstDistrict", splitting.firstDistrict.toString())
         tJunction.addUserData("secondDistrict", splitting.secondDistrict.toString())
     }

@@ -7,7 +7,9 @@ import ru.nsu.trafficsimulator.model.intsettings.BuildingIntersectionSettings
 import ru.nsu.trafficsimulator.model.intsettings.IntersectionSettings
 import kotlin.math.max
 
-class Layout(val district: Int = 0) {
+class Layout(district: Int = 0) {
+    var district = district
+        private set
     val roads = mutableMapOf<Long, Road>()
     val intersections = mutableMapOf<Long, Intersection>()
     val intersectionRoadsNumber
@@ -28,6 +30,8 @@ class Layout(val district: Int = 0) {
 
         roadIdCount = other.roadIdCount
         intersectionIdCount = other.intersectionIdCount
+
+        district = other.district
     }
 
     fun addRoad(
