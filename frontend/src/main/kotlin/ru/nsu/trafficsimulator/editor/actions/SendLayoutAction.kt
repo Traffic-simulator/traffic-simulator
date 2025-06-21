@@ -5,17 +5,16 @@ import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.server.Client
 
-class SendLayoutAction() : IAction {
+class SendLayoutAction(private val client: Client?) : IAction {
     override fun isStructuralAction(): Boolean = true
-    override fun runAction(layout: Layout): Boolean = true
 
     override fun runImgui(): Boolean {
         val res = ImGui.button("Send layout")
         return res
     }
 
-    override fun runAction(layout: Layout, client: Client): Boolean {
-        if (client.getConnected()) {
+    override fun runAction(layout: Layout): Boolean {
+        if (client!!.getConnected()) {
             try {
                 val resLayout = client.sendLayout(layout)
                 layout.copy(resLayout)

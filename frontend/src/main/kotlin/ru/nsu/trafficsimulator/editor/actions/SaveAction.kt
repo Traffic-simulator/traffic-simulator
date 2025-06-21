@@ -12,7 +12,6 @@ class SaveAction : IAction {
     private var errorMessage = ""
 
     override fun isStructuralAction(): Boolean = true
-    override fun runAction(layout: Layout, client: Client): Boolean = true
 
     override fun runImgui(): Boolean {
         ImGui.text("Filename:")

@@ -12,7 +12,6 @@ const val PORT = 8080
 
 class ServerAction : IAction {
     override fun isStructuralAction(): Boolean = true
-    override fun runAction(layout: Layout, client: Client): Boolean = true
 
     override fun runImgui(): Boolean {
         val res = ImGui.button("Host")

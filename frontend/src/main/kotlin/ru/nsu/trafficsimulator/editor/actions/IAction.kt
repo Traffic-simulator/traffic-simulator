@@ -20,6 +20,4 @@ interface IAction {
      * @return whether layout changed or not
      */
     fun runAction(layout: Layout): Boolean
-
-    fun runAction(layout: Layout, client: Client): Boolean
 }

@@ -13,6 +13,7 @@ import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.server.Client
 
 class Editor {
     companion object {
@@ -23,13 +24,14 @@ class Editor {
             }
 
         private lateinit var camera: Camera
+        private var client: Client? = null
         private var changes = ArrayList<IStateChange>()
         private var nextChange = 0
 
         private val actions = listOf(LoadAction(), SaveAction())
         private val serverAction = ServerAction()
-        private val clientAction = ClientAction()
-        private val sendLayoutAction = SendLayoutAction()
+        private val clientAction by lazy { ClientAction(client) }
+        private val sendLayoutAction by lazy { SendLayoutAction(client) }
         private val tools = listOf(EditTool(), AddRoadTool(), AddBuildingTool(), DeleteRoadTool(), InspectorTool())
 
         private var currentTool = tools[0]
@@ -89,28 +91,33 @@ class Editor {
         }
 
         private fun renderServerMenu() {
-            ImGui.begin("Server Menu")
+            ImGui.begin("Client/Server Menu")
             if (serverAction.runImgui()) {
                 if (serverAction.runAction(layout)) {
                     onLayoutChange(serverAction.isStructuralAction(), true)
                 }
             }
+            if (ImGui.button("Create client")) {
+                client = Client()
+            }
             ImGui.end()
         }
 
         private fun renderClientMenu() {
-            ImGui.begin("Client Menu")
-            if (clientAction.runImgui()) {
-                if (clientAction.runAction(layout)) {
-                    onLayoutChange(clientAction.isStructuralAction(), true)
+            if (client != null) {
+                ImGui.begin("Client Menu")
+                if (clientAction.runImgui()) {
+                    if (clientAction.runAction(layout)) {
+                        onLayoutChange(clientAction.isStructuralAction(), true)
+                    }
                 }
-            }
-            if (sendLayoutAction.runImgui()) {
-                if (sendLayoutAction.runAction(layout, clientAction.client)) {
-                    onLayoutChange(sendLayoutAction.isStructuralAction(), true)
+                if (sendLayoutAction.runImgui()) {
+                    if (sendLayoutAction.runAction(layout)) {
+                        onLayoutChange(sendLayoutAction.isStructuralAction(), true)
+                    }
                 }
+                ImGui.end()
             }
-            ImGui.end()
         }
 
         fun render(modelBatch: ModelBatch) {
@@ -175,7 +182,5 @@ class Editor {
                 spheres[id]!!.transform.setToTranslation(intersection.position.toVec3().toGdxVec())
             }
         }
-
-
     }
 }

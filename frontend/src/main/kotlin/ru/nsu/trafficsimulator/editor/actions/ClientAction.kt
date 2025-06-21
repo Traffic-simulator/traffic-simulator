@@ -6,12 +6,10 @@ import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.server.Client
 
-class ClientAction : IAction {
+class ClientAction(private val client: Client?) : IAction {
     private val address = ImString("localhost")
     private val port = ImString("8080")
-    val client = Client()
     override fun isStructuralAction(): Boolean = true
-    override fun runAction(layout: Layout, client: Client): Boolean = true
 
     override fun runImgui(): Boolean {
         ImGui.text("Server address:")
@@ -28,7 +26,7 @@ class ClientAction : IAction {
         try {
             val address = address.toString()
             val port = port.toString().toInt()
-            val newLayout = client.connect(address, port)
+            val newLayout = client!!.connect(address, port)
             println(newLayout.toString())
             layout.copy(newLayout)
             return true
