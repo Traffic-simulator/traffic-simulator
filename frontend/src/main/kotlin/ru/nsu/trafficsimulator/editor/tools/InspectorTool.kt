@@ -41,6 +41,7 @@ class InspectorTool : IEditingTool {
     private var selectedFromRoad: LaneSphere? = null
     private var connectLanesChange: ConnectLanesChange? = null
     private var disconnectLanesChange: DisconnectLanesChange? = null
+    private var vehicles: List<Vehicle> = listOf()
     var viewOnly = false
 
     init {
@@ -191,6 +192,8 @@ class InspectorTool : IEditingTool {
                 null
             }
         }.withFilter { !viewOnly }
+
+        textItem<Vehicle>("ID") { it.id }
     }
 
     override fun getButtonName(): String = name
@@ -205,6 +208,12 @@ class InspectorTool : IEditingTool {
 
         selectedSubject = null
         lastClickPos = screenPos
+
+        val vehicle = findIntersectionWithCar(vehicles, screenPos, camera)
+        if (vehicle != null) {
+            selectedSubject = vehicle
+            return true
+        }
 
         val intersection = findRoadIntersectionAt(layout, groundPoint)
         if (intersection != null) {
@@ -468,8 +477,12 @@ class InspectorTool : IEditingTool {
 
     fun addVehicleStats(stats: List<Pair<String, (id: Int) -> Any>>) {
         for ((name, text) in stats) {
-            textItem<ISimulation.VehicleDTO>(name) { text(it.id) }.withFilter { viewOnly }
+            textItem<Vehicle>(name) { text(it.id) }.withFilter { viewOnly }
         }
+    }
+
+    fun updateVehicles(vehicles: List<Vehicle>) {
+        this.vehicles = vehicles
     }
 
     private inline fun <reified T> textItem(label: String, crossinline textFunc: (subj: T) -> Any): InspectorItem<T> {

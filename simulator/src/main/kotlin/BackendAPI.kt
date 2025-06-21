@@ -71,6 +71,14 @@ class BackendAPI : ISimulation {
         )
     }
 
+    override fun getVehicleStats(): List<Pair<String, (id: Int) -> Any>> {
+        return listOf(
+            "Current Speed" to { id ->
+                simulator?.vehicles?.find { it.vehicleId == id }?.speed ?: "Vehicle not found"
+            }
+        )
+    }
+
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
         val lcInfo: ISimulation.LaneChangeDTO?
         if (!vehicle.isInLaneChange()) {

@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import com.badlogic.gdx.math.Matrix4
+import com.badlogic.gdx.math.collision.BoundingBox
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute
@@ -126,6 +127,12 @@ class Visualizer(private var layout: Layout) {
             for (attribute in toRemove) {
                 material.remove(attribute)
             }
+        }
+        val bb = BoundingBox()
+        for (model in carModels) {
+            model.calculateTransforms()
+            model.calculateBoundingBox(bb)
+            println(bb)
         }
     }
 

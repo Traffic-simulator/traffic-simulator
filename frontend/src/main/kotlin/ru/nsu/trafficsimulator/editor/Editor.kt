@@ -13,7 +13,7 @@ import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.*
 
 class Editor {
     companion object {
@@ -159,6 +159,10 @@ class Editor {
                 spheres[id] = ModelInstance(model)
                 spheres[id]!!.transform.setToTranslation(intersection.position.toVec3().toGdxVec())
             }
+        }
+
+        fun updateVehicles(vehicles: List<Vehicle>) {
+            inspectorTool.updateVehicles(vehicles)
         }
 
         fun addRoadStats(stats: List<Pair<String, (id: Long) -> Any>>) {

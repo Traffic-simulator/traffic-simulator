@@ -5,6 +5,8 @@ import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.collision.BoundingBox
+import com.badlogic.gdx.math.collision.OrientedBoundingBox
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
@@ -28,8 +30,17 @@ fun getIntersectionWithGround(screenPos: Vec2, camera: Camera): Vec3? {
     return null
 }
 
-fun getIntersectionWithCar(vehicles: List<Vehicle>, screenPos: Vec2, camera: Camera) {
-
+fun findIntersectionWithCar(vehicles: List<Vehicle>, screenPos: Vec2, camera: Camera): Vehicle? {
+    val ray = camera.getPickRay(screenPos.x.toFloat(), screenPos.y.toFloat())
+    for (vehicle in vehicles) {
+        val intersection = Vector3()
+        val boundingBox = BoundingBox(Vector3(-3.3f, 0.0f, -1.36f), Vector3(2.63f, 2.62f, 1.35f))
+        val orientedBoundingBox = OrientedBoundingBox(boundingBox, vehicle.transform)
+        if (Intersector.intersectRayOrientedBounds(ray, orientedBoundingBox, intersection)) {
+            return vehicle
+        }
+    }
+    return null
 }
 
 fun transformVehicles(vehicles: List<ISimulation.VehicleDTO>): List<Vehicle> {

@@ -111,6 +111,7 @@ class Main : ApplicationAdapter() {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
             val vehicles = transformVehicles(simState.backend.getVehicles())
             visualizer.updateCars(vehicles)
+            Editor.updateVehicles(vehicles)
             visualizer.updateSignals(simState.backend.getSignalStates())
             visualizer.updateHeatmap(simState.backend.getSegments())
 
