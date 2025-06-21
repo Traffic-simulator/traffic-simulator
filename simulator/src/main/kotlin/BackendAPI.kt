@@ -63,6 +63,14 @@ class BackendAPI : ISimulation {
         return LocalTime.ofSecondOfDay(simulator!!.currentTime.toLong() % SECONDS_IN_DAY)
     }
 
+    override fun getIntersectionStats(): List<Pair<String, (id: Long) -> Any>> {
+        return listOf(
+            "Current people" to { id ->
+                simulator?.buildings?.find { it.junctionId.toLong() == id }?.currentPeople ?: "Building not found"
+            }
+        )
+    }
+
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
         val lcInfo: ISimulation.LaneChangeDTO?
         if (!vehicle.isInLaneChange()) {

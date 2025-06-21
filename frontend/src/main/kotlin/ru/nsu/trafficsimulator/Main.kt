@@ -86,6 +86,10 @@ class Main : ApplicationAdapter() {
 
         Editor.init(camera)
         Editor.onStructuralLayoutChange.add { visualizer.updateLayout(it) }
+
+        Editor.addRoadStats(simState.backend.getRoadStats())
+        Editor.addIntersectionStats(simState.backend.getIntersectionStats())
+        Editor.addVehicleStats(simState.backend.getVehicleStats())
     }
 
     fun initializeSimulation(layout: Layout) {

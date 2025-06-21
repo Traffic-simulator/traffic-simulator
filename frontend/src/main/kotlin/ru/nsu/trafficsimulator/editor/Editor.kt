@@ -161,6 +161,16 @@ class Editor {
             }
         }
 
+        fun addRoadStats(stats: List<Pair<String, (id: Long) -> Any>>) {
+            inspectorTool.addRoadStats(stats)
+        }
 
+        fun addIntersectionStats(stats: List<Pair<String, (id: Long) -> Any>>) {
+            inspectorTool.addIntersectionStats(stats)
+        }
+
+        fun addVehicleStats(stats: List<Pair<String, (id: Int) -> Any>>) {
+            inspectorTool.addVehicleStats(stats)
+        }
     }
 }

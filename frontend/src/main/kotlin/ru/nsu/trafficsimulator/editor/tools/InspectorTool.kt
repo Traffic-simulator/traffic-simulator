@@ -454,6 +454,24 @@ class InspectorTool : IEditingTool {
         }
     }
 
+    fun addRoadStats(stats: List<Pair<String, (id: Long) -> Any>>) {
+        for ((name, text) in stats) {
+            textItem<Road>(name) { text(it.id) }
+        }
+    }
+
+    fun addIntersectionStats(stats: List<Pair<String, (id: Long) -> Any>>) {
+        for ((name, text) in stats) {
+            textItem<Intersection>(name) { text(it.id) }.withFilter { viewOnly }
+        }
+    }
+
+    fun addVehicleStats(stats: List<Pair<String, (id: Int) -> Any>>) {
+        for ((name, text) in stats) {
+            textItem<ISimulation.VehicleDTO>(name) { text(it.id) }.withFilter { viewOnly }
+        }
+    }
+
     private inline fun <reified T> textItem(label: String, crossinline textFunc: (subj: T) -> Any): InspectorItem<T> {
         val menu = { subject: T ->
             ImGui.tableNextRow()
