@@ -252,14 +252,4 @@ class Main : ApplicationAdapter() {
     override fun resize(width: Int, height: Int) {
         visualizer.onResize(width, height)
     }
-
-    private fun hostLayout(): Layout {
-        val result = Layout(0)
-        result.addIntersection(Vec3(150.0, 0.0, 0.0), MergingIntersectionSettings(4, 1))
-        result.addIntersection(Vec3(0.0, 0.0, 150.0), MergingIntersectionSettings(1, 2))
-        result.addIntersection(Vec3(-150.0, 0.0, 0.0), MergingIntersectionSettings(2, 3))
-        result.addIntersection(Vec3(0.0, 0.0, -150.0), MergingIntersectionSettings(3, 4))
-
-        return result
-    }
 }
