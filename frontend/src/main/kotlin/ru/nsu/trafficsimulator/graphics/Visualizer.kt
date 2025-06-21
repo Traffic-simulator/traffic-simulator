@@ -128,12 +128,6 @@ class Visualizer(private var layout: Layout) {
                 material.remove(attribute)
             }
         }
-        val bb = BoundingBox()
-        for (model in carModels) {
-            model.calculateTransforms()
-            model.calculateBoundingBox(bb)
-            println(bb)
-        }
     }
 
     fun getCamera() = camera
