@@ -15,6 +15,7 @@ dependencies {
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
   implementation(project(":api"))
   implementation(project(":simulator"))
+  implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
