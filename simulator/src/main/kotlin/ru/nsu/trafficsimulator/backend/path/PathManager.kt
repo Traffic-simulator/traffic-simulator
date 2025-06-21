@@ -7,7 +7,6 @@ import ru.nsu.trafficsimulator.backend.path.algorithms.IPathBuilder
 import ru.nsu.trafficsimulator.backend.vehicle.Vehicle
 import ru.nsu.trafficsimulator.backend.vehicle.VehicleDetector
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 /*
@@ -27,7 +26,7 @@ import kotlin.collections.HashMap
  */
 class PathManager(private val algorithm: IPathBuilder) {
 
-    private val vehiclesPaths = HashMap<Int, ArrayList<Path.PathWaypoint>>()
+    private val vehiclesPaths = HashMap<Int, List<Path.PathWaypoint>>()
 
     fun isDestinationReachable(vehicle: Vehicle, initPosition: Double): Boolean {
         createPathIfNotExists(vehicle, initPosition)
@@ -36,7 +35,7 @@ class PathManager(private val algorithm: IPathBuilder) {
         if (path == null || path.isEmpty()) {
             return false
         }
-        val despawnLane = path.last.lane
+        val despawnLane = path.last().lane
         return despawnLane.roadId.equals(vehicle.destination.roadId)
             && despawnLane.laneId.toString().equals(vehicle.destination.laneId)
     }
@@ -47,17 +46,21 @@ class PathManager(private val algorithm: IPathBuilder) {
     fun getNextMLCDistance(vehicle: Vehicle): Double {
         createPathIfNotExists(vehicle, vehicle.position)
 
-        var curLane = vehicle.lane
         var first = true
         var acc_distance = 0.0
+        var curLane = vehicle.lane
         var tmpAcc = curLane.length - vehicle.position
 
+        val path = vehiclesPaths[vehicle.vehicleId]!!
+        var curWaypointIndex = path.indexOfFirst { it.lane == curLane }
+        if (curWaypointIndex == -1) {
+            return SimulationConfig.INF
+        }
+
         // next path lanes
-        while (acc_distance < SimulationConfig.MAX_VALUABLE_DISTANCE) {
-            val nextLane = getNextPathLane(vehicle, curLane)
-            if (nextLane == null) {
-                return SimulationConfig.INF
-            }
+        while (acc_distance < SimulationConfig.MAX_VALUABLE_DISTANCE && curWaypointIndex < path.size - 1) {
+            curWaypointIndex += 1
+            val nextLane = path[curWaypointIndex]
             if (nextLane.type == Path.PWType.MLC) {
                 if (first) {
                     return nextLane.mlcMaxRoadOffset - vehicle.position
@@ -67,7 +70,6 @@ class PathManager(private val algorithm: IPathBuilder) {
             first = false
             acc_distance += tmpAcc
             tmpAcc = nextLane.lane.length
-
             curLane = nextLane.lane
         }
         return SimulationConfig.INF
@@ -140,10 +142,9 @@ class PathManager(private val algorithm: IPathBuilder) {
             return
         }
         vehiclesPaths[vehicle.vehicleId] = algorithm.getPath(
-            vehicle.network,
             Waypoint(vehicle.lane.roadId, vehicle.lane.laneId.toString()),
             vehicle.destination,
-            initPosition)
+            initPosition).second
 
         val path = vehiclesPaths.get(vehicle.vehicleId)!!
         val usedLanes = HashSet<Lane>()

@@ -1,16 +1,21 @@
 package ru.nsu.trafficsimulator.backend.vehicle
 
+import ISimulation
 import ru.nsu.trafficsimulator.backend.SimulationConfig
 import ru.nsu.trafficsimulator.backend.SimulationConfig.Companion.JUNCTION_BLOCK_DISTANCE
 import ru.nsu.trafficsimulator.backend.network.Waypoint
 import mu.KotlinLogging
+import ru.nsu.trafficsimulator.backend.Simulator
 import ru.nsu.trafficsimulator.backend.network.Lane
 import ru.nsu.trafficsimulator.backend.network.Network
 
 import ru.nsu.trafficsimulator.backend.path.Path
 import ru.nsu.trafficsimulator.backend.path.PathManager
 import ru.nsu.trafficsimulator.backend.path.algorithms.DijkstraPathBuilder
+import ru.nsu.trafficsimulator.backend.path.algorithms.IPathBuilder
+import ru.nsu.trafficsimulator.backend.path.algorithms.StagedDijkstraPathBuilder
 import ru.nsu.trafficsimulator.backend.path.cost_function.DynamicTimeCostFunction
+import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
 import ru.nsu.trafficsimulator.backend.route_generator.RouteGeneratorDespawnListener
 import signals.SignalState
 import ru.nsu.trafficsimulator.backend.vehicle.model.IDM
@@ -129,13 +134,9 @@ class Vehicle(
             }
         }
 
-        // nextVehicle
+        // Calc acceleration
         val nextVeh = getNextVehicle()
-        // nextMandatoryLaneChange
-        var nextMLCDistance = pathManager.getNextMLCDistance(this)
-        if (nextMLCDistance == null) {
-            nextMLCDistance = SimulationConfig.INF
-        }
+        val nextMLCDistance = pathManager.getNextMLCDistance(this)
 
         acc = minOf(
             junctionAcc,
@@ -317,8 +318,15 @@ class Vehicle(
 
     companion object {
         var counter: Int = 0
-        val costFunction = DynamicTimeCostFunction()
-        val pathManager = PathManager(DijkstraPathBuilder(costFunction))
+        lateinit var costFunction: ICostFunction
+        lateinit var pathManager: PathManager
+
+        fun initialize(network: Network, simulator: Simulator) {
+            costFunction = DynamicTimeCostFunction()
+            pathManager = PathManager(StagedDijkstraPathBuilder(network, simulator, costFunction))
+            // pathManager = PathManager(DijkstraPathBuilder(network, costFunction))
+        }
+
 
         fun NewVehicle(
             network: Network,

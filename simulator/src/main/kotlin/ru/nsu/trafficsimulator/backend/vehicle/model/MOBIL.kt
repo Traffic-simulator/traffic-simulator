@@ -33,8 +33,7 @@ class MOBIL {
             }
 
             val balance = accelerations.first + politeness * (accelerations.second + accelerations.third)
-            println("${me.vehicleId} bal $balance")
-            return balance > -0.4
+            return balance > -0.5
         }
 
         private fun calculateAccelerations(me: Vehicle, toLane: Lane): Triple<Double, Double, Double>? {

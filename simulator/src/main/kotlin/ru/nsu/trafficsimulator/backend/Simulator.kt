@@ -46,6 +46,7 @@ class Simulator(openDrive: OpenDRIVE,
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
         routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings, seed)
+        Vehicle.initialize(network, this)
     }
 
     fun update(dt: Double): ArrayList<Vehicle> {
@@ -75,6 +76,7 @@ class Simulator(openDrive: OpenDRIVE,
                 3) Update vehicles acceleration
                 4) Despawn arrived vehicles
          */
+        // TODO: speed up, n^2 iteration again
         val sortedVehicles = vehicles.sortedBy { it.distToClosestJunction() }
         sortedVehicles.forEach { it ->
             it.updateAcceleration()
