@@ -8,8 +8,6 @@ import kotlin.math.sqrt
 
 class IDM {
 
-
-
     companion object {
         private val timeHeadway = 1.6 // seconds, desired time headway
         private val sigma = 4.0

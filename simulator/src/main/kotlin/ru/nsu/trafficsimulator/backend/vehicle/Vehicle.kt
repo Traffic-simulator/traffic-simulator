@@ -23,9 +23,10 @@ class Vehicle(
     val source: Waypoint,
     val destination: Waypoint,
     val pathManager: PathManager,
-    val despawnCallback: RouteGeneratorDespawnListener,
+    val despawnCallback: RouteGeneratorDespawnListener?,
     val maxSpeed: Double = 30.0,
-    val maxAcc: Double = 2.0
+    val maxAcc: Double = 2.0,
+    var speed: Double = 0.0
 ) {
 
     private val logger = KotlinLogging.logger("BACKEND")
@@ -37,7 +38,6 @@ class Vehicle(
     val maxDeceleration = 9.0
 
     var lane = network.getLaneById(source.roadId, source.laneId)
-    var speed = 0.0
     var acc = 0.0
     var laneChangeDistance = -0.1
     var laneChangeFullDistance = 0.0
@@ -145,7 +145,7 @@ class Vehicle(
     }
 
     fun getNextVehicle(): Pair<Vehicle?, Double> {
-        return VehicleDetector.getNextVehicle(this, pathManager.getNextRoads(this))
+        return VehicleDetector.getNextVehicle(position, pathManager.getNextRoads(this))
     }
 
     data class ClosestJunction(val junctionId: String, val distance: Double, val connectingRoadId: String)
@@ -237,7 +237,6 @@ class Vehicle(
             }
 
             if (MOBIL.checkNMLCAbility(this, toLane)) {
-                println("Vehicle ${vehicleId} is non-mandatory lane changing @${lane.roadId}:${lane.laneId} to @${toLane.roadId}:${toLane.laneId}.")
                 pathManager.removePath(this)
                 performLaneChange(toLane)
                 return
@@ -264,7 +263,7 @@ class Vehicle(
 
             lane.removeVehicle(this)
             despawned = true
-            despawnCallback.onDespawn(vehicleId)
+            despawnCallback?.onDespawn(vehicleId)
             return false
         }
         return true
@@ -333,6 +332,15 @@ class Vehicle(
             //    throw RuntimeException("WTF, broooo!??")
             // }
             return Vehicle(counter++, network, source, destination, pathManager, despawnCallback, maxSpeed, maxAcc)
+        }
+
+        fun createTempVehicle(
+            network: Network,
+            source: Waypoint,
+            destination: Waypoint,
+            speed: Double
+        ): Vehicle {
+            return Vehicle(-1, network, source, destination, pathManager, null, speed, 2.0, speed)
         }
 
         fun NewVehicle(

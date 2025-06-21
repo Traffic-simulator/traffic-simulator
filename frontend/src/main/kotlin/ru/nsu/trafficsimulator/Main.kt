@@ -93,8 +93,8 @@ class Main : ApplicationAdapter() {
         val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy_HH.mm.ss")
         val formattedDateTime = currentDateTime.format(formatter)
 
-        val dto2 = simState.backend.gatherSimulationStats(dto, 500)
-        OpenDriveWriter().write(dto2, "export_$formattedDateTime.xodr")
+       // val dto2 = simState.backend.gatherSimulationStats(dto, 500)
+        OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
         simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, simState.startTime, 500)
     }
 

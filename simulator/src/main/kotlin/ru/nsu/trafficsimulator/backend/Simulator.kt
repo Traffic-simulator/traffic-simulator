@@ -16,6 +16,9 @@ import ru.nsu.trafficsimulator.backend.route_generator_new.RouteGeneratorImpl
 import ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function.Building
 import vehicle.Direction
 import ru.nsu.trafficsimulator.backend.vehicle.Vehicle
+import ru.nsu.trafficsimulator.backend.vehicle.Vehicle.Companion.pathManager
+import ru.nsu.trafficsimulator.backend.vehicle.VehicleDetector
+import ru.nsu.trafficsimulator.backend.vehicle.model.IDM
 import java.time.LocalTime
 import kotlin.collections.ArrayList
 import kotlin.random.Random
@@ -101,6 +104,11 @@ class Simulator(openDrive: OpenDRIVE,
         return vehicles
     }
 
+    fun removeVehicle(vehicle: Vehicle) {
+        vehicle.lane.removeVehicle(vehicle)
+        vehicles.remove(vehicle)
+    }
+
     // We can do it not each frame (but be careful with gatherSimStats in BackendAPI)
     fun gatherStatistics() {
         val roads: List<Road> = network.roads
@@ -163,6 +171,19 @@ class Simulator(openDrive: OpenDRIVE,
                 return true
             }
             return false
+        }
+
+        override fun isFreeWithSpeed(source: Waypoint, destination: Waypoint, speed: Double): Boolean {
+            // Let's just create temporary vehicle to check ability of it's existence
+            // maxAcc can be random here as there is no problem in cars behind us.
+
+            val vehicle = Vehicle.createTempVehicle(network, source, destination, speed)
+            val nextVeh = VehicleDetector.getNextVehicle(0.0, vehicle.pathManager.getNextRoads(vehicle))
+
+            val desiredAcc = IDM.getAcceleration(vehicle, nextVeh)
+            removeVehicle(vehicle)
+
+            return desiredAcc > vehicle.comfortDeceleration
         }
     }
 

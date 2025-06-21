@@ -109,7 +109,7 @@ class PathManager(private val algorithm: IPathBuilder) {
 
             // initial lane
             var acc_distance = 0.0
-            yield(VehicleDetector.VehicleLaneSequence(vehicle, lane, acc_distance, true))
+            yield(VehicleDetector.VehicleLaneSequence(lane, acc_distance, true))
             acc_distance += lane.road.troad.length - vehicle.position
 
             // next path lanes
@@ -121,7 +121,6 @@ class PathManager(private val algorithm: IPathBuilder) {
 
                 yield(
                     VehicleDetector.VehicleLaneSequence(
-                        vehicle,
                         nextLane.lane,
                         acc_distance,
                         false

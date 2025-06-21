@@ -12,20 +12,19 @@ closestBackVehicle we use lane -> VehicleDetector
  */
 class VehicleDetector {
 
-    data class VehicleLaneSequence(val vehicle: Vehicle,
-                                   val lane: Lane,
+    data class VehicleLaneSequence(val lane: Lane,
                                    val acc_distance: Double,
                                    val initial_iteration: Boolean)
 
     companion object {
 
-        fun getNextVehicle(vehicle: Vehicle, laneSeq: Sequence<VehicleLaneSequence>): Pair<Vehicle?, Double> {
+        fun getNextVehicle(initPosition: Double, laneSeq: Sequence<VehicleLaneSequence>): Pair<Vehicle?, Double> {
             var closestVehicle: Vehicle? = null
 
             for (it in laneSeq) {
                 if (it.initial_iteration) {
                     it.lane.vehicles.forEach {
-                        if (it.position > vehicle.position) {
+                        if (it.position > initPosition) {
                             if (closestVehicle == null) {
                                 closestVehicle = it
                             } else {
@@ -36,7 +35,7 @@ class VehicleDetector {
                         }
                     }
                     if (closestVehicle != null) {
-                        val distance = closestVehicle!!.position - closestVehicle!!.length - vehicle.position
+                        val distance = closestVehicle!!.position - closestVehicle!!.length - initPosition
                         if (distance > SimulationConfig.MAX_VALUABLE_DISTANCE) {
                             return Pair(null, SimulationConfig.INF)
                         }

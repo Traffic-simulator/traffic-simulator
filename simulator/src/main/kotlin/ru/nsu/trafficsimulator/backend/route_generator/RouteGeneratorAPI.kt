@@ -17,4 +17,5 @@ interface VehicleCreationListener {
 
 interface WaypointSpawnAbilityChecker {
     fun isFree(waypoint: Waypoint): Boolean
+    fun isFreeWithSpeed(source: Waypoint, destination:Waypoint, speed: Double): Boolean
 }
