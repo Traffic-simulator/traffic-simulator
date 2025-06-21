@@ -11,8 +11,8 @@ class BackendAPI : ISimulation {
     val logger = KotlinLogging.logger("BACKEND")
     var simulator: Simulator? = null
 
-    override fun init(layout: OpenDRIVE, regionId: Int?, startingTime: LocalTime, seed: Long): Error? {
-        simulator = Simulator(layout, startingTime, seed)
+    override fun init(layout: OpenDRIVE, drivingSide: ISimulation.DrivingSide, regionId: Int?, startingTime: LocalTime, seed: Long): Error? {
+        simulator = Simulator(layout,  drivingSide, startingTime, seed)
         return null
     }
 
@@ -82,7 +82,7 @@ class BackendAPI : ISimulation {
             vehicle.lane.laneId,
             ISimulation.VehicleType.PassengerCar,
             vehicle.position,
-            vehicle.direction,
+            vehicle.lane.direction!!,
             vehicle.speed,
             lcInfo,
             "Road id: ${vehicle.source.roadId}", // Maybe later will use not road ids

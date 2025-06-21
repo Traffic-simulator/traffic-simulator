@@ -3,7 +3,6 @@ package ru.nsu.trafficsimulator
 import BackendAPI
 import ISimulation
 import OpenDriveWriter
-import com.badlogic.gdx.Application
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -96,7 +95,7 @@ class Main : ApplicationAdapter() {
         OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
 //        val dto = OpenDriveReader().read("self_made_town_01.xodr")
 //        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto, null, simState.startTime,500)
+        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, LocalTime.ofSecondOfDay(60 * 60 * 8), 500)
     }
 
     override fun render() {

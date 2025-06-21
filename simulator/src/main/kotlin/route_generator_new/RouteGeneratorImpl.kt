@@ -1,6 +1,6 @@
 package route_generator_new
 
-import Waypoint
+import network.Waypoint
 import route_generator.IRouteGenerator
 import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener

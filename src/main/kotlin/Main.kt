@@ -2,7 +2,7 @@ package trafficsim
 
 import OpenDriveReader
 import Simulator
-import Waypoint
+import network.Waypoint
 import vehicle.Direction
 import java.util.*
 

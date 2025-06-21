@@ -12,7 +12,7 @@ closestBackVehicle we use lane -> VehicleDetector
 class VehicleDetector {
 
     data class VehicleLaneSequence(val vehicle: Vehicle,
-                                   val lane: Lane, val direction: Direction,
+                                   val lane: Lane,
                                    val acc_distance: Double,
                                    val initial_iteration: Boolean)
 

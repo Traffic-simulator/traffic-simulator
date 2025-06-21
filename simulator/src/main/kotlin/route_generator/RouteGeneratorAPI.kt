@@ -1,6 +1,6 @@
 package route_generator
 
-import Waypoint
+import network.Waypoint
 
 interface IRouteGenerator {
     fun update(dt: Double, create: VehicleCreationListener, isPositionFree: WaypointSpawnAbilityChecker)

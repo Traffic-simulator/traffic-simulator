@@ -1,20 +1,17 @@
-import junction_intersection.Intersection
 import junction_intersection.JunctionIntersectionFinder
 import mu.KotlinLogging
-import network.Lane
 import network.Network
 import opendrive.ERoadLinkElementType
 import network.Road
+import network.Waypoint
 import opendrive.OpenDRIVE
 import path_builder.IPathBuilder
 import route_generator.IRouteGenerator
 import route_generator.RouteGeneratorDespawnListener
 import route_generator.VehicleCreationListener
 import route_generator.WaypointSpawnAbilityChecker
-import route_generator_new.ModelConfig
 import route_generator_new.RouteGeneratorImpl
 import route_generator_new.discrete_function.Building
-import route_generator_new.discrete_function.TravelDesireFunction
 import vehicle.Direction
 import vehicle.Vehicle
 import vehicle.model.MOBIL
@@ -27,6 +24,7 @@ import kotlin.random.Random
 // Route - source point and destination point.
 // Path - all concrete roads and lanes that vehicle will go
 class Simulator(openDrive: OpenDRIVE,
+                drivingSide: ISimulation.DrivingSide,
                 startingTime: LocalTime,
                 seed: Long,
 ) {
@@ -34,7 +32,7 @@ class Simulator(openDrive: OpenDRIVE,
     val finder = JunctionIntersectionFinder(openDrive)
     private val logger = KotlinLogging.logger("SIMULATOR")
     val intersections = finder.findIntersection()
-    val network: Network = Network(openDrive.road, openDrive.junction, intersections)
+    val network: Network = Network(drivingSide, openDrive.road, openDrive.junction, intersections)
     val rnd = Random(seed)
     val routeGeneratorAPI: IRouteGenerator
 
@@ -175,7 +173,7 @@ class Simulator(openDrive: OpenDRIVE,
             // Compute segments
             for (lane in road.lanes) {
                 lane.vehicles.forEach {
-                    val posFromStart = if (it.direction == Direction.BACKWARD) {
+                    val posFromStart = if (it.lane.direction == Direction.BACKWARD) {
                         lane.length - it.position
                     } else {
                         it.position
@@ -244,7 +242,6 @@ class Simulator(openDrive: OpenDRIVE,
             return nw.vehicleId
         }
 
-        // TODO: this logic is closer to network
         override fun getWaypointByJunction(junctionId: String, isStart: Boolean): Waypoint {
             val predecessors = network.roads.stream().filter {
                 it.predecessor!!.getElementType().equals(ERoadLinkElementType.JUNCTION)
@@ -268,7 +265,6 @@ class Simulator(openDrive: OpenDRIVE,
                 return Waypoint(
                     road.id,
                     lanes.get(0).laneId.toString(),
-                    if (isStart) Direction.FORWARD else Direction.BACKWARD
                 )
             }
 
@@ -279,8 +275,7 @@ class Simulator(openDrive: OpenDRIVE,
             }
             return Waypoint(
                 road.id,
-                lanes.get(0).laneId.toString(),
-                if (isStart) Direction.BACKWARD else Direction.FORWARD
+                lanes.get(0).laneId.toString()
             )
         }
     }
