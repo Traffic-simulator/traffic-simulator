@@ -20,6 +20,7 @@ import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
+import ru.nsu.trafficsimulator.math.transformVehicles
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.time.LocalDateTime
@@ -108,7 +109,8 @@ class Main : ApplicationAdapter() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator && !simState.isPaused) {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
-            visualizer.updateCars(simState.backend.getVehicles())
+            val vehicles = transformVehicles(simState.backend.getVehicles())
+            visualizer.updateCars(vehicles)
             visualizer.updateSignals(simState.backend.getSignalStates())
             visualizer.updateHeatmap(simState.backend.getSegments())
 
