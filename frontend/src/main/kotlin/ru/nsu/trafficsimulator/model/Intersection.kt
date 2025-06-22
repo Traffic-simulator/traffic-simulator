@@ -19,7 +19,7 @@ class Intersection(
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: MutableMap<Long, IntersectionRoad> = HashMap()
     var signals: HashMap<Road, Signal> = HashMap()
-    private var irNextId: Long = 0
+    var irNextId: Long = 0
 
     val building: BuildingIntersectionSettings?
         get() = if (intersectionSettings != null && intersectionSettings is BuildingIntersectionSettings) {

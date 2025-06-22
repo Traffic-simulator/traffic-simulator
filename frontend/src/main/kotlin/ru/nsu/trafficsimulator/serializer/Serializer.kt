@@ -29,6 +29,7 @@ fun serializeLayout(layout: Layout, newDistrict: Int? = null): OpenDRIVE {
         for (road in roads) {
             val id = irId++
             intersection.intersectionRoads[id] = road.copy(id = id)
+            intersection.irNextId = irId
         }
     }
 
