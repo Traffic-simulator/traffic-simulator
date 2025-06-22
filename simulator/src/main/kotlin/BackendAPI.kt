@@ -74,8 +74,12 @@ class BackendAPI : ISimulation {
     override fun getVehicleStats(): List<Pair<String, (id: Int) -> Any>> {
         return listOf(
             "Current Speed" to { id ->
-                simulator?.vehicles?.find { it.vehicleId == id }?.speed ?: "Vehicle not found"
-            }
+                simulator?.vehicles?.find { it.vehicleId == id }?.speed
+                    ?.let { "${"%.2f".format(it * 3.6)} km/h" }
+                    ?: "Vehicle not found"
+            },
+            "Blocking factors" to {
+                    id -> simulator?.vehicles?.find { it.vehicleId == id}?.blockingFactors ?: "" }
         )
     }
 
