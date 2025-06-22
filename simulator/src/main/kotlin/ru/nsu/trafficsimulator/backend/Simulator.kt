@@ -29,19 +29,23 @@ class Simulator(openDrive: OpenDRIVE,
                 drivingSide: ISimulation.DrivingSide,
                 startingTime: LocalTime,
                 seed: Long,
-                numFramesHeatmapMemory: Int = 2000
+                numFramesHeatmapMemory: Int = 2000,
+                // stats will be gathered every gatherStatsFrequency'th frame.
+                // It's recommended to be numFramesHeatmapMemory divisible by gatherStatsFrequency
+                private val gatherStatsFrequency: Int = 5
 ) {
 
     val finder = JunctionIntersectionFinder(openDrive)
     private val logger = KotlinLogging.logger("SIMULATOR")
     val intersections = finder.findIntersection()
-    val network: Network = Network(drivingSide, openDrive.road, openDrive.junction, intersections, numFramesHeatmapMemory)
+    val network: Network = Network(drivingSide, openDrive.road, openDrive.junction, intersections, numFramesHeatmapMemory / gatherStatsFrequency)
     val rnd = Random(seed)
     val routeGeneratorAPI: IRouteGenerator
 
     val vehicles: ArrayList<Vehicle> = ArrayList()
     val buildings: List<Building>
     var currentTime: Double = startingTime.toSecondOfDay().toDouble()
+    var updateIterationsCounter: Long = 0
     init {
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
@@ -77,7 +81,8 @@ class Simulator(openDrive: OpenDRIVE,
                 4) Despawn arrived vehicles
          */
         // TODO: speed up, n^2 iteration again
-        val sortedVehicles = vehicles.sortedBy { it.distToClosestJunction() }
+        vehicles.forEach { it.distToClosestJunctionTmp = it.distToClosestJunction() }
+        val sortedVehicles = vehicles.sortedBy { it.distToClosestJunctionTmp }
         sortedVehicles.forEach { it ->
             it.updateAcceleration()
         }
@@ -103,6 +108,7 @@ class Simulator(openDrive: OpenDRIVE,
         gatherStatistics()
 
         currentTime += dt
+        updateIterationsCounter++
         return vehicles
     }
 
@@ -113,6 +119,10 @@ class Simulator(openDrive: OpenDRIVE,
 
     // We can do it not each frame (but be careful with gatherSimStats in BackendAPI)
     fun gatherStatistics() {
+        if (updateIterationsCounter % gatherStatsFrequency != 0L) {
+            return
+        }
+
         val roads: List<Road> = network.roads
         for (road in roads) {
 

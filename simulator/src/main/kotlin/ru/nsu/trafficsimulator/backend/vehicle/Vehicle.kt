@@ -49,6 +49,7 @@ class Vehicle(
     var laneChangeFromLaneId = 0
     var position = 0.0
     var despawned = false
+    var distToClosestJunctionTmp: Double = SimulationConfig.INF
 
     init {
         lane.addVehicle(this)

@@ -6,9 +6,9 @@ class ModelConfig {
     companion object {
         val defaultTravelDesireDistribution =
             TravelDesireFunction(listOf(
-                1.0, 1.0, 5.0, 1.0, 1.0, 1.0, // 00:00 - 06:00
-                1.0, 5.0, 5.0, 5.0, 1.0, 1.0, // 06:00 - 12:00
-                1.0, 1.0, 1.0, 5.0, 1.0, 1.0, // 12:00 - 18:00
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // 00:00 - 06:00
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // 06:00 - 12:00
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // 12:00 - 18:00
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0  // 18:00 - 00:00
             ))
 
@@ -23,7 +23,7 @@ class ModelConfig {
                 stayTimeMap[BuildingTypes.EDUCATION] = Pair(60 * 90.0, 60 * 360.0)
                 stayTimeMap[BuildingTypes.SHOPPING] = Pair(60 * 40.0, 60 * 120.0)
                 stayTimeMap[BuildingTypes.WORK] = Pair(60 * 240.0, 60 * 480.0)
-            */
+*/
 
             /*  Testing version   */
             stayTimeMap[BuildingTypes.HOME] = Pair(0.0, 10.0)

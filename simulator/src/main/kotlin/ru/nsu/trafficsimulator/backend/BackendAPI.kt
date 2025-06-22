@@ -8,6 +8,7 @@ import opendrive.OpenDRIVE
 import opendrive.TRoad
 import opendrive.TUserData
 import ru.nsu.trafficsimulator.backend.vehicle.Vehicle
+import java.time.Duration
 import java.time.LocalTime
 
 class BackendAPI : ISimulation {
@@ -22,6 +23,7 @@ class BackendAPI : ISimulation {
 
     override fun gatherSimulationStats(layout: OpenDRIVE, seed: Long): OpenDRIVE {
         logger.info { "Starting gathering stats "}
+        val startTime = LocalTime.now()
         val framerate: Long = 50      // in milliseconds
         val logPeriod: Long = 20 * 60 // in seconds (20 min)
         val SECONDS_IN_DAY: Long = 24 * 60 * 60
@@ -64,7 +66,8 @@ class BackendAPI : ISimulation {
             it.addUserData("positiveSideAvgFlowSpeed", serializeList(positiveSideList))
         }
 
-        logger.info { "Stats gathering successfully finished. "}
+        val finishTime = LocalTime.now()
+        logger.info { "Stats gathering successfully finished in ${Duration.between(startTime, finishTime).seconds} seconds. "}
         return layout
     }
 

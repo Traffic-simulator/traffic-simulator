@@ -10,9 +10,6 @@ class Lanes (
     val positiveLanes : MutableList<Lane> = mutableListOf()
     val negativeLanes : MutableList<Lane> = mutableListOf()
     init {
-        println(leftRoadsList.size)
-        println(rightRoadsList.size)
-        println()
         for (id in leftRoadsList) {
             positiveLanes.add(Lane(referenceLine, id))
         }
