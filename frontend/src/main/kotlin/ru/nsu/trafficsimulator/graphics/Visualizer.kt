@@ -477,7 +477,7 @@ class Visualizer(private var layout: Layout) {
         layout.intersections.values.forEach { intersection ->
             if (intersection.isBuilding) {
                 val road = intersection.incomingRoads.first()
-                val direction = road.getDirection(road.length - 0.1).normalized()
+                val direction = road.getDirection(road.length).normalized()
                 val angle = atan2(direction.z, direction.x).toFloat()
 
                 val buildingScene = Scene(buildingSettings[intersection.building!!.type]!!.first)
@@ -491,7 +491,7 @@ class Visualizer(private var layout: Layout) {
                     .plus(Vec3(0.0, yOffset * buildingSettings[intersection.building!!.type]!!.third, 0.0))
                 buildingScene.modelInstance.transform
                     .setToTranslation(center.toGdxVec())
-                    .rotate(0f, 1f, 0f, Math.toDegrees(-angle.toDouble() - 90f).toFloat())
+                    .rotate(0f, 1f, 0f, (Math.toDegrees(-angle.toDouble()) - 90).toFloat())
                     .scale(buildingSize, buildingSize, buildingSize)
 
                 sceneManager.addScene(buildingScene)
