@@ -3,13 +3,16 @@ package ru.nsu.trafficsimulator.graphics
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
+import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.utils.GdxRuntimeException
 
 class RoadModelBuilder : ModelBuilder() {
+
     companion object {
-        var meshBuilder: RoadMeshBuilder? = null
+        var meshBuilders: MutableList<RoadMeshBuilder> = mutableListOf()
+        private const val MESH_FULLNESS_THRESHOLD = 0.75
     }
 
     override fun part(
@@ -24,17 +27,19 @@ class RoadModelBuilder : ModelBuilder() {
     }
 
     override fun end(): Model {
-        meshBuilder?.end()
-        meshBuilder = null
+        for (builder in meshBuilders) {
+            builder.end()
+        }
+        meshBuilders.clear()
         return super.end()
     }
 
     private fun getBuilder(attributes: VertexAttributes): RoadMeshBuilder {
-        if (meshBuilder != null) {
-            return meshBuilder as RoadMeshBuilder
+        if (meshBuilders.isEmpty() || meshBuilders.last().lastIndex() < MeshBuilder.MAX_VERTICES * MESH_FULLNESS_THRESHOLD) {
+            meshBuilders.add(RoadMeshBuilder())
         }
-        meshBuilder = RoadMeshBuilder()
-        meshBuilder!!.begin(attributes)
-        return meshBuilder!!
+        val builder = meshBuilders.last()
+        builder.begin(attributes)
+        return builder
     }
 }
