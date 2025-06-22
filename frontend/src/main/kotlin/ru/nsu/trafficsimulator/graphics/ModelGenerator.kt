@@ -44,6 +44,7 @@ class ModelGenerator {
             TO_ROAD_HEIGHT.y += 0.01
             for (road in layout.roads.values) {
                 addRoadToModel(road, modelBuilder)
+
             }
             TO_ROAD_HEIGHT.y -= 0.01
 
