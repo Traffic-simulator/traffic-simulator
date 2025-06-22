@@ -117,6 +117,7 @@ class Main : ApplicationAdapter() {
 
             simState.currentTime = simState.backend.getSimulationTime()
         }
+        visualizer.updateSelectedItem(Editor.getSelectedItem())
 
         if (tmpInputProcessor != null) {
             Gdx.input.inputProcessor = tmpInputProcessor

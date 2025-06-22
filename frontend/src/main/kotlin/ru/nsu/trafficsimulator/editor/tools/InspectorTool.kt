@@ -30,7 +30,8 @@ class InspectorTool : IEditingTool {
     private lateinit var layout: Layout
     private lateinit var camera: Camera
 
-    private var selectedSubject: Any? = null
+    var selectedSubject: Any? = null
+        private set
     private var lastClickPos: Vec2? = null
 
     private val menus: MutableList<Pair<KClass<*>, InspectorItem<*>>> = mutableListOf()

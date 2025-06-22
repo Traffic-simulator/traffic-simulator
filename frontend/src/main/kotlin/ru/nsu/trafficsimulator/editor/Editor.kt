@@ -176,5 +176,9 @@ class Editor {
         fun addVehicleStats(stats: List<Pair<String, (id: Int) -> Any>>) {
             inspectorTool.addVehicleStats(stats)
         }
+
+        fun getSelectedItem(): Any? {
+            return inspectorTool.selectedSubject
+        }
     }
 }

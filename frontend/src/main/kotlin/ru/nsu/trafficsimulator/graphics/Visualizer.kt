@@ -52,6 +52,8 @@ class Visualizer(private var layout: Layout) {
 
     private val modelBatch = ModelBatch()
 
+    private var selectedItem: Any? = null
+
     private var layoutScene: Scene? = null
 
     var heatmapMode: Boolean = false
@@ -147,19 +149,9 @@ class Visualizer(private var layout: Layout) {
         turnOffHeatmap()
     }
 
-    private fun turnOffHeatmap() {
-        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
-        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
-        mesh.getVertices(vertices)
-        val attributes = mesh.vertexAttributes
-        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
-        for (i in 0..<mesh.numVertices) {
-            vertices[heatmapAttrib.offset / 4 + i] = 0.0f
-        }
-        mesh.updateVertices(0, vertices)
-    }
-
     fun updateCars(cars: List<Vehicle>) {
+        val selectedId = if (selectedItem is Vehicle) { (selectedItem as Vehicle).id } else { -1 }
+
         for (vehicle in cars) {
             val vehicleId = vehicle.id
 
@@ -318,6 +310,32 @@ class Visualizer(private var layout: Layout) {
         placeBuildings()
     }
 
+    private fun selectCar(vehicle: Vehicle, select: Boolean) {
+        val carInstance = carInstances[vehicle.id] ?: return
+        for (material in carInstance.modelInstance.materials) {
+            material.set(PBRColorAttribute.createEmissive(Color.WHITE))
+            material.set(
+                PBRFloatAttribute.createEmissiveIntensity(if (select) { 0.2f } else { 0.0f })
+            )
+        }
+    }
+
+    fun updateSelectedItem(item: Any?) {
+        // TODO: support selecting roads and intersections
+        //  We could create separate meshes for each road and intersection
+        //  And then manipulate material. Or we could do something else... Maybe in attribute?
+        if (selectedItem is Vehicle) {
+            selectCar(selectedItem as Vehicle, false)
+        }
+
+        selectedItem = item
+        if (item == null) return
+
+        if (item is Vehicle) {
+            selectCar(item, true)
+        }
+    }
+
     fun onResize(width: Int, height: Int) {
         sceneManager.updateViewport(width.toFloat(), height.toFloat())
     }
@@ -394,5 +412,17 @@ class Visualizer(private var layout: Layout) {
                 buildingScenes.add(buildingScene)
             }
         }
+    }
+
+    private fun turnOffHeatmap() {
+        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
+        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+        mesh.getVertices(vertices)
+        val attributes = mesh.vertexAttributes
+        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+        for (i in 0..<mesh.numVertices) {
+            vertices[heatmapAttrib.offset / 4 + i] = 0.0f
+        }
+        mesh.updateVertices(0, vertices)
     }
 }
