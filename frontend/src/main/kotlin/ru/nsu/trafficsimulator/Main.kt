@@ -19,16 +19,10 @@ import imgui.type.ImInt
 import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
-import ru.nsu.trafficsimulator.editor.actions.ClientAction
-import ru.nsu.trafficsimulator.editor.actions.SendLayoutAction
-import ru.nsu.trafficsimulator.editor.actions.ServerAction
 import ru.nsu.trafficsimulator.graphics.Visualizer
-import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.math.transformVehicles
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model.intsettings.MergingIntersectionSettings
 import ru.nsu.trafficsimulator.serializer.serializeLayout
-import ru.nsu.trafficsimulator.server.Server
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
