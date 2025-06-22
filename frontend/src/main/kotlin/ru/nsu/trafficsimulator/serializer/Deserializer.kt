@@ -24,7 +24,8 @@ class Deserializer {
                 userParameters[userData.code] = userData.value
             }
 
-            val layout = Layout(userParameters["district"]?.toInt() ?: 0)
+            val district = userParameters["district"]?.toInt() ?: 0
+            val layout = Layout(district)
 
             val intersections = openDRIVE.junction
                 .map { deserializeIntersection(it) }
@@ -32,13 +33,13 @@ class Deserializer {
 
             val roads = openDRIVE.road
                 .filter { it.junction == "-1" }
-                .map { deserializeRoad(it, layout.intersections) }
+                .map { deserializeRoad(it, layout.intersections, district) }
             roads.forEach { pushRoad(it, layout) }
             layout.intersectionIdCount = layout.intersections.keys.max() + 1
 
             val intersectionRoads = openDRIVE.road
                 .filter { it.junction != "-1" }
-                .map { deserializeIntersectionRoad(it, layout.intersections, layout.roads) }
+                .map { deserializeIntersectionRoad(it, layout.intersections, layout.roads, district) }
             intersectionRoads.forEach { pushIntersectionRoad(it, layout) }
 
             recalculateIntersectionPosition(layout)
@@ -49,7 +50,11 @@ class Deserializer {
         }
 
 
-        private fun deserializeRoad(tRoad: TRoad, idToIntersection: MutableMap<Long, Intersection>): Road {
+        private fun deserializeRoad(
+            tRoad: TRoad,
+            idToIntersection: MutableMap<Long, Intersection>,
+            layoutDistrict: Int
+        ): Road {
             val userParameters: MutableMap<String, String> = mutableMapOf()
             tRoad.getGAdditionalData().forEach { data ->
                 val userData = data as TUserData
@@ -109,7 +114,7 @@ class Deserializer {
                 leftLane,
                 rightLane,
                 spline,
-                userParameters["district"]?.toInt() ?: throw IllegalArgumentException("Can`t determine district")
+                userParameters["district"]?.toInt() ?: layoutDistrict
             )
 
             // See https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/latest/specification/14_signals/14_01_introduction.html
@@ -150,7 +155,8 @@ class Deserializer {
         private fun deserializeIntersectionRoad(
             tRoad: TRoad,
             idToIntersection: Map<Long, Intersection>,
-            idToRoad: Map<Long, Road>
+            idToRoad: Map<Long, Road>,
+            layoutDistrict: Int
         ): IntersectionRoad {
             val userParameters: MutableMap<String, String> = mutableMapOf()
             tRoad.getGAdditionalData().forEach { data ->
@@ -179,8 +185,7 @@ class Deserializer {
                     ?: throw IllegalArgumentException("Intersection road have no successor"),
                 geometry = planeViewToSpline(tRoad.planView),
                 laneLinkage = link.predecessor[0].id.toInt() to link.successor[0].id.toInt(),
-                district = userParameters["district"]?.toInt()
-                    ?: throw IllegalArgumentException("Can`t determine district")
+                district = userParameters["district"]?.toInt() ?: layoutDistrict
             )
 
             intersection.intersectionRoads[intersectionRoad.id] = intersectionRoad
