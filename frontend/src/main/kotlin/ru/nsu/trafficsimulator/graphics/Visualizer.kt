@@ -146,15 +146,16 @@ class Visualizer(private var layout: Layout) {
     }
 
     private fun turnOffHeatmap() {
-        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
-        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
-        mesh.getVertices(vertices)
-        val attributes = mesh.vertexAttributes
-        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
-        for (i in 0..<mesh.numVertices) {
-            vertices[heatmapAttrib.offset / 4 + i] = 0.0f
+        for (mesh in layoutScene!!.modelInstance.model.meshes) {
+            val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+            mesh.getVertices(vertices)
+            val attributes = mesh.vertexAttributes
+            val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+            for (i in 0..<mesh.numVertices) {
+                vertices[heatmapAttrib.offset / 4 + i] = 0.0f
+            }
+            mesh.updateVertices(0, vertices)
         }
-        mesh.updateVertices(0, vertices)
     }
 
     fun updateCars(cars: List<ISimulation.VehicleDTO>) {
@@ -301,31 +302,42 @@ class Visualizer(private var layout: Layout) {
         if (layoutScene == null || layoutScene!!.modelInstance.model.meshes.isEmpty) {
             return
         }
-        val nodes = layoutScene!!.modelInstance.model.nodes
-        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
 
-        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
-        mesh.getVertices(vertices)
-        val indices = ShortArray(mesh.numIndices)
-        mesh.getIndices(indices)
+        data class MeshData(val mesh: Mesh) {
+            val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+            val indices = ShortArray(mesh.numIndices)
+
+            private val attributes = mesh.vertexAttributes
+            val colorAttrib = attributes.findByUsage(VertexAttributes.Usage.ColorUnpacked)
+            val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+
+            init {
+                mesh.getVertices(vertices)
+                mesh.getIndices(indices)
+            }
+        }
+        val nodes = layoutScene!!.modelInstance.model.nodes
+        val meshData: MutableMap<Mesh, MeshData> = mutableMapOf()
 
         val roadRegex = Regex("road(\\d+)")
 
-        val attributes = mesh.vertexAttributes
-        val colorAttrib = attributes.findByUsage(VertexAttributes.Usage.ColorUnpacked)
         val offsetInColorForOffset = 1
         val offsetInColorForLane = 0
-        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
 
         for (node in nodes) {
             for (nodePart in node.parts) {
                 val meshPart = nodePart.meshPart
                 val res = roadRegex.matchEntire(meshPart.id) ?: continue
                 val roadId = res.groups[1]?.value?.toLongOrNull() ?: throw Exception("Failed to parse road id??")
-                if (meshPart.mesh != mesh) {
-                    logger.warn { "Found mesh part with a different mesh" }
-                    continue
+                if (!meshData.containsKey(meshPart.mesh)) {
+                    meshData[meshPart.mesh] = MeshData(meshPart.mesh)
                 }
+                val data = meshData[meshPart.mesh]!!
+                val vertices = data.vertices
+                val indices = data.indices
+                val colorAttrib = data.colorAttrib
+                val heatmapAttrib = data.heatmapAttrib
+
 
                 val getOffsetAndLane = {vertexIndex: Short ->
                     val offset = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
@@ -353,8 +365,10 @@ class Visualizer(private var layout: Layout) {
                 }
             }
         }
-        // TODO: Do double or even triple buffering of mesh values for better perf
-        mesh.updateVerticesImmediately(heatmapAttrib.offset / 4, vertices, mesh.numVertices)
+        for ((mesh, data) in meshData) {
+            // TODO: Do double or even triple buffering of mesh values for better perf
+            (mesh as RoadMesh).updateVerticesImmediately(data.heatmapAttrib.offset / 4, data.vertices, mesh.numVertices)
+        }
     }
 
     // Valid heatmap values lie in range [1.0, 2.0], offset by 1 from [0.0, 1.0]

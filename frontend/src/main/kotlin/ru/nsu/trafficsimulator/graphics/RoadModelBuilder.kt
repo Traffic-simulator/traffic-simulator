@@ -35,11 +35,10 @@ class RoadModelBuilder : ModelBuilder() {
     }
 
     private fun getBuilder(attributes: VertexAttributes): RoadMeshBuilder {
-        if (meshBuilders.isEmpty() || meshBuilders.last().lastIndex() < MeshBuilder.MAX_VERTICES * MESH_FULLNESS_THRESHOLD) {
+        if (meshBuilders.isEmpty() || meshBuilders.last().lastIndex().toDouble() >= MeshBuilder.MAX_VERTICES.toDouble() * MESH_FULLNESS_THRESHOLD) {
             meshBuilders.add(RoadMeshBuilder())
+            meshBuilders.last().begin(attributes)
         }
-        val builder = meshBuilders.last()
-        builder.begin(attributes)
-        return builder
+        return meshBuilders.last()
     }
 }
