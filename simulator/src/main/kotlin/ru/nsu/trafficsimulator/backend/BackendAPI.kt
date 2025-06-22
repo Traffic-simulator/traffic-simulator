@@ -17,7 +17,7 @@ class BackendAPI : ISimulation {
     var simulator: Simulator? = null
 
     override fun init(layout: OpenDRIVE, drivingSide: ISimulation.DrivingSide, regionId: Int?, startingTime: LocalTime, seed: Long): Error? {
-        simulator = Simulator(layout,  drivingSide, startingTime, seed)
+        simulator = Simulator(layout,  drivingSide, regionId, startingTime, seed)
         return null
     }
 
@@ -28,8 +28,8 @@ class BackendAPI : ISimulation {
         val logPeriod: Long = 20 * 60 // in seconds (20 min)
         val SECONDS_IN_DAY: Long = 24 * 60 * 60
         val numFramesHeatmapMemory = (logPeriod * 1000 / framerate).toInt() // Have to store heatmap values for each logging step
-
-        val sim = Simulator(layout, ISimulation.DrivingSide.RIGHT, LocalTime.of(0, 0, 0), seed, numFramesHeatmapMemory)
+        // gatheringStats working only on whole map
+        val sim = Simulator(layout, ISimulation.DrivingSide.RIGHT, null, LocalTime.of(0, 0, 0), seed, numFramesHeatmapMemory)
 
             // roadId, <negativeSideAvgSpeed, positiveSideAvgSpeed>
         val roadSideFlowSpeed = HashMap<String, ArrayList<Pair<Double, Double>>>()

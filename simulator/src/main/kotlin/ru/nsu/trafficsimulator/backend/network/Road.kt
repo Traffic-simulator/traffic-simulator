@@ -2,6 +2,7 @@ package ru.nsu.trafficsimulator.backend.network
 
 import ru.nsu.trafficsimulator.backend.network.signals.Signal
 import opendrive.*
+import ru.nsu.trafficsimulator.backend.route_generator_new.BuildingTypes
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
@@ -17,8 +18,17 @@ class Road(val troad: TRoad, numFramesHeatmapMemory: Int) {
     var signals: TRoadSignals? = troad.signals
     var negativeSideAvgSpeed: Double = 0.0
     var positiveSideAvgSpeed: Double = 0.0
+    var region: Int? = null
 
     init {
+        // Parse region
+        for (data in troad.getGAdditionalData()) {
+            val tUser = data as TUserData
+            when (tUser.code) {
+                "district" -> region = tUser.value.toInt()
+            }
+        }
+
 
         if (troad.lanes.laneSection[0].left != null) {
             lanes.addAll(troad.lanes.laneSection[0].left.lane.filter { /* usingRoadTypes.contains(it.type) */ true }.map{ it -> Lane(it, this, it.id.toInt(), numFramesHeatmapMemory) })

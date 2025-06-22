@@ -2,6 +2,7 @@ package ru.nsu.trafficsimulator
 
 import ru.nsu.trafficsimulator.backend.BackendAPI
 import ISimulation
+import OpenDriveReader
 import OpenDriveWriter
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
@@ -95,7 +96,8 @@ class Main : ApplicationAdapter() {
 
         // val dto2 = simState.backend.gatherSimulationStats(dto, 500)
         OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
-        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, simState.startTime, 500)
+        val dto2 = OpenDriveReader().read("sausages4.xodr")
+        simState.backend.init(dto2, ISimulation.DrivingSide.RIGHT, 4, simState.startTime, 500)
     }
 
     override fun render() {
@@ -205,23 +207,23 @@ class Main : ApplicationAdapter() {
                 simState.isPaused = !simState.isPaused
             }
             ImGui.sameLine()
-            if (ImGui.button(">")) {
+            if (ImGui.button("x1")) {
                 simState.speed = 1
             }
             ImGui.sameLine()
-            if (ImGui.button(">>")) {
+            if (ImGui.button("x5")) {
                 simState.speed = 5
             }
             ImGui.sameLine()
-            if (ImGui.button(">>>")) {
+            if (ImGui.button("x10")) {
                 simState.speed = 10
             }
             ImGui.sameLine()
-            if (ImGui.button(">>>>")) {
+            if (ImGui.button("x60")) {
                 simState.speed = 60
             }
             ImGui.sameLine()
-            if (ImGui.button("kchau")) {
+            if (ImGui.button("x480")) {
                 simState.speed = 480
             }
             if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {

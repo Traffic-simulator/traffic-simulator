@@ -8,10 +8,11 @@ import opendrive.ERoadLinkElementType
 import ru.nsu.trafficsimulator.backend.network.Road
 import ru.nsu.trafficsimulator.backend.network.Waypoint
 import opendrive.OpenDRIVE
-import ru.nsu.trafficsimulator.backend.route_generator.IRouteGenerator
-import ru.nsu.trafficsimulator.backend.route_generator.RouteGeneratorDespawnListener
-import ru.nsu.trafficsimulator.backend.route_generator.VehicleCreationListener
-import ru.nsu.trafficsimulator.backend.route_generator.WaypointSpawnAbilityChecker
+import ru.nsu.trafficsimulator.backend.path.Path
+import ru.nsu.trafficsimulator.backend.path.algorithms.DijkstraPathBuilder
+import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
+import ru.nsu.trafficsimulator.backend.path.cost_function.StaticLengthCostFunction
+import ru.nsu.trafficsimulator.backend.route_generator.*
 import ru.nsu.trafficsimulator.backend.route_generator_new.RouteGeneratorImpl
 import ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function.Building
 import vehicle.Direction
@@ -27,12 +28,13 @@ import kotlin.random.Random
 // Path - all concrete roads and lanes that vehicle will go
 class Simulator(openDrive: OpenDRIVE,
                 drivingSide: ISimulation.DrivingSide,
+                regionId: Int?,
                 startingTime: LocalTime,
                 seed: Long,
-                numFramesHeatmapMemory: Int = 2000,
+                numFramesHeatmapMemory: Int = 4000,
                 // stats will be gathered every gatherStatsFrequency'th frame.
                 // It's recommended to be numFramesHeatmapMemory divisible by gatherStatsFrequency
-                private val gatherStatsFrequency: Int = 5
+                private val gatherStatsFrequency: Int = 10
 ) {
 
     val finder = JunctionIntersectionFinder(openDrive)
@@ -46,10 +48,46 @@ class Simulator(openDrive: OpenDRIVE,
     val buildings: List<Building>
     var currentTime: Double = startingTime.toSecondOfDay().toDouble()
     var updateIterationsCounter: Long = 0
+
+    private val regionAPI = object: IRegionAPI {
+        // TODO: Use CachedDijkstraPathBuilder
+        val costFunction: ICostFunction = StaticLengthCostFunction()
+        val pathBuilder = DijkstraPathBuilder(network, costFunction)
+
+        override fun isRegionRoad(roadId: Int, regionId: Int): Boolean {
+            return isRegionRoad(roadId.toString(), regionId)
+        }
+
+        override fun isRegionRoad(roadId: String, regionId: Int): Boolean {
+            return network.getRoadById(roadId).region == regionId
+        }
+
+        override fun getGlobalPath(source: Waypoint, destination: Waypoint): Pair<Double, List<Path.PathWaypoint>> {
+            return pathBuilder.getPath(source, destination, 0.0)
+        }
+
+        override fun getPathTime(path: List<Path.PathWaypoint>, beforeExcluded: Path.PathWaypoint): Double {
+            val roads = path.takeWhile{ it != beforeExcluded }
+            var cost = 0.0
+            // TODO: USE TIMED COST FUNCTION
+            roads.forEach { cost += costFunction.getLaneCost(it.lane) / 16.0 /* TODO: drop this divison later*/ }
+            return cost
+        }
+
+        override fun getWaypointAvgSpeed(waypoint: Waypoint): Double {
+            return 8.0 // for now it's ok
+        }
+    }
+
     init {
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
-        routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings, seed)
+        if (regionId == null) {
+            routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings, seed)
+        } else {
+            val regionAPI: IRegionAPI = regionAPI
+            routeGeneratorAPI = RegionRouteGenerator(regionId, regionAPI, RouteGeneratorImpl(currentTime, buildings, seed))
+        }
         Vehicle.initialize(network, this)
     }
 
@@ -195,7 +233,7 @@ class Simulator(openDrive: OpenDRIVE,
             val desiredAcc = IDM.getAcceleration(vehicle, nextVeh)
             removeVehicle(vehicle)
 
-            return desiredAcc > vehicle.comfortDeceleration
+            return desiredAcc > -vehicle.comfortDeceleration
         }
     }
 
@@ -203,8 +241,9 @@ class Simulator(openDrive: OpenDRIVE,
         override fun createVehicle(
             source: Waypoint,
             destination: Waypoint,
-            onDespawn: RouteGeneratorDespawnListener
-        ): Int? {
+            onDespawn: RouteGeneratorDespawnListener,
+            initialSpeed: Double
+        ): Int {
             // TODO: make additional checks, for example is source and destination can be connected
             // TODO: connect speed and acc paramters to conf or to veh.kt
             val nw = Vehicle.NewVehicle(
@@ -213,7 +252,8 @@ class Simulator(openDrive: OpenDRIVE,
                 destination,
                 onDespawn,
                 rnd.nextInt(4, 6) * 4.0,
-                rnd.nextDouble(2.0, 2.5)
+                rnd.nextDouble(2.0, 2.5),
+                initialSpeed
             )
             vehicles.add(nw)
             return nw.vehicleId

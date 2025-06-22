@@ -334,13 +334,13 @@ class Vehicle(
             source: Waypoint,
             destination: Waypoint,
             despawnCallback: RouteGeneratorDespawnListener,
-            maxSpeed: Double, maxAcc: Double
+            maxSpeed: Double, maxAcc: Double, speed: Double = 0.0
         ): Vehicle {
             // TODO: Ruslan
             // if (source.roadId == destination.roadId) {
             //    throw RuntimeException("WTF, broooo!??")
             // }
-            return Vehicle(counter++, network, source, destination, pathManager, despawnCallback, maxSpeed, maxAcc)
+            return Vehicle(counter++, network, source, destination, pathManager, despawnCallback, maxSpeed, maxAcc, speed)
         }
 
         fun createTempVehicle(
