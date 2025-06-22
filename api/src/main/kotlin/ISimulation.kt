@@ -102,4 +102,8 @@ interface ISimulation {
      * Get current time of simulation.
      */
     fun getSimulationTime(): LocalTime
+
+    fun getRoadStats(): List<Pair<String, (id: Long) -> Any>> = listOf()
+    fun getIntersectionStats(): List<Pair<String, (id: Long) -> Any>> = listOf()
+    fun getVehicleStats(): List<Pair<String, (id: Int) -> Any>> = listOf()
 }

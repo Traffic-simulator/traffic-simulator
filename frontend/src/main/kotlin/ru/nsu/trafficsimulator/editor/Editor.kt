@@ -13,7 +13,7 @@ import ru.nsu.trafficsimulator.editor.changes.IStateChange
 import ru.nsu.trafficsimulator.editor.tools.*
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec2
-import ru.nsu.trafficsimulator.model.Layout
+import ru.nsu.trafficsimulator.model.*
 
 class Editor {
     companion object {
@@ -28,7 +28,10 @@ class Editor {
         private var nextChange = 0
 
         private val actions = listOf(LoadAction(), SaveAction())
-        private val tools = listOf(EditTool(), AddRoadTool(), AddBuildingTool(), DeleteRoadTool(), InspectorTool())
+        private val inspectorTool = InspectorTool()
+        private val tools = listOf(EditTool(), AddRoadTool(), AddBuildingTool(), DeleteRoadTool(), inspectorTool)
+
+        private var viewOnly: Boolean = false
 
         private var currentTool = tools[0]
 
@@ -42,54 +45,64 @@ class Editor {
         }
 
         fun runImgui() {
-            ImGui.begin("Editor")
-            ImGui.labelText("##actions", "Available Actions:")
-            for (action in actions) {
-                if (action.runImgui()) {
-                    if (action.runAction(layout)) {
-                        onLayoutChange(action.isStructuralAction(), true)
+            if (!viewOnly) {
+                ImGui.begin("Editor")
+                ImGui.labelText("##actions", "Available Actions:")
+                for (action in actions) {
+                    if (action.runImgui()) {
+                        if (action.runAction(layout)) {
+                            onLayoutChange(action.isStructuralAction(), true)
+                        }
                     }
                 }
-            }
-            if (ImGui.button("Undo")) {
-                if (nextChange > 0) {
-                    nextChange--;
-                    changes[nextChange].revert(layout)
-                    layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    onLayoutChange(changes[nextChange].isStructuralChange(), false)
+                if (ImGui.button("Undo")) {
+                    if (nextChange > 0) {
+                        nextChange--;
+                        changes[nextChange].revert(layout)
+                        layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
+                        onLayoutChange(changes[nextChange].isStructuralChange(), false)
+                    }
                 }
-            }
-            if (ImGui.button("Redo")) {
-                if (nextChange < changes.size) {
-                    changes[nextChange].apply(layout)
-                    nextChange++
-                    layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
-                    onLayoutChange(changes[nextChange - 1].isStructuralChange(), false)
+                if (ImGui.button("Redo")) {
+                    if (nextChange < changes.size) {
+                        changes[nextChange].apply(layout)
+                        nextChange++
+                        layout.intersections.values.forEach { it.recalculateIntersectionRoads() }
+                        onLayoutChange(changes[nextChange - 1].isStructuralChange(), false)
+                    }
                 }
-            }
 
-            ImGui.separator()
-            ImGui.labelText("##tools", "Available Tools:")
-            for (tool in tools) {
-                if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
-                    currentTool = tool
-                    onLayoutChange(false, true)
+                ImGui.separator()
+                ImGui.labelText("##tools", "Available Tools:")
+                for (tool in tools) {
+                    if (ImGui.selectable(tool.getButtonName(), currentTool == tool)) {
+                        currentTool = tool
+                        onLayoutChange(false, true)
+                    }
                 }
+                ImGui.end()
             }
-            ImGui.end()
 
             val change = currentTool.runImgui()
-            if (change != null) {
+            if (!viewOnly && change != null) {
                 appendChange(change)
             }
         }
-
 
         fun render(modelBatch: ModelBatch) {
             currentTool.render(modelBatch)
 
             for ((_, sphere) in spheres) {
                 modelBatch.render(sphere)
+            }
+        }
+
+        fun viewOnlyMode(viewOnly: Boolean) {
+            this.viewOnly = viewOnly
+            inspectorTool.viewOnly = viewOnly
+            if (viewOnly && currentTool != inspectorTool) {
+                currentTool = inspectorTool
+                currentTool.init(layout, camera, true)
             }
         }
 
@@ -103,7 +116,7 @@ class Editor {
 
                 override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                     val change = currentTool.handleUp(Vec2(screenX.toDouble(), screenY.toDouble()), button)
-                    if (change != null) {
+                    if (!viewOnly && change != null) {
                         appendChange(change)
                     }
                     val prevGrabInput = grabInput
@@ -148,6 +161,24 @@ class Editor {
             }
         }
 
+        fun updateVehicles(vehicles: List<Vehicle>) {
+            inspectorTool.updateVehicles(vehicles)
+        }
 
+        fun addRoadStats(stats: List<Pair<String, (id: Long) -> Any>>) {
+            inspectorTool.addRoadStats(stats)
+        }
+
+        fun addIntersectionStats(stats: List<Pair<String, (id: Long) -> Any>>) {
+            inspectorTool.addIntersectionStats(stats)
+        }
+
+        fun addVehicleStats(stats: List<Pair<String, (id: Int) -> Any>>) {
+            inspectorTool.addVehicleStats(stats)
+        }
+
+        fun getSelectedItem(): Any? {
+            return inspectorTool.selectedSubject
+        }
     }
 }

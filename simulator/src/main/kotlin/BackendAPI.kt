@@ -63,6 +63,26 @@ class BackendAPI : ISimulation {
         return LocalTime.ofSecondOfDay(simulator!!.currentTime.toLong() % SECONDS_IN_DAY)
     }
 
+    override fun getIntersectionStats(): List<Pair<String, (id: Long) -> Any>> {
+        return listOf(
+            "Current people" to { id ->
+                simulator?.buildings?.find { it.junctionId.toLong() == id }?.currentPeople ?: "Building not found"
+            }
+        )
+    }
+
+    override fun getVehicleStats(): List<Pair<String, (id: Int) -> Any>> {
+        return listOf(
+            "Current Speed" to { id ->
+                simulator?.vehicles?.find { it.vehicleId == id }?.speed
+                    ?.let { "${"%.2f".format(it * 3.6)} km/h" }
+                    ?: "Vehicle not found"
+            },
+            "Blocking factors" to {
+                    id -> simulator?.vehicles?.find { it.vehicleId == id}?.blockingFactors ?: "" }
+        )
+    }
+
     fun vehToDTO(vehicle: Vehicle) : ISimulation.VehicleDTO {
         val lcInfo: ISimulation.LaneChangeDTO?
         if (!vehicle.isInLaneChange()) {

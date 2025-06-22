@@ -19,6 +19,7 @@ import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
+import ru.nsu.trafficsimulator.math.transformVehicles
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.time.LocalDateTime
@@ -85,6 +86,10 @@ class Main : ApplicationAdapter() {
 
         Editor.init(camera)
         Editor.onStructuralLayoutChange.add { visualizer.updateLayout(it) }
+
+        Editor.addRoadStats(simState.backend.getRoadStats())
+        Editor.addIntersectionStats(simState.backend.getIntersectionStats())
+        Editor.addVehicleStats(simState.backend.getVehicleStats())
     }
 
     fun initializeSimulation(layout: Layout) {
@@ -103,12 +108,15 @@ class Main : ApplicationAdapter() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator && !simState.isPaused) {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
-            visualizer.updateCars(simState.backend.getVehicles())
+            val vehicles = transformVehicles(simState.backend.getVehicles())
+            visualizer.updateCars(vehicles)
+            Editor.updateVehicles(vehicles)
             visualizer.updateSignals(simState.backend.getSignalStates())
             visualizer.updateHeatmap(simState.backend.getSegments())
 
             simState.currentTime = simState.backend.getSimulationTime()
         }
+        visualizer.updateSelectedItem(Editor.getSelectedItem())
 
         if (tmpInputProcessor != null) {
             Gdx.input.inputProcessor = tmpInputProcessor
@@ -122,9 +130,8 @@ class Main : ApplicationAdapter() {
 
         renderSimulationMenu()
 
-        if (state == ApplicationState.Editor) {
-            Editor.runImgui()
-        }
+        Editor.runImgui()
+
         ImGui.render()
         if (ImGui.getIO().wantCaptureKeyboard or ImGui.getIO().wantCaptureMouse) {
             tmpInputProcessor = Gdx.input.inputProcessor
@@ -193,9 +200,11 @@ class Main : ApplicationAdapter() {
             }
             if (state == ApplicationState.Editor) {
                 visualizer.cleanup()
-                inputMultiplexer.addProcessor(0, editorInputProcess)
+                Editor.viewOnlyMode(false)
+//                inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
-                inputMultiplexer.removeProcessor(editorInputProcess)
+//                inputMultiplexer.removeProcessor(editorInputProcess)
+                Editor.viewOnlyMode(true)
                 initializeSimulation(Editor.layout)
             }
         }
