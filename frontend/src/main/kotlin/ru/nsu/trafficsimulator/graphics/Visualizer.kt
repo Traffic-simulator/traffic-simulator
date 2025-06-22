@@ -338,7 +338,6 @@ class Visualizer(private var layout: Layout) {
                 val colorAttrib = data.colorAttrib
                 val heatmapAttrib = data.heatmapAttrib
 
-
                 val getOffsetAndLane = {vertexIndex: Short ->
                     val offset = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
                     val lane = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]

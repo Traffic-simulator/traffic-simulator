@@ -12,7 +12,8 @@ class RoadModelBuilder : ModelBuilder() {
 
     companion object {
         var meshBuilders: MutableList<RoadMeshBuilder> = mutableListOf()
-        private const val MESH_FULLNESS_THRESHOLD = 0.75
+        // This has to be < 0.5 because overflowing into negative shorts is not what we want
+        private const val MESH_FULLNESS_THRESHOLD = 0.375
     }
 
     override fun part(
