@@ -16,6 +16,11 @@ interface ISimulation {
         var variation: Int = 0
     }
 
+    enum class DrivingSide {
+        LEFT,   // Currently unsupported
+        RIGHT
+    }
+
     object Constants {
         const val SIMULATION_FRAME_MILLIS: Long = 10
     }
@@ -67,6 +72,7 @@ interface ISimulation {
      * @param layout Layout to initialize simulation
      */
     fun init(layout: opendrive.OpenDRIVE,
+             drivingSide: DrivingSide, // Left is not tested for now...
              regionId: Int?,
              startingTime: LocalTime,
              seed: Long): Error?

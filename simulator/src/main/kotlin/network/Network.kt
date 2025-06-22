@@ -1,19 +1,21 @@
 package network
 
+import ISimulation
 import junction_intersection.Intersection
 import network.junction.Connection
 import network.junction.Junction
 import network.signals.Signal
-import opendrive.EContactPoint
-import opendrive.ERoadLinkElementType
-import opendrive.TJunction
-import opendrive.TRoad
+import opendrive.*
+import vehicle.Direction
+import kotlin.math.E
 
 // TODO: Interface for this class, because it's too big for reading
-class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val intersections: MutableList<Intersection>) {
+class Network(
+    drivingSide: ISimulation.DrivingSide,
+    troads: List<TRoad>,
+    tjunctions: List<TJunction>,
+    val intersections: MutableList<Intersection>) {
 
-    // DONE store predecessors and successors id for roads
-    // DONE store predecessor and successor for lanes
     val roads: List<Road> = troads.map{ Road(it) }
     val junctions: List<Junction> = tjunctions.map { Junction(it, intersections, this) }
 
@@ -127,7 +129,87 @@ class Network(val troads: List<TRoad>, val tjunctions: List<TJunction>, val inte
         }
 
         junctions.forEach{ it.initTrajectories() }
-    //    verbose()
+
+        createLaneDirections(drivingSide)
+    }
+
+    private fun createLaneDirections(drivingSide: ISimulation.DrivingSide) {
+        if (drivingSide == ISimulation.DrivingSide.LEFT) {
+            throw RuntimeException("Left-side traffic currently unsupported")
+        }
+
+        // To detect lane direction we have to find roads that have only one connected side.
+        // After that traverse all other lanes, using bfs...
+        // After that check that all lanes are visited by as and there is no conflicts in directions.
+        var directionAutoDetectionPossible = false
+        val visited = HashSet<Lane>()
+        val bfsQueue = ArrayDeque<Lane>()
+
+        fun getLaneDirection(isSucc: Boolean, laneId: Int, drivingSide: ISimulation.DrivingSide): Direction {
+            if (isSucc && laneId > 0 || !isSucc && laneId < 0) {
+                when (drivingSide) {
+                    ISimulation.DrivingSide.RIGHT -> return Direction.BACKWARD
+                    ISimulation.DrivingSide.LEFT -> return Direction.FORWARD
+                }
+            } else {
+                when (drivingSide) {
+                    ISimulation.DrivingSide.RIGHT -> return Direction.FORWARD
+                    ISimulation.DrivingSide.LEFT -> return Direction.BACKWARD
+                }
+            }
+        }
+
+        fun isRoadEnd(roadLink: TRoadLinkPredecessorSuccessor?): Boolean {
+            if (roadLink == null) {
+                return true
+            }
+            if (roadLink.elementType != ERoadLinkElementType.JUNCTION) {
+                return false
+            }
+            return getJunctionById(roadLink.elementId).connections.size == 0
+        }
+
+        getAllLanes().forEach{
+            lane ->
+                if (isRoadEnd(lane.road.successor) || isRoadEnd(lane.road.predecessor)) {
+                    directionAutoDetectionPossible = true
+                    visited.add(lane)
+                    bfsQueue.add(lane)
+
+                    lane.direction = getLaneDirection(isRoadEnd(lane.road.successor), lane.laneId, drivingSide)
+                }
+        }
+
+        if (!directionAutoDetectionPossible) {
+            throw Exception("Can not detect directions of the road, add one-side-connected road.")
+        }
+
+        while(!bfsQueue.isEmpty()) {
+            val top = bfsQueue.removeFirstOrNull()!!
+
+            top.successor?.forEach{
+                succ ->
+                    if (!visited.contains(succ.first)) {
+                        visited.add(succ.first)
+                        bfsQueue.add(succ.first)
+                        succ.first.direction = top.direction!!.opposite(succ.second)
+                    }
+            }
+
+            top.predecessor?.forEach{
+                pred ->
+                    if (!visited.contains(pred.first)) {
+                        visited.add(pred.first)
+                        bfsQueue.add(pred.first)
+                        pred.first.direction = top.direction!!.opposite(pred.second)
+                    }
+            }
+        }
+
+        val exc = getAllLanes().firstOrNull { it.direction == null }
+        if (exc != null) {
+            throw Exception("Unreachable lane! RoadId: ${exc.road.id}, laneId: ${exc.laneId}.")
+        }
     }
 
     fun getRoadById(id: String): Road {

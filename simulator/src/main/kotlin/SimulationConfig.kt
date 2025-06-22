@@ -12,7 +12,7 @@ class SimulationConfig {
         const val MAX_VALUABLE_DISTANCE = 300.0
 
         // Maybe have to be affected by speed
-        const val LANE_CHANGE_DISTANCE_GAP = 20.0
+        const val LANE_CHANGE_DISTANCE_GAP = 12.0
 
         // Distance when vehicle can see other vehicles on junction, junction traffic lights
         // TODO: it would be good to depend on speed

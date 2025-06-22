@@ -2,14 +2,13 @@ package vehicle
 
 import SimulationConfig
 import SimulationConfig.Companion.JUNCTION_BLOCK_DISTANCE
-import Waypoint
+import network.Waypoint
 import mu.KotlinLogging
 import network.Lane
 import network.Network
 import path_builder.IPathBuilder
 import path_builder.DijkstraPathBuilder
 import path_builder.cost_function.DynamicTimeCostFunction
-import path_builder.cost_function.StaticLengthCostFunction
 import route_generator.RouteGeneratorDespawnListener
 import signals.SignalState
 import vehicle.model.IDM
@@ -34,13 +33,12 @@ class Vehicle(
     val maxDeceleration = 9.0
 
     var lane = network.getLaneById(source.roadId, source.laneId)
-    var direction = source.direction
     var speed = 0.0
     var acc = 0.0
     var laneChangeDistance = -0.1
     var laneChangeFullDistance = 0.0
     var laneChangeFromLaneId = 0
-    var position = 1.0
+    var position = 0.0
     var despawned = false
     var blockingFactors = ""
 
@@ -49,7 +47,7 @@ class Vehicle(
     }
 
     fun getLaneChangePenalty(): Double {
-        val res = SimulationConfig.LANE_CHANGE_DISTANCE_GAP + speed / 1.5
+        val res = SimulationConfig.LANE_CHANGE_DISTANCE_GAP + speed
 
         // HAVE TO BE STRICTLY SMALLER THAN MLC_MIN_DISTANCE - 10.0!!!!
         assert(res < SimulationConfig.MLC_MIN_DISTANCE)
@@ -76,7 +74,7 @@ class Vehicle(
                 "Position: ${"%.3f".format(position)}, " +
                 "Speed: ${"%.3f".format(speed)}, " +
                 "Acceleration: ${"%.3f".format(acc)}, " +
-                "Direction: ${direction}"
+                "Direction: ${lane.direction}"
         }
     }
 
@@ -151,12 +149,9 @@ class Vehicle(
     // Get next junction on path, if currently on junction return the next one
     private fun getClosestJunction(): ClosestJunction? {
         var tmp_lane: IPathBuilder.PathWaypoint? = pathBuilder.getNextPathLane(this)
-        var tmp_dir: Direction = direction
         var accDist = lane.road.troad.length - position
 
         while (tmp_lane != null && tmp_lane.lane.road.junction == "-1") {
-            tmp_dir = tmp_dir.opposite(tmp_lane.isDirectionOpposite)
-
             accDist += tmp_lane.lane.length
             tmp_lane = pathBuilder.getNextPathLane(this, tmp_lane.lane)
         }
@@ -166,6 +161,7 @@ class Vehicle(
         return ClosestJunction(tmp_lane.lane.road.junction, accDist, tmp_lane.lane.roadId)
     }
 
+    // TODO: implement this!
 //    private fun getClosestLaneAfterJunction(): Lane? {
 //        var tmp_lane: IPathBuilder.PathWaypoint? = pathBuilder.getNextPathLane(this)
 //        var tmp_dir: Direction = direction
@@ -192,14 +188,12 @@ class Vehicle(
 
         val nextLane = pathBuilder.getNextPathLane(this)
         if (nextLane != null) {
-            // println("Veh moved to next lane. vehid: ${vehicleId} moved to rid: ${nextLane.first.roadId}, lid: ${nextLane.first.laneId}, olddir: ${direction}, newdir: ${if (nextLane.second) direction.opposite(direction) else direction}")
 
             // If was blocking junction have to unlock
             if (lane.road.junction != "-1" && nextLane.lane.road.junction != lane.road.junction) {
                 network.getJunctionById(lane.road.junction).unlockTrajectoryVehicle(lane.roadId, vehicleId)
             }
 
-            direction = direction.opposite(nextLane.isDirectionOpposite)
             setNewLane(nextLane.lane)
             position = newPosition
         } else {

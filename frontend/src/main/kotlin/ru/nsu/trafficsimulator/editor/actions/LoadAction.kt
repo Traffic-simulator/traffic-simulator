@@ -24,6 +24,7 @@ class LoadAction : IAction {
     }
 
     override fun runAction(layout: Layout): Boolean {
+        errorMessage = ""
         try {
             val opendrive = OpenDriveReader().read(str.toString())
             val newLayout = Deserializer.deserialize(opendrive)

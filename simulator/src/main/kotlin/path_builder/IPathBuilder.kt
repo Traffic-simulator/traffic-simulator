@@ -17,7 +17,6 @@ interface IPathBuilder {
     data class PathWaypoint (
         val type: PWType,
         val lane: Lane,
-        val isDirectionOpposite: Boolean,
         val mlcMaxRoadOffset: Double
     )
 
