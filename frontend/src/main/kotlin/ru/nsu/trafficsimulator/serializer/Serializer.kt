@@ -8,23 +8,28 @@ import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.IntersectionRoad
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Road
-import java.util.Scanner
 import kotlin.math.cos
-import kotlin.math.sign
 import kotlin.math.sin
 
 const val MAX_SPEED = "60"
 
-fun serializeLayout(layout: Layout): OpenDRIVE {
+fun serializeLayout(layout: Layout, newDistrict: Int? = null): OpenDRIVE {
     val openDrive = OpenDRIVE()
 
-    var irId = layout.roads.values.maxBy { it.id }.id + 1
+    openDrive.addUserData("district", (newDistrict ?: layout.district).toString())
+
+
+    var irId = 0L
+    if (layout.roads.isNotEmpty()) {
+        irId = layout.roads.values.maxBy { it.id }.id + 1
+    }
     for (intersection in layout.intersections.values) {
         val roads = intersection.intersectionRoads.values.toList()
         intersection.intersectionRoads.clear()
         for (road in roads) {
             val id = irId++
             intersection.intersectionRoads[id] = road.copy(id = id)
+            intersection.irNextId = irId
         }
     }
 
@@ -81,7 +86,8 @@ private fun serializeRoad(road: Road): TRoad {
                 orientation = "+"
                 s = 0.0
                 dynamic = TYesNo.YES
-                subtype = "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
+                subtype =
+                    "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
             })
         }
 
@@ -91,7 +97,8 @@ private fun serializeRoad(road: Road): TRoad {
                 orientation = "-"
                 s = road.length
                 dynamic = TYesNo.YES
-                subtype = "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
+                subtype =
+                    "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
             })
         }
     }
@@ -146,6 +153,8 @@ private fun serializeRoad(road: Road): TRoad {
     tRoad.addUserData("startDirectionSpline", serializeVec2(road.geometry.getDirection(0.0)))
     tRoad.addUserData("endDirectionSpline", serializeVec2(road.geometry.getDirection(road.geometry.length)))
 
+    tRoad.addUserData("district", road.district.toString())
+
     return tRoad
 }
 
@@ -155,6 +164,14 @@ private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
     tRoad.id = road.id.toString()
     tRoad.length = road.geometry.length
     tRoad.junction = road.intersection.id.toString()
+
+    tRoad.type.add(TRoadType().apply {
+        s = 0.0
+        type = ERoadType.TOWN
+        speed = TRoadTypeSpeed()
+        speed.max = MAX_SPEED
+        speed.unit = EUnitSpeed.KM_H
+    })
 
     tRoad.link = TRoadLink()
     tRoad.link.predecessor = TRoadLinkPredecessorSuccessor().apply {
@@ -191,23 +208,25 @@ private fun serializeIntersectionRoad(road: IntersectionRoad): TRoad {
 
         val rightLane = TRoadLanesLaneSectionRightLane()
         rightLane.id = (-1).toBigInteger()
-            rightLane.type = ELaneType.DRIVING
-            rightLane.link = TRoadLanesLaneSectionLcrLaneLink()
-            rightLane.link.predecessor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
-                id = road.laneLinkage.first.toBigInteger()
-            })
-            rightLane.link.successor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
-                id = road.laneLinkage.second.toBigInteger()
-            })
-            rightLane.borderOrWidth.add(TRoadLanesLaneSectionLrLaneWidth().apply {
-                a = Layout.LANE_WIDTH
-                b = 0.0
-                c = 0.0
-                d = 0.0
-            })
-            right.lane.add(rightLane)
+        rightLane.type = ELaneType.DRIVING
+        rightLane.link = TRoadLanesLaneSectionLcrLaneLink()
+        rightLane.link.predecessor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
+            id = road.laneLinkage.first.toBigInteger()
+        })
+        rightLane.link.successor.add(TRoadLanesLaneSectionLcrLaneLinkPredecessorSuccessor().apply {
+            id = road.laneLinkage.second.toBigInteger()
+        })
+        rightLane.borderOrWidth.add(TRoadLanesLaneSectionLrLaneWidth().apply {
+            a = Layout.LANE_WIDTH
+            b = 0.0
+            c = 0.0
+            d = 0.0
+        })
+        right.lane.add(rightLane)
 
     })
+
+    tRoad.addUserData("district", road.district.toString())
 
     return tRoad
 }
@@ -228,7 +247,7 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
             laneLink.add(TJunctionConnectionLaneLink().apply {
                 from = intersectionRoad.laneLinkage.first.toBigInteger()
                 to = (-1).toBigInteger()
-                })
+            })
 
         })
     }
@@ -241,8 +260,16 @@ private fun serializeIntersection(intersection: Intersection): TJunction {
         tJunction.addUserData("buildingFullness", it.fullness.toString())
     }
 
-    if (intersection.isMerging) {
+    intersection.merging?.let { merging ->
         tJunction.addUserData("mergingIntersection", "true")
+        tJunction.addUserData("firstDistrict", merging.firstDistrict.toString())
+        tJunction.addUserData("secondDistrict", merging.secondDistrict.toString())
+    }
+
+    intersection.splitSettings?.let { splitting ->
+        tJunction.addUserData("splitIntersection", "true")
+        tJunction.addUserData("firstDistrict", splitting.firstDistrict.toString())
+        tJunction.addUserData("secondDistrict", splitting.secondDistrict.toString())
     }
 
     return tJunction
@@ -297,6 +324,9 @@ private fun TJunction.addUserData(key: String, value: String) =
     this.getGAdditionalData().add(createUserData(key, value))
 
 private fun TRoad.addUserData(key: String, value: String) =
+    this.getGAdditionalData().add(createUserData(key, value))
+
+private fun OpenDRIVE.addUserData(key: String, value: String) =
     this.getGAdditionalData().add(createUserData(key, value))
 
 

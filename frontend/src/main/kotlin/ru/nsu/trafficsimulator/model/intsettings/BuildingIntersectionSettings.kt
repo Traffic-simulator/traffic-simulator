@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.model
+package ru.nsu.trafficsimulator.model.intsettings
 
 data class BuildingIntersectionSettings(
     var type: BuildingType,

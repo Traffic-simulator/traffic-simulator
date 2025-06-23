@@ -21,6 +21,7 @@ import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.findRoadIntersectionAt
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.intsettings.BuildingType
 import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.reflect.KClass

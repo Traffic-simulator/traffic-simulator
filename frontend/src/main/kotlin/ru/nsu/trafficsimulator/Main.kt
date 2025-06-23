@@ -8,7 +8,8 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.math.MathUtils.clamp
 import imgui.ImGui
@@ -25,7 +26,6 @@ import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-
 
 val logger = KotlinLogging.logger("FRONTEND")
 
@@ -209,7 +209,11 @@ class Main : ApplicationAdapter() {
             }
         }
         if (state == ApplicationState.Simulator) {
-            val pauseLabel = if (simState.isPaused) { "|>" } else { "||" }
+            val pauseLabel = if (simState.isPaused) {
+                "|>"
+            } else {
+                "||"
+            }
             if (ImGui.button(pauseLabel)) {
                 simState.isPaused = !simState.isPaused
             }

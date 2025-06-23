@@ -3,9 +3,13 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.model.intsettings.BuildingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.IntersectionSettings
 import kotlin.math.max
 
-class Layout {
+class Layout(district: Int = 0) {
+    var district = district
+        private set
     val roads = mutableMapOf<Long, Road>()
     val intersections = mutableMapOf<Long, Intersection>()
     val intersectionRoadsNumber
@@ -26,6 +30,8 @@ class Layout {
 
         roadIdCount = other.roadIdCount
         intersectionIdCount = other.intersectionIdCount
+
+        district = other.district
     }
 
     fun addRoad(
@@ -52,7 +58,8 @@ class Layout {
             id = roadIdCount++,
             startIntersection = startIntersection,
             endIntersection = endIntersection,
-            geometry = spline
+            geometry = spline,
+            district = district
         )
 
         addRoad(newRoad)
