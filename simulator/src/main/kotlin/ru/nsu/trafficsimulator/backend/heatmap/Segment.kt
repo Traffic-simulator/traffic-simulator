@@ -5,7 +5,7 @@ import ru.nsu.trafficsimulator.backend.vehicle.Vehicle
 import kotlin.math.exp
 
 class Segment(lane: Lane, numFramesMemory: Int) {
-    private val lastStates = SumTrackingArrayDeque(numFramesMemory)
+    private val lastStates = SumTrackingCircularBuffer(numFramesMemory)
     private val speedLimit = lane.getMaxSpeed()
 
     private var currentIterVehiclesSum: Double = 0.0
@@ -60,30 +60,34 @@ class Segment(lane: Lane, numFramesMemory: Int) {
         return (sig - sig0) / (sigEnd - sig0)
     }
 
-    private class SumTrackingArrayDeque(private val limit: Int) {
-        private val deque = ArrayDeque<Double>(limit + 1)
+    private class SumTrackingCircularBuffer(private val limit: Int) {
+        private val buffer = DoubleArray(limit)
+        private var startIndex = 0
+        private var count = 0
         private var currentSum: Double = 0.0
 
-        val size: Int get() = deque.size
-        val isEmpty: Boolean get() = deque.isEmpty()
-        val average: Double get() = if (isEmpty) 0.0 else currentSum / size
+        val size: Int get() = count
+        val isEmpty: Boolean get() = count == 0
+        val average: Double get() = if (isEmpty) 0.0 else currentSum / count
 
         fun add(value: Double) {
-            deque.addLast(value)
+            if (count < limit) {
+                // Buffer not full yet
+                buffer[(startIndex + count) % limit] = value
+                count++
+            } else {
+                // Buffer is full - replace oldest element
+                currentSum -= buffer[startIndex]
+                buffer[startIndex] = value
+                startIndex = (startIndex + 1) % limit
+            }
             currentSum += value
-            enforceLimit()
         }
 
         fun clear() {
-            deque.clear()
+            startIndex = 0
+            count = 0
             currentSum = 0.0
-        }
-
-        private fun enforceLimit() {
-            while (deque.size > limit) {
-                val removed = deque.removeFirst()
-                currentSum -= removed
-            }
         }
     }
 }
