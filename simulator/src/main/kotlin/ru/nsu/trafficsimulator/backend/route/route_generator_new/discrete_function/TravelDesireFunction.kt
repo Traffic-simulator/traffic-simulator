@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function
+package ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function
 
 import jakarta.validation.constraints.NotNull
 

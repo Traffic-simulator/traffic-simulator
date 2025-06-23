@@ -1,7 +1,7 @@
 package ru.nsu.trafficsimulator.backend.network
 
 import ru.nsu.trafficsimulator.backend.SimulationConfig
-import ru.nsu.trafficsimulator.backend.heatmap.Segment
+import ru.nsu.trafficsimulator.backend.network.heatmap.Segment
 import ru.nsu.trafficsimulator.backend.network.signals.Signal
 import opendrive.EUnitSpeed
 import opendrive.TRoadLanesLaneSectionLcrLaneLink

@@ -11,15 +11,15 @@ import ru.nsu.trafficsimulator.backend.utils.TimedCache
 import java.util.*
 
 // TODO: make timeout configurable
-// It's possible to add multithreading. But it's not the bottleneck now
-class StagedDijkstraPathBuilder(
+class CachedDijkstraPathBuilder(
     private val network: Network,
     private val simulator: Simulator,
-    private val costFunction: ICostFunction
+    private val costFunction: ICostFunction,
+    private val cacheTimeout: Double = 20.0 * 10
 ) : IPathBuilder {
 
     private val dijkstraPathBuilder = DijkstraPathBuilder(network, costFunction)
-    private val timedCache = TimedCache<Pair<Waypoint, Waypoint>, Pair<Double, List<Path.PathWaypoint>>>(20.0 * 10)
+    private val timedCache = TimedCache<Pair<Waypoint, Waypoint>, Pair<Double, List<Path.PathWaypoint>>>(cacheTimeout)
 
     override fun getPath(
         source: Waypoint,

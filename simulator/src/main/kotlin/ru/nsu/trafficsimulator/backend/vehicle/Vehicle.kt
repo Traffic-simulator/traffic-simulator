@@ -1,25 +1,21 @@
 package ru.nsu.trafficsimulator.backend.vehicle
 
-import ISimulation
+import mu.KotlinLogging
 import ru.nsu.trafficsimulator.backend.SimulationConfig
 import ru.nsu.trafficsimulator.backend.SimulationConfig.Companion.JUNCTION_BLOCK_DISTANCE
-import ru.nsu.trafficsimulator.backend.network.Waypoint
-import mu.KotlinLogging
 import ru.nsu.trafficsimulator.backend.Simulator
 import ru.nsu.trafficsimulator.backend.network.Lane
 import ru.nsu.trafficsimulator.backend.network.Network
-
+import ru.nsu.trafficsimulator.backend.network.Waypoint
 import ru.nsu.trafficsimulator.backend.path.Path
 import ru.nsu.trafficsimulator.backend.path.PathManager
-import ru.nsu.trafficsimulator.backend.path.algorithms.DijkstraPathBuilder
-import ru.nsu.trafficsimulator.backend.path.algorithms.IPathBuilder
-import ru.nsu.trafficsimulator.backend.path.algorithms.StagedDijkstraPathBuilder
+import ru.nsu.trafficsimulator.backend.path.algorithms.CachedDijkstraPathBuilder
 import ru.nsu.trafficsimulator.backend.path.cost_function.DynamicTimeCostFunction
 import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
-import ru.nsu.trafficsimulator.backend.route_generator.RouteGeneratorDespawnListener
-import signals.SignalState
+import ru.nsu.trafficsimulator.backend.route.RouteGeneratorDespawnListener
 import ru.nsu.trafficsimulator.backend.vehicle.model.IDM
 import ru.nsu.trafficsimulator.backend.vehicle.model.MOBIL
+import signals.SignalState
 import kotlin.math.abs
 
 class Vehicle(
@@ -329,7 +325,7 @@ class Vehicle(
 
         fun initialize(network: Network, simulator: Simulator) {
             costFunction = DynamicTimeCostFunction()
-            pathManager = PathManager(StagedDijkstraPathBuilder(network, simulator, costFunction))
+            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction))
             // pathManager = PathManager(DijkstraPathBuilder(network, costFunction))
         }
 

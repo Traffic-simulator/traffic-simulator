@@ -2,10 +2,11 @@ package ru.nsu.trafficsimulator.backend.path
 
 import ru.nsu.trafficsimulator.backend.SimulationConfig
 import ru.nsu.trafficsimulator.backend.network.Lane
+import ru.nsu.trafficsimulator.backend.network.LaneSequence
 import ru.nsu.trafficsimulator.backend.network.Waypoint
 import ru.nsu.trafficsimulator.backend.path.algorithms.IPathBuilder
+// TODO: убрать vehicle отсюда
 import ru.nsu.trafficsimulator.backend.vehicle.Vehicle
-import ru.nsu.trafficsimulator.backend.vehicle.VehicleDetector
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -17,9 +18,7 @@ import kotlin.collections.HashMap
                 but it's not necessary to do that.
 
         0.1) First road of path can contain MLC, but have to consider position of vehicle.
-            For this each function accepts initPositionArgument, but uses it only when building new path.
-        0.2) TODO: currently last roads on the path can not contain MLC (based on logic that buildings has one-lane roads)
-            // TODO: it;s not right when part simulation!!
+             For this each function accepts initPositionArgument, but uses it only when building new path.
         1) When the next PathWaypoint is mandatory lane change - for nextVehicle scan we just need to check current road (even before mlcMaxDist).
 
         2) I can imagine scenarios where vehicle can use single Lane object twice, but it's very rare I think - will throw exception.
@@ -103,15 +102,15 @@ class PathManager(private val algorithm: IPathBuilder) {
         return null
     }
 
-    fun getNextRoads(vehicle: Vehicle): Sequence<VehicleDetector.VehicleLaneSequence> {
+    fun getNextRoads(vehicle: Vehicle): Sequence<LaneSequence> {
         createPathIfNotExists(vehicle, vehicle.position)
 
-        fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<VehicleDetector.VehicleLaneSequence> = sequence {
+        fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<LaneSequence> = sequence {
             var curLane = lane
 
             // initial lane
             var acc_distance = 0.0
-            yield(VehicleDetector.VehicleLaneSequence(lane, acc_distance, true))
+            yield(LaneSequence(lane, acc_distance, true))
             acc_distance += lane.road.troad.length - vehicle.position
 
             // next path lanes
@@ -122,7 +121,7 @@ class PathManager(private val algorithm: IPathBuilder) {
                 }
 
                 yield(
-                    VehicleDetector.VehicleLaneSequence(
+                    LaneSequence(
                         nextLane.lane,
                         acc_distance,
                         false

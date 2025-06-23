@@ -1,7 +1,7 @@
 package ru.nsu.trafficsimulator.backend.vehicle
 
-import ru.nsu.trafficsimulator.backend.network.Lane
 import ru.nsu.trafficsimulator.backend.SimulationConfig
+import ru.nsu.trafficsimulator.backend.network.LaneSequence
 
 
 /*
@@ -12,13 +12,9 @@ closestBackVehicle we use lane -> VehicleDetector
  */
 class VehicleDetector {
 
-    data class VehicleLaneSequence(val lane: Lane,
-                                   val acc_distance: Double,
-                                   val initial_iteration: Boolean)
-
     companion object {
 
-        fun getNextVehicle(initPosition: Double, laneSeq: Sequence<VehicleLaneSequence>): Pair<Vehicle?, Double> {
+        fun getNextVehicle(initPosition: Double, laneSeq: Sequence<LaneSequence>): Pair<Vehicle?, Double> {
             var closestVehicle: Vehicle? = null
 
             for (it in laneSeq) {

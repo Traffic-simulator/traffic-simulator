@@ -1,9 +1,9 @@
-package ru.nsu.trafficsimulator.backend
+package ru.nsu.trafficsimulator.backend.utils
 
 import opendrive.OpenDRIVE
 import opendrive.TUserData
-import ru.nsu.trafficsimulator.backend.route_generator_new.BuildingTypes
-import ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function.Building
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.BuildingTypes
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function.Building
 
 class BuildingsParser(val openDrive: OpenDRIVE) {
 

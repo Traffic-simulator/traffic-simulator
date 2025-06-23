@@ -2,7 +2,6 @@ package ru.nsu.trafficsimulator.backend.network
 
 import ru.nsu.trafficsimulator.backend.network.signals.Signal
 import opendrive.*
-import ru.nsu.trafficsimulator.backend.route_generator_new.BuildingTypes
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet

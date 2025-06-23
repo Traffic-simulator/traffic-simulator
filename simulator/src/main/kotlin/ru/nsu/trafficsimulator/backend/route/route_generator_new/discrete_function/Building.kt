@@ -1,6 +1,6 @@
-package ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function
+package ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function
 
-import ru.nsu.trafficsimulator.backend.route_generator_new.BuildingTypes
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.BuildingTypes
 
 class Building(
     val type: BuildingTypes,

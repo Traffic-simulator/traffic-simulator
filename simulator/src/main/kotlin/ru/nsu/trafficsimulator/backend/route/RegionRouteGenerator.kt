@@ -1,6 +1,9 @@
-package ru.nsu.trafficsimulator.backend.route_generator
+package ru.nsu.trafficsimulator.backend.route
 
+import ru.nsu.trafficsimulator.backend.network.Network
 import ru.nsu.trafficsimulator.backend.network.Waypoint
+import ru.nsu.trafficsimulator.backend.path.IRegionPathAPI
+import ru.nsu.trafficsimulator.backend.path.RegionPathAPI
 
 // TODO: connect with info from stats.xodr
 // It's proxy above simple RegionRouteGenerator
@@ -8,10 +11,11 @@ import ru.nsu.trafficsimulator.backend.network.Waypoint
 // Goal of this class work with underlying SpawnModel to spawn vehicles only on regionRoads
 class RegionRouteGenerator(
     private val regionId: Int,
-    private val regionAPI: IRegionAPI,
+    private val network: Network,
     private val base: IRouteGenerator
 ) : IRouteGenerator {
 
+    private val regionAPI: IRegionPathAPI = RegionPathAPI(network)
     var counter: Int = 0
 
     data class SimulationVehicleInfo(

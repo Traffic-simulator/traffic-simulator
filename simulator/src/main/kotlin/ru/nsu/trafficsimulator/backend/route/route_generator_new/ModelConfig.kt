@@ -1,6 +1,6 @@
-package ru.nsu.trafficsimulator.backend.route_generator_new
+package ru.nsu.trafficsimulator.backend.route.route_generator_new
 
-import ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function.TravelDesireFunction
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function.TravelDesireFunction
 
 class ModelConfig {
     companion object {

@@ -11,4 +11,8 @@ class StaticLengthCostFunction : ICostFunction {
         return 100.0 * numLaneChanges
     }
 
+    override fun getStatLaneCost(lane: Lane, secondsOfDay: Double): Double {
+        TODO("Not yet implemented")
+    }
+
 }

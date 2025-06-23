@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.backend.heatmap
+package ru.nsu.trafficsimulator.backend.network.heatmap
 
 import ru.nsu.trafficsimulator.backend.network.Lane
 import ru.nsu.trafficsimulator.backend.vehicle.Vehicle

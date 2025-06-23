@@ -19,4 +19,8 @@ class DynamicTimeCostFunction: ICostFunction {
     override fun getLaneChangeCost(numLaneChanges: Int): Double {
         return 10.0 * numLaneChanges
     }
+
+    override fun getStatLaneCost(lane: Lane, secondsOfDay: Double): Double {
+        TODO("Not yet implemented")
+    }
 }
