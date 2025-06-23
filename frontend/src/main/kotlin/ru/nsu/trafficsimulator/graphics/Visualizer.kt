@@ -19,15 +19,13 @@ import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec3
-import ru.nsu.trafficsimulator.math.customSigmoid
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
 import ru.nsu.trafficsimulator.model.Vehicle
-import ru.nsu.trafficsimulator.serializer.Deserializer
+import ru.nsu.trafficsimulator.model.intsettings.BuildingType
 import signals.SignalState
-import vehicle.Direction
-import java.lang.Math.clamp
+import java.util.HashMap
 import kotlin.math.*
 
 class Visualizer(private var layout: Layout) {
@@ -35,16 +33,25 @@ class Visualizer(private var layout: Layout) {
     private val camera: PerspectiveCamera
 
     private val carModels = listOf(
-        GLBLoader().load(Gdx.files.internal("models/racer_big.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Ambulance.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Mazda RX-7.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Convertible.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/cartoon banana car.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Jeep.glb"))!!.scene.model,
-        GLBLoader().load(Gdx.files.internal("models/Car.glb"))!!.scene.model,
+        pathToModel("models/racer_big.glb"),
+        pathToModel("models/Ambulance.glb"),
+        pathToModel("models/Mazda RX-7.glb"),
+        pathToModel("models/Convertible.glb"),
+        pathToModel("models/cartoon banana car.glb"),
+        pathToModel("models/Jeep.glb"),
+        pathToModel("models/Car.glb"),
     )
+    private val buildingSettings: HashMap<BuildingType, Triple<Model, Float, Float>> = hashMapOf(
+        BuildingType.HOME to Triple(pathToModel("models/HOME.glb"), 2.0f, 0.0f),
+        BuildingType.SHOPPING to Triple(pathToModel("models/SHOPPING.glb"), 10.0f, 0.0f),
+        BuildingType.EDUCATION to Triple(pathToModel("models/EDUCATION.glb"), 2.0f, 0.0f),
+        BuildingType.WORK to Triple(pathToModel("models/WORK.glb"), 15.0f, 1.0f),
+        BuildingType.ENTERTAINMENT to Triple(pathToModel("models/ENTERTAINMENT.glb"), 10.0f, 1.0f)
+    )
+
     private val buildingModel = GLBLoader().load(Gdx.files.internal("models/building.glb"))!!.scene.model
-    private var trafficLightModel: Model = GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
+    private var trafficLightModel: Model =
+        GLBLoader().load(Gdx.files.internal("models/traffic_light.glb")).scene!!.model
 
     private val carInstances = mutableMapOf<Int, Scene>()
     private val buildingScenes = mutableListOf<Scene>()
@@ -130,6 +137,10 @@ class Visualizer(private var layout: Layout) {
                 material.remove(attribute)
             }
         }
+    }
+
+    private fun pathToModel(path: String): Model {
+        return GLBLoader().load(Gdx.files.internal(path))!!.scene.model
     }
 
     fun getCamera() = camera
@@ -411,12 +422,23 @@ class Visualizer(private var layout: Layout) {
 
         layout.intersections.values.forEach { intersection ->
             if (intersection.isBuilding) {
-                val buildingScene = Scene(buildingModel)
+                val road = intersection.incomingRoads.first()
+                val direction = road.getDirection(road.length).normalized()
+                val angle = atan2(direction.z, direction.x).toFloat()
+
+                val buildingScene = Scene(buildingSettings[intersection.building!!.type]!!.first)
+                val buildingSize = buildingSettings[intersection.building!!.type]!!.second
+                val bbox = BoundingBox()
+                buildingScene.modelInstance.calculateBoundingBox(bbox)
+                val modelHeight = bbox.height
+                val yOffset = modelHeight * buildingSize / 2.0
 
                 val center = intersection.position.toVec3()
+                    .plus(Vec3(0.0, yOffset * buildingSettings[intersection.building!!.type]!!.third, 0.0))
                 buildingScene.modelInstance.transform
                     .setToTranslation(center.toGdxVec())
-                    .scale(0.7f, 0.7f, 0.7f)
+                    .rotate(0f, 1f, 0f, (Math.toDegrees(-angle.toDouble()) - 90).toFloat())
+                    .scale(buildingSize, buildingSize, buildingSize)
 
                 sceneManager.addScene(buildingScene)
                 buildingScenes.add(buildingScene)
