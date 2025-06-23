@@ -10,12 +10,11 @@ import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
 import ru.nsu.trafficsimulator.backend.utils.TimedCache
 import java.util.*
 
-// TODO: make timeout configurable
 class CachedDijkstraPathBuilder(
     private val network: Network,
     private val simulator: Simulator,
     private val costFunction: ICostFunction,
-    private val cacheTimeout: Double = 20.0 * 10
+    private val cacheTimeout: Double = 20.0 * 5
 ) : IPathBuilder {
 
     private val dijkstraPathBuilder = DijkstraPathBuilder(network, costFunction)

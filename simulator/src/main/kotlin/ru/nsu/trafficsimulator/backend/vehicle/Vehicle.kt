@@ -17,6 +17,7 @@ import ru.nsu.trafficsimulator.backend.vehicle.model.IDM
 import ru.nsu.trafficsimulator.backend.vehicle.model.MOBIL
 import signals.SignalState
 import kotlin.math.abs
+import kotlin.math.min
 
 class Vehicle(
     val vehicleId: Int,
@@ -25,7 +26,7 @@ class Vehicle(
     val destination: Waypoint,
     val pathManager: PathManager,
     val despawnCallback: RouteGeneratorDespawnListener?,
-    val maxSpeed: Double = 30.0,
+    val globalMaxSpeed: Double = 30.0,
     val maxAcc: Double = 2.0,
     var speed: Double = 0.0
 ) {
@@ -47,6 +48,7 @@ class Vehicle(
     var despawned = false
     var distToClosestJunctionTmp: Double = SimulationConfig.INF
     var blockingFactors = ""
+    var maxSpeed = globalMaxSpeed
 
     init {
         lane.addVehicle(this)
@@ -54,9 +56,7 @@ class Vehicle(
 
     fun getLaneChangePenalty(): Double {
         val res = SimulationConfig.LANE_CHANGE_DISTANCE_GAP + speed
-
-        // HAVE TO BE STRICTLY SMALLER THAN MLC_MIN_DISTANCE - 10.0!!!!
-        assert(res < SimulationConfig.MLC_MIN_DISTANCE)
+        assert(res < SimulationConfig.MLC_MIN_DISTANCE - 10.0)
         return res
     }
 
@@ -84,23 +84,19 @@ class Vehicle(
         }
     }
 
-    // Possible problem here: in case of very close junctions vehicle can not get enough time to break before the next one,
-    //  as we check only the closest one.
-    // TODO: prove that mandatory lane change border starts to be stop point not only in the last road
-    // TODO: vehicle all the time has to find the worst situation for braking!!!
+    // TODO: in case of very close junctions vehicle can not get enough time to break before the next one, as we check only the closest one.
     /*
         1) Traffic Lights (TODO: high speed walktrough!!)
-        2) Junctions   (TODO: high speed walkthrough!)
+        2) Junctions
         3) Other vehicles
         4) MLC
      */
     fun updateAcceleration() {
         val closestJunction = getClosestJunction()
-        var junctionAcc = SimulationConfig.INF
+        var junctionAcc     = SimulationConfig.INF
         blockingFactors = ""
-        // Rely on that traffic lights are placed in the end of each lane.
-        // If lane contains red traffic light
 
+        // Checking traffic lights
         if (lane.signal != null && lane.signal!!.state != SignalState.GREEN) {
             // Don't block any trajectories...
             // Stop before this signal
@@ -108,6 +104,7 @@ class Vehicle(
             logger.debug("Veh@${vehicleId} will stop because of TrafficLight@${lane.signal!!.id}")
             blockingFactors = "TrafficLight@${lane.signal!!.id}"
         } else
+        // There is no blocking traffic light, continue...
         if (closestJunction != null && closestJunction.distance < JUNCTION_BLOCK_DISTANCE) {
             val junction = network.getJunctionById(closestJunction.junctionId)
 
@@ -117,15 +114,11 @@ class Vehicle(
             if (lane.getMaxPositionVehicle()!! == this && lane.road.junction == "-1") {
 
                 // If Vehicle will get stuck on junction road it have to stop before junction to do not block it.
-                // TODO: return this staff
-                // val laneAfterJunction: Lane = getClosestLaneAfterJunction()!!
-                // val minPosVeh = laneAfterJunction.getMinPositionVehicle()
-                // val hasFreePlace: Boolean = minPosVeh == null || minPosVeh.position > 2 * MIN_GAP + minPosVeh.length
-                val hasFreePlace: Boolean = true
-
+                val freePlace = getFreePlaceAfterJunction()
                 val tryBlockResult = junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)
-                if (hasFreePlace && tryBlockResult.first) {
+                if (freePlace > SimulationConfig.EPS && tryBlockResult.first) {
                     // Trajectory was succesfully blocked by us, can continue driving
+                    // TODO: calc junctionAcc to the next junction
                 } else {
                     // Trajectory was blocked, have to stop before junction
                     junction.unlockTrajectoryVehicle(vehicleId)
@@ -138,6 +131,7 @@ class Vehicle(
         }
 
         // Calc acceleration
+        maxSpeed = min(globalMaxSpeed, lane.getMaxSpeed())
         val nextVeh = getNextVehicle()
         val nextMLCDistance = pathManager.getNextMLCDistance(this)
 
@@ -169,27 +163,29 @@ class Vehicle(
         return ClosestJunction(tmp_lane.lane.road.junction, accDist, tmp_lane.lane.roadId)
     }
 
-    // TODO: implement this!
-//    private fun getClosestLaneAfterJunction(): Lane? {
-//        var tmp_lane: IpathManager.PathWaypoint? = pathManager.getNextPathLane(this)
-//        var tmp_dir: Direction = direction
-//
-//        while (tmp_lane != null && tmp_lane.lane.road.junction == "-1") {
-//            tmp_dir = tmp_dir.opposite(tmp_lane.isDirectionOpposite)
-//
-//            tmp_lane = pathManager.getNextPathLane(this, tmp_lane.lane, tmp_dir)
-//        }
-//        if (tmp_lane == null) {
-//            return null
-//        }
-//        tmp_dir = tmp_dir.opposite(tmp_lane.second)
-//        tmp_lane = pathManager.getNextPathLane(this, tmp_lane.first, tmp_dir)
-//
-//        if (tmp_lane == null) {
-//            return null
-//        }
-//        return tmp_lane.first
-//    }
+    private fun getFreePlaceAfterJunction(): Double {
+        // We are the first car in front of junction and in the not junction road
+        var tmp_lane = pathManager.getNextPathLane(this)
+        if (tmp_lane == null) {
+            return SimulationConfig.INF
+        }
+        var occupiedSpace = 0.0
+        tmp_lane.lane.vehicles.forEach { occupiedSpace += it.length + SimulationConfig.MIN_GAP }
+
+        assert(tmp_lane.lane.road.junction != "-1")
+
+
+        tmp_lane = pathManager.getNextPathLane(this, tmp_lane.lane)
+        if (tmp_lane == null) {
+            return SimulationConfig.INF
+        }
+
+        val minPosVeh = tmp_lane.lane.getMinPositionVehicle()
+        if (minPosVeh == null) {
+            return tmp_lane.lane.length - occupiedSpace
+        }
+        return minPosVeh.position - minPosVeh.length - SimulationConfig.MIN_GAP - occupiedSpace
+    }
 
 
     // TODO: what to do if: in the end of the road vehicle use non mandatory lane change,
@@ -261,6 +257,7 @@ class Vehicle(
 
             setNewLane(nextLane.lane)
             position = newPosition
+            maxSpeed = min(globalMaxSpeed, nextLane.lane.getMaxSpeed())
         } else {
             // Despawn vehicle
             logger.debug { "Veh@${vehicleId} was despawned" }
@@ -327,7 +324,7 @@ class Vehicle(
 
         fun initialize(network: Network, simulator: Simulator) {
             costFunction = DynamicTimeCostFunction()
-            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction))
+            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction, 20.0))
             // pathManager = PathManager(DijkstraPathBuilder(network, costFunction))
         }
 

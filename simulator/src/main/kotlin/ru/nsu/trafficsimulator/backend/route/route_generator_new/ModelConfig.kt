@@ -6,7 +6,7 @@ class ModelConfig {
     companion object {
         val defaultTravelDesireDistribution =
             TravelDesireFunction(listOf(
-                2.0, 2.0, 2.0, 1.0, 1.0, 1.0, // 00:00 - 06:00
+                10.0, 10.0, 10.0, 1.0, 1.0, 1.0, // 00:00 - 06:00
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // 06:00 - 12:00
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // 12:00 - 18:00
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0  // 18:00 - 00:00

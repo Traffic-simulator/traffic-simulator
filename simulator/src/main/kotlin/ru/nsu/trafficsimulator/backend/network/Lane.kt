@@ -31,7 +31,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     }
 
     fun getMaxSpeed(): Double {
-        val defaultMaxSpeed = 30.0
+        val defaultMaxSpeed = 80.0 / 3.6 // 80 km/h - default maxspeed
         val speed = road.troad.type?.firstOrNull()?.speed ?: return defaultMaxSpeed
 
         return when (speed.unit) {
