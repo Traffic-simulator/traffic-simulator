@@ -177,7 +177,7 @@ class Model (
         for (i in 0..planLength) {
             var type = listOfNonEmptyBuildingTypes.get(random.nextInt(listOfNonEmptyBuildingTypes.size));
             var buildingsList = buildingsMapByType[type]!!.toList()
-            val randomIndex = weightedRandom.chooseIndex(buildingsList.map { it.second.capacity - it.second.currentPeople })
+            val randomIndex = weightedRandom.chooseIndex(buildingsList.map {(it.second.capacity - it.second.currentPeople) * 1000 / it.second.capacity + 1 })
             var building = buildingsList.get(randomIndex).second
             var iters = 10
 

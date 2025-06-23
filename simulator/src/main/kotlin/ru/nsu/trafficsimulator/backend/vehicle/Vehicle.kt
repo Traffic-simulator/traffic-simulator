@@ -321,7 +321,7 @@ class Vehicle(
 
         fun initialize(network: Network, simulator: Simulator) {
             costFunction = DynamicTimeCostFunction()
-            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction))
+            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction, 40.0))
             // pathManager = PathManager(DijkstraPathBuilder(network, costFunction))
         }
 
