@@ -113,6 +113,12 @@ uniform vec4 u_morphTargets1;
 uniform vec4 u_morphTargets2;
 #endif
 
+attribute float a_heatmap;
+varying float v_heatmap;
+
+attribute vec4 a_color;
+varying vec4 v_color;
+
 #ifdef normalFlag
 attribute vec3 a_normal;
 uniform mat3 u_normalMatrix;
@@ -218,6 +224,7 @@ varying vec3 v_csmUVs[numCSM];
 #endif //shadowMapFlag
 
 void main() {
+    v_heatmap = a_heatmap;
 	#ifdef textureFlag
 		v_texCoord0 = (u_texCoord0Transform * vec3(a_texCoord0, 1.0)).xy;
 	#endif
@@ -225,6 +232,8 @@ void main() {
 	#ifdef textureCoord1Flag
 		v_texCoord1 = (u_texCoord1Transform * vec3(a_texCoord1, 1.0)).xy;
 	#endif
+
+	v_color = a_color;
 
 	#ifdef skinningFlag
 		mat4 skinning = mat4(0.0);
