@@ -19,16 +19,12 @@ import net.mgsx.gltf.scene3d.scene.SceneManager
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Vec3
-import ru.nsu.trafficsimulator.math.customSigmoid
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
 import ru.nsu.trafficsimulator.model.Vehicle
-import ru.nsu.trafficsimulator.serializer.Deserializer
-import ru.nsu.trafficsimulator.model.BuildingType
+import ru.nsu.trafficsimulator.model.intsettings.BuildingType
 import signals.SignalState
-import vehicle.Direction
-import java.lang.Math.clamp
 import java.util.HashMap
 import kotlin.math.*
 
