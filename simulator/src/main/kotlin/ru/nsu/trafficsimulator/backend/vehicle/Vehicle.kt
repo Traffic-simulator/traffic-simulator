@@ -114,7 +114,7 @@ class Vehicle(
             // We can do that only front vehicle can block trajectories.
             // But it's dangerous in high speeds, that vehicle can not break before junction.
             // To smooth out it we can process vehicles not by distance but by predicted time to junctions.
-            if (lane.getMaxPositionVehicle()!! == this) {
+            if (lane.getMaxPositionVehicle()!! == this && lane.road.junction == "-1") {
 
                 // If Vehicle will get stuck on junction road it have to stop before junction to do not block it.
                 // TODO: return this staff
@@ -132,6 +132,8 @@ class Vehicle(
                     blockingFactors = tryBlockResult.second
                     junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
                 }
+            } else {
+                junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
             }
         }
 
