@@ -265,6 +265,7 @@ class Vehicle(
 
             lane.removeVehicle(this)
             despawned = true
+            network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
             despawnCallback?.onDespawn(vehicleId)
             return false
         }
@@ -336,10 +337,10 @@ class Vehicle(
             despawnCallback: RouteGeneratorDespawnListener,
             maxSpeed: Double, maxAcc: Double, speed: Double = 0.0
         ): Vehicle {
-            // TODO: Ruslan
-             if (source.roadId == destination.roadId) {
-                throw RuntimeException("WTF, broooo!??")
-             }
+            // This if is not correct when region simulation
+//             if (source.roadId == destination.roadId) {
+//                throw RuntimeException("WTF, broooo!??")
+//             }
             return Vehicle(counter++, network, source, destination, pathManager, despawnCallback, maxSpeed, maxAcc, speed)
         }
 
