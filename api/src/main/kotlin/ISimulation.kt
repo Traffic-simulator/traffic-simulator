@@ -1,3 +1,4 @@
+import opendrive.OpenDRIVE
 import signals.SignalState
 import vehicle.Direction
 import java.time.LocalTime
@@ -14,6 +15,11 @@ interface ISimulation {
         Bus;
 
         var variation: Int = 0
+    }
+
+    enum class DrivingSide {
+        LEFT,   // Currently unsupported
+        RIGHT
     }
 
     object Constants {
@@ -67,9 +73,12 @@ interface ISimulation {
      * @param layout Layout to initialize simulation
      */
     fun init(layout: opendrive.OpenDRIVE,
+             drivingSide: DrivingSide, // Left is not tested for now...
              regionId: Int?,
              startingTime: LocalTime,
              seed: Long): Error?
+
+    fun gatherSimulationStats(layout: OpenDRIVE, seed: Long): OpenDRIVE
 
     /**
      * Simulate simulation
@@ -96,4 +105,8 @@ interface ISimulation {
      * Get current time of simulation.
      */
     fun getSimulationTime(): LocalTime
+
+    fun getRoadStats(): List<Pair<String, (id: Long) -> Any>> = listOf()
+    fun getIntersectionStats(): List<Pair<String, (id: Long) -> Any>> = listOf()
+    fun getVehicleStats(): List<Pair<String, (id: Int) -> Any>> = listOf()
 }

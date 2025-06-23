@@ -3,9 +3,13 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.model.intsettings.BuildingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.IntersectionSettings
 import kotlin.math.max
 
-class Layout {
+class Layout(district: Int = 0) {
+    var district = district
+        private set
     val roads = mutableMapOf<Long, Road>()
     val intersections = mutableMapOf<Long, Intersection>()
     val intersectionRoadsNumber
@@ -26,6 +30,8 @@ class Layout {
 
         roadIdCount = other.roadIdCount
         intersectionIdCount = other.intersectionIdCount
+
+        district = other.district
     }
 
     fun addRoad(
@@ -52,7 +58,8 @@ class Layout {
             id = roadIdCount++,
             startIntersection = startIntersection,
             endIntersection = endIntersection,
-            geometry = spline
+            geometry = spline,
+            district = district
         )
 
         addRoad(newRoad)
@@ -111,26 +118,31 @@ class Layout {
         intersection.recalculateIntersectionRoads()
     }
 
-    fun deleteRoad(road: Road) {
+    fun deleteRoad(road: Road, deleteIntersections: Boolean = true) {
         road.startIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 deleteIntersection(it)
             }
+            roads.remove(road.id)
         }
-        roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings): Intersection {
+    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings?): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection =
-            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, intersectionSettings)
+            Intersection(
+                newIntersectionId,
+                position.xzProjection(),
+                DEFAULT_INTERSECTION_PADDING,
+                intersectionSettings
+            )
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }

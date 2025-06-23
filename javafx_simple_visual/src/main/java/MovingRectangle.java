@@ -5,6 +5,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import ru.nsu.trafficsimulator.backend.Simulator;
 
 import java.util.ArrayList;
 

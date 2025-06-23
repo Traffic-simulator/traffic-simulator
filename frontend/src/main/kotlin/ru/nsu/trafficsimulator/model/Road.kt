@@ -10,7 +10,8 @@ class Road(
     var endIntersection: Intersection,
     var leftLane: Int = 1,
     var rightLane: Int = 1,
-    var geometry: Spline
+    var geometry: Spline,
+    val district : Int
 ) {
     val startPadding
         get() = startIntersection.padding
@@ -124,7 +125,7 @@ class Road(
         endIntersection.recalculateIntersectionRoads(this)
     }
 
-    fun getIncomingLaneNumber(intersection: Intersection): Int {
+    fun getIncomingLaneCount(intersection: Intersection): Int {
         return when (intersection) {
             startIntersection -> leftLane
             endIntersection -> -rightLane
@@ -132,7 +133,7 @@ class Road(
         }
     }
 
-    fun getOutgoingLaneNumber(intersection: Intersection): Int {
+    fun getOutgoingLaneCount(intersection: Intersection): Int {
         return when (intersection) {
             startIntersection -> -rightLane
             endIntersection -> leftLane

@@ -1,15 +1,16 @@
 package ru.nsu.trafficsimulator
 
-import BackendAPI
+import ru.nsu.trafficsimulator.backend.BackendAPI
 import ISimulation
+import OpenDriveReader
 import OpenDriveWriter
-import com.badlogic.gdx.Application
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.InputProcessor
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.math.MathUtils.clamp
 import imgui.ImGui
@@ -20,12 +21,12 @@ import mu.KotlinLogging
 import org.lwjgl.glfw.GLFW
 import ru.nsu.trafficsimulator.editor.Editor
 import ru.nsu.trafficsimulator.graphics.Visualizer
+import ru.nsu.trafficsimulator.math.transformVehicles
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-
 
 val logger = KotlinLogging.logger("FRONTEND")
 
@@ -86,6 +87,10 @@ class Main : ApplicationAdapter() {
 
         Editor.init(camera)
         Editor.onStructuralLayoutChange.add { visualizer.updateLayout(it) }
+
+        Editor.addRoadStats(simState.backend.getRoadStats())
+        Editor.addIntersectionStats(simState.backend.getIntersectionStats())
+        Editor.addVehicleStats(simState.backend.getVehicleStats())
     }
 
     fun initializeSimulation(layout: Layout) {
@@ -93,10 +98,11 @@ class Main : ApplicationAdapter() {
         val currentDateTime = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy_HH.mm.ss")
         val formattedDateTime = currentDateTime.format(formatter)
+
+        // val dto2 = simState.backend.gatherSimulationStats(dto, 500)
         OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
-//        val dto = OpenDriveReader().read("self_made_town_01.xodr")
-//        Editor.layout = Deserializer.deserialize(dto)
-        simState.backend.init(dto, null, simState.startTime,500)
+        // val dto2 = simState.backend.gatherSimulationStats(OpenDriveReader().read("sausages4.xodr"), 500)
+        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, simState.startTime, 500)
     }
 
     override fun render() {
@@ -104,12 +110,15 @@ class Main : ApplicationAdapter() {
         val frameStartTime = System.nanoTime()
         if (state == ApplicationState.Simulator && !simState.isPaused) {
             simState.backend.updateSimulation(FRAMETIME * simState.speed)
-            visualizer.updateCars(simState.backend.getVehicles())
+            val vehicles = transformVehicles(simState.backend.getVehicles())
+            visualizer.updateCars(vehicles)
+            Editor.updateVehicles(vehicles)
             visualizer.updateSignals(simState.backend.getSignalStates())
             visualizer.updateHeatmap(simState.backend.getSegments())
 
             simState.currentTime = simState.backend.getSimulationTime()
         }
+        visualizer.updateSelectedItem(Editor.getSelectedItem())
 
         if (tmpInputProcessor != null) {
             Gdx.input.inputProcessor = tmpInputProcessor
@@ -123,9 +132,8 @@ class Main : ApplicationAdapter() {
 
         renderSimulationMenu()
 
-        if (state == ApplicationState.Editor) {
-            Editor.runImgui()
-        }
+        Editor.runImgui()
+
         ImGui.render()
         if (ImGui.getIO().wantCaptureKeyboard or ImGui.getIO().wantCaptureMouse) {
             tmpInputProcessor = Gdx.input.inputProcessor
@@ -194,28 +202,42 @@ class Main : ApplicationAdapter() {
             }
             if (state == ApplicationState.Editor) {
                 visualizer.cleanup()
-                inputMultiplexer.addProcessor(0, editorInputProcess)
+                Editor.viewOnlyMode(false)
+//                inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
-                inputMultiplexer.removeProcessor(editorInputProcess)
+//                inputMultiplexer.removeProcessor(editorInputProcess)
+                Editor.viewOnlyMode(true)
                 initializeSimulation(Editor.layout)
             }
         }
         if (state == ApplicationState.Simulator) {
-            val pauseLabel = if (simState.isPaused) { "|>" } else { "||" }
+            val pauseLabel = if (simState.isPaused) {
+                "|>"
+            } else {
+                "||"
+            }
             if (ImGui.button(pauseLabel)) {
                 simState.isPaused = !simState.isPaused
             }
             ImGui.sameLine()
-            if (ImGui.button(">")) {
+            if (ImGui.button("x1")) {
                 simState.speed = 1
             }
             ImGui.sameLine()
-            if (ImGui.button(">>")) {
-                simState.speed = 2
+            if (ImGui.button("x5")) {
+                simState.speed = 5
             }
             ImGui.sameLine()
-            if (ImGui.button(">>>")) {
-                simState.speed = 5
+            if (ImGui.button("x10")) {
+                simState.speed = 10
+            }
+            ImGui.sameLine()
+            if (ImGui.button("x60")) {
+                simState.speed = 60
+            }
+            ImGui.sameLine()
+            if (ImGui.button("x480")) {
+                simState.speed = 480
             }
             if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
                 visualizer.heatmapMode = !visualizer.heatmapMode

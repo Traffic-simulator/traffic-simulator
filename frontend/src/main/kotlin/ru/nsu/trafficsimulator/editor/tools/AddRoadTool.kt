@@ -4,9 +4,12 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import ru.nsu.trafficsimulator.editor.changes.AddRoadStateChange
+import ru.nsu.trafficsimulator.editor.changes.ConnectRoadsChange
 import ru.nsu.trafficsimulator.editor.changes.IStateChange
+import ru.nsu.trafficsimulator.editor.changes.SplitRoadStateChange
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.math.Vec3
+import ru.nsu.trafficsimulator.math.findRoad
 import ru.nsu.trafficsimulator.math.getIntersectionWithGround
 import ru.nsu.trafficsimulator.model.Intersection
 import ru.nsu.trafficsimulator.model.Layout
@@ -47,20 +50,71 @@ class AddRoadTool : IEditingTool {
         try {
             startPosition?.let { startPosition ->
                 val endPosition = getIntersectionWithGround(screenPos, camera!!) ?: return null
-                val existingEndIntersection = findRoadIntersectionAt(endPosition)
+                var existingEndIntersection = findRoadIntersectionAt(endPosition)
 
                 val dir = (endPosition - startPosition).normalized()
                 val startDirection = startPosition + dir * START_DIRECTION_LENGTH
                 val endDirection = endPosition + dir * START_DIRECTION_LENGTH
 
-                return AddRoadStateChange(
+                val roadChange = AddRoadStateChange(
                     startPosition to startDirection,
                     existingStartIntersection,
                     endPosition to endDirection,
                     existingEndIntersection
                 )
-            }
 
+                val startRoad = findRoad(layout!!, startPosition)
+                val endRoad = findRoad(layout!!, endPosition)
+
+                return when {
+                    // If we are connecting 2 roads
+                    startRoad != null && endRoad != null && existingStartIntersection == null && existingEndIntersection == null -> {
+                        val (startPosOnRoad, _) = startRoad.geometry.closestPoint(startPosition.xzProjection())
+                        existingStartIntersection = findRoadIntersectionAt(startPosOnRoad.toVec3())
+                        val (endPosOnRoad, _) = endRoad.geometry.closestPoint(endPosition.xzProjection())
+                        existingEndIntersection = findRoadIntersectionAt(endPosOnRoad.toVec3())
+                        ConnectRoadsChange(
+                            AddRoadStateChange(
+                                startPosOnRoad.toVec3() to startDirection,
+                                existingStartIntersection,
+                                endPosOnRoad.toVec3() to endDirection,
+                                existingEndIntersection
+                            ),
+                            startRoad, endRoad, startPosOnRoad.toVec3(), endPosOnRoad.toVec3()
+                        )
+                    }
+                    // If we are splitting by first click
+                    startRoad != null && existingStartIntersection == null -> {
+                        val (startPos, _) = startRoad.geometry.closestPoint(startPosition.xzProjection())
+                        existingStartIntersection = findRoadIntersectionAt(startPos.toVec3())
+                        SplitRoadStateChange(
+                            AddRoadStateChange(
+                                startPos.toVec3() to startDirection,
+                                existingStartIntersection,
+                                endPosition to endDirection,
+                                existingEndIntersection
+                            ),
+                            startRoad, startPos.toVec3(), false
+                        )
+                    }
+                    // If we are splitting by second click
+                    endRoad != null && existingEndIntersection == null -> {
+                        val (endPos, _) = endRoad.geometry.closestPoint(endPosition.xzProjection())
+                        existingEndIntersection = findRoadIntersectionAt(endPos.toVec3())
+                        SplitRoadStateChange(
+                            AddRoadStateChange(
+                                startPosition to startDirection,
+                                existingStartIntersection,
+                                endPos.toVec3() to endDirection,
+                                existingEndIntersection
+                            ),
+                            endRoad, endPos.toVec3(), true
+                        )
+                    }
+                    // If we aren't splitting
+                    else -> roadChange
+                }
+            }
             return null
         } finally {
             startPosition = null

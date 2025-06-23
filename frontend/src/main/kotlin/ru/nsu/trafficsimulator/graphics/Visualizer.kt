@@ -23,6 +23,7 @@ import ru.nsu.trafficsimulator.math.customSigmoid
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.model.Layout.Companion.LANE_WIDTH
 import ru.nsu.trafficsimulator.model.Road
+import ru.nsu.trafficsimulator.model.Vehicle
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.model.BuildingType
 import signals.SignalState
@@ -61,6 +62,8 @@ class Visualizer(private var layout: Layout) {
     private val trafficLights = mutableMapOf<Pair<Road, Boolean>, Scene>()
 
     private val modelBatch = ModelBatch()
+
+    private var selectedItem: Any? = null
 
     private var layoutScene: Scene? = null
 
@@ -161,22 +164,9 @@ class Visualizer(private var layout: Layout) {
         turnOffHeatmap()
     }
 
-    private fun turnOffHeatmap() {
-        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
-        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
-        mesh.getVertices(vertices)
-        val attributes = mesh.vertexAttributes
-        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
-        for (i in 0..<mesh.numVertices) {
-            vertices[heatmapAttrib.offset / 4 + i] = 0.0f
-        }
-        mesh.updateVertices(0, vertices)
-    }
-
-    fun updateCars(cars: List<ISimulation.VehicleDTO>) {
+    fun updateCars(cars: List<Vehicle>) {
         for (vehicle in cars) {
             val vehicleId = vehicle.id
-            val carRoad = vehicle.road
 
             // Если машина не добавлена, создаем новую ModelInstance
             if (!carInstances.containsKey(vehicleId)) {
@@ -186,29 +176,7 @@ class Visualizer(private var layout: Layout) {
             }
             val carInstance = carInstances[vehicleId]!!
 
-            val spline = Deserializer.planeViewToSpline(carRoad.planView)
-            val pointOnSpline = clamp(
-                if (vehicle.direction == Direction.BACKWARD) {
-                    spline.length - vehicle.distance
-                } else {
-                    vehicle.distance
-                }, 0.0, spline.length
-            )
-            val pos = spline.getPoint(pointOnSpline)
-            val dir = spline.getDirection(pointOnSpline).normalized() * if (vehicle.direction == Direction.BACKWARD) {
-                -1.0
-            } else {
-                1.0
-            }
-            val right = dir.toVec3().cross(Vec3.UP).normalized()
-            val angle = acos(dir.x) * sign(dir.y) + getVehicleLaneChangeAngle(vehicle)
-            val laneOffset = getVehicleOffset(vehicle)
-            val finalTranslation = pos.toVec3() + right * laneOffset * LANE_WIDTH + Vec3.UP
-            carInstance
-                .modelInstance
-                .transform
-                .setToRotationRad(Vec3.UP.toGdxVec(), angle.toFloat())
-                .setTranslation(finalTranslation.toGdxVec())
+            carInstance.modelInstance.transform.set(vehicle.transform)
         }
 
         // Удаление машин, которых больше нет в vehicleData
@@ -218,44 +186,6 @@ class Visualizer(private var layout: Layout) {
             sceneManager.removeScene(carInstances[key])
             carInstances.remove(key)
         }
-    }
-
-    fun getVehicleOffset(vehicle: ISimulation.VehicleDTO): Double {
-        if (vehicle.laneChangeInfo == null) {
-            return abs(vehicle.laneId) - 0.5
-        }
-
-        val lcInfo = vehicle.laneChangeInfo!!
-        val base = abs(lcInfo.toLaneId) - 0.5
-        val addition = 1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance)
-        if (abs(lcInfo.toLaneId) < abs(lcInfo.fromLaneId)) {
-            return base + addition
-        }
-        return base - addition
-    }
-
-
-    val middlePartLaneChangeAngle = customSigmoid(2.0, 6.0)
-    fun getVehicleLaneChangeAngle(vehicle: ISimulation.VehicleDTO): Double {
-        if (vehicle.laneChangeInfo == null) {
-            return 0.0
-        }
-
-        val lcInfo = vehicle.laneChangeInfo!!
-        val angle: Double
-        if (lcInfo.laneChangeCurrentDistance < lcInfo.laneChangeFullDistance / 3.0) {
-            angle = customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance)
-        } else
-            if (lcInfo.laneChangeCurrentDistance < 2.0 * lcInfo.laneChangeFullDistance / 3.0) {
-                angle = middlePartLaneChangeAngle
-            } else {
-                angle = (1.0 - customSigmoid(lcInfo.laneChangeCurrentDistance, lcInfo.laneChangeFullDistance))
-            }
-
-        if (abs(lcInfo.toLaneId) < abs(lcInfo.fromLaneId)) {
-            return angle
-        }
-        return -angle
     }
 
     fun updateSignals(signals: List<ISimulation.SignalDTO>) {
@@ -317,37 +247,45 @@ class Visualizer(private var layout: Layout) {
         if (layoutScene == null || layoutScene!!.modelInstance.model.meshes.isEmpty) {
             return
         }
-        val nodes = layoutScene!!.modelInstance.model.nodes
-        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
 
-        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
-        mesh.getVertices(vertices)
-        val indices = ShortArray(mesh.numIndices)
-        mesh.getIndices(indices)
+        data class MeshData(val mesh: Mesh) {
+            val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+            val indices = ShortArray(mesh.numIndices)
+
+            private val attributes = mesh.vertexAttributes
+            val colorAttrib = attributes.findByUsage(VertexAttributes.Usage.ColorUnpacked)
+            val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+
+            init {
+                mesh.getVertices(vertices)
+                mesh.getIndices(indices)
+            }
+        }
+        val nodes = layoutScene!!.modelInstance.model.nodes
+        val meshData: MutableMap<Mesh, MeshData> = mutableMapOf()
 
         val roadRegex = Regex("road(\\d+)")
 
-        val attributes = mesh.vertexAttributes
-        val colorAttrib = attributes.findByUsage(VertexAttributes.Usage.ColorUnpacked)
         val offsetInColorForOffset = 1
         val offsetInColorForLane = 0
-        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
 
         for (node in nodes) {
             for (nodePart in node.parts) {
                 val meshPart = nodePart.meshPart
                 val res = roadRegex.matchEntire(meshPart.id) ?: continue
                 val roadId = res.groups[1]?.value?.toLongOrNull() ?: throw Exception("Failed to parse road id??")
-                if (meshPart.mesh != mesh) {
-                    logger.warn { "Found mesh part with a different mesh" }
-                    continue
+                if (!meshData.containsKey(meshPart.mesh)) {
+                    meshData[meshPart.mesh] = MeshData(meshPart.mesh)
                 }
+                val data = meshData[meshPart.mesh]!!
+                val vertices = data.vertices
+                val indices = data.indices
+                val colorAttrib = data.colorAttrib
+                val heatmapAttrib = data.heatmapAttrib
 
-                val getOffsetAndLane = { vertexIndex: Short ->
-                    val offset =
-                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
-                    val lane =
-                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
+                val getOffsetAndLane = {vertexIndex: Short ->
+                    val offset = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
+                    val lane = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
                     offset to lane
                 }
 
@@ -358,34 +296,28 @@ class Visualizer(private var layout: Layout) {
                     val (offsetA, laneA) = getOffsetAndLane(vertexIndexA)
                     val (offsetB, laneB) = getOffsetAndLane(vertexIndexB)
                     val (offsetC, laneC) = getOffsetAndLane(vertexIndexC)
-                    val lane = -if (abs(laneA) >= abs(laneB) && abs(laneA) >= abs(laneC)) {
+                    val lane = if (abs(laneA) >= abs(laneB) && abs(laneA) >= abs(laneC)) {
                         laneA.toInt()
                     } else if (abs(laneB) >= abs(laneA) && abs(laneB) >= abs(laneC)) {
                         laneB.toInt()
                     } else {
                         laneC.toInt()
                     }
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] =
-                        getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] =
-                        getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] =
-                        getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] = getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] = getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] = getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
                 }
             }
         }
-        // TODO: Do double or even triple buffering of mesh values for better perf
-        mesh.updateVerticesImmediately(heatmapAttrib.offset / 4, vertices, mesh.numVertices)
+        for ((mesh, data) in meshData) {
+            // TODO: Do double or even triple buffering of mesh values for better perf
+            (mesh as RoadMesh).updateVerticesImmediately(data.heatmapAttrib.offset / 4, data.vertices, mesh.numVertices)
+        }
     }
 
     // Valid heatmap values lie in range [1.0, 2.0], offset by 1 from [0.0, 1.0]
     // heatmap value of 0.0 is an invalid value
-    private fun getHeatmapValue(
-        segments: List<ISimulation.SegmentDTO>,
-        roadId: Long,
-        laneId: Int,
-        offset: Float
-    ): Double {
+    private fun getHeatmapValue(segments: List<ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
         val segment = segments.find { it.road.id.toLong() == roadId && it.laneId == laneId } ?: return 0.0
         return segment.segments[min(floor(offset / segment.segmentLen).toInt(), segment.segments.size - 1)] + 1.0
     }
@@ -401,6 +333,32 @@ class Visualizer(private var layout: Layout) {
 
         placeTrafficLights()
         placeBuildings()
+    }
+
+    private fun selectCar(vehicle: Vehicle, select: Boolean) {
+        val carInstance = carInstances[vehicle.id] ?: return
+        for (material in carInstance.modelInstance.materials) {
+            material.set(PBRColorAttribute.createEmissive(Color.WHITE))
+            material.set(
+                PBRFloatAttribute.createEmissiveIntensity(if (select) { 0.2f } else { 0.0f })
+            )
+        }
+    }
+
+    fun updateSelectedItem(item: Any?) {
+        // TODO: support selecting roads and intersections
+        //  We could create separate meshes for each road and intersection
+        //  And then manipulate material. Or we could do something else... Maybe in attribute?
+        if (selectedItem is Vehicle) {
+            selectCar(selectedItem as Vehicle, false)
+        }
+
+        selectedItem = item
+        if (item == null) return
+
+        if (item is Vehicle) {
+            selectCar(item, true)
+        }
     }
 
     fun onResize(width: Int, height: Int) {
@@ -423,11 +381,7 @@ class Visualizer(private var layout: Layout) {
             }
             for (road in intersection.incomingRoads) {
                 val isStart = road.startIntersection == intersection
-                val distFromStart = if (isStart) {
-                    0.0
-                } else {
-                    road.length
-                }
+                val distFromStart = if (isStart) { 0.0 } else { road.length }
                 val key = road to isStart
                 visited.add(key)
                 if (!trafficLights.containsKey(key)) {
@@ -438,11 +392,7 @@ class Visualizer(private var layout: Layout) {
                 val scene = trafficLights[key]!!
                 val centerPos = road.getPoint(distFromStart)
                 val roadDirection = road.getDirection(distFromStart)
-                val laneId = if (isStart) {
-                    -road.leftLane
-                } else {
-                    road.rightLane
-                }.toDouble()
+                val laneId = if (isStart) { -road.leftLane } else { road.rightLane }.toDouble()
                 val offsetLen = if (isStart) {
                     road.leftLane
                 } else {
@@ -498,5 +448,17 @@ class Visualizer(private var layout: Layout) {
                 buildingScenes.add(buildingScene)
             }
         }
+    }
+
+    private fun turnOffHeatmap() {
+        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
+        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+        mesh.getVertices(vertices)
+        val attributes = mesh.vertexAttributes
+        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+        for (i in 0..<mesh.numVertices) {
+            vertices[heatmapAttrib.offset / 4 + i] = 0.0f
+        }
+        mesh.updateVertices(0, vertices)
     }
 }

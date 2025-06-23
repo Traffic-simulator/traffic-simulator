@@ -1,6 +1,5 @@
 package ru.nsu.trafficsimulator.math
 
-import java.lang.Math.pow
 import java.util.*
 import kotlin.math.*
 
@@ -170,11 +169,21 @@ class Spline {
     }
 
     /**
-     * @return Pair of closest point and distance from the start of that point
+     * @return Pair of closest point and direction at that point
      */
     fun closestPoint(point: Vec2): Pair<Vec2, Vec2> {
         return splineParts
             .map { it.closestPoint(point) }
+            .minBy { (closestPoint, _) -> point.distance(closestPoint) }
+    }
+
+    /**
+     * @return Triple of closest point, direction at that point and distance from the start of the spline part
+     */
+    fun closestPointWithDistance(point: Vec2): Triple<Vec2, Vec2, Double> {
+        return splineParts
+            .map { it.closestPointWithDistance(point) }
+            .mapIndexed { i, res -> Triple(res.first, res.second, res.third + splineParts[i].offset) }
             .minBy { (closestPoint, _) -> point.distance(closestPoint) }
     }
 
@@ -244,44 +253,21 @@ class Spline {
             throw IllegalArgumentException("Padding sum must be between 0 and length")
         }
 
-        val newSpline = Spline()
-
         val startIdx = splineParts.indexOfFirst { it.offset + it.length > startPadding }
         val endIdx = splineParts.indexOfLast { it.offset < length - endPadding }
 
         if (startIdx == endIdx) {
             val sp = splineParts[startIdx]
 
-            val gamma = (length - startPadding - endPadding) / length
-            val delta = startPadding / length
-
-            val x: Poly3
-            val y: Poly3
-            sp.x.let {
-                x = Poly3(
-                    it.a + it.b * delta + it.c * delta * delta + it.d * delta * delta * delta,
-                    gamma * (it.b + 2.0 * it.c * delta + 3.0 * it.d * delta * delta),
-                    gamma * gamma * (it.c + 3.0 * it.d * delta),
-                    gamma * gamma * gamma * it.d
-                )
-            }
-            sp.y.let {
-                y = Poly3(
-                    it.a + it.b * delta + it.c * delta * delta + it.d * delta * delta * delta,
-                    gamma * (it.b + 2.0 * it.c * delta + 3.0 * it.d * delta * delta),
-                    gamma * gamma * (it.c + 3.0 * it.d * delta),
-                    gamma * gamma * gamma * it.d
-                )
-            }
-            val partLength = calculateLength(x, y)
-            newSpline.splineParts.add(SplinePart(x, y, 0.0, partLength, true))
-            newSpline.length = partLength
-
-            return newSpline
+            return Spline(
+                sp.getPoint(startPadding),
+                sp.getPoint(startPadding) + sp.getDirection(startPadding),
+                sp.getPoint(length - endPadding),
+                sp.getPoint(length - endPadding) + sp.getDirection(length - endPadding)
+            )
         }
 
-
-        return newSpline
+        TODO("multisplinepart")
     }
 
 
@@ -332,8 +318,27 @@ class Spline {
             return Vec2(x.derivativeValue(distance), y.derivativeValue(distance))
         }
 
-        // Point, direction, distance from start
+        // Point, direction
         fun closestPoint(point: Vec2): Pair<Vec2, Vec2> {
+            val bestGuess = getGuessClosestToPoint(point)
+
+            return Pair(
+                Vec2(x.value(bestGuess), y.value(bestGuess)),
+                Vec2(x.derivativeValue(bestGuess), y.derivativeValue(bestGuess))
+            )
+        }
+
+        fun closestPointWithDistance(point: Vec2): Triple<Vec2, Vec2, Double> {
+            val bestGuess = getGuessClosestToPoint(point)
+
+            return Triple(
+                Vec2(x.value(bestGuess), y.value(bestGuess)),
+                Vec2(x.derivativeValue(bestGuess), y.derivativeValue(bestGuess)),
+                if (normalized) { calculateLength(x, y, bestGuess) } else { bestGuess }
+            )
+        }
+
+        private fun getGuessClosestToPoint(point: Vec2): Double {
             val maxValue = endDist
             val iterationCount = 5
             val sampleCount = 10
@@ -370,11 +375,7 @@ class Spline {
                     bestDistSq = dist
                 }
             }
-
-            return Pair(
-                Vec2(x.value(bestGuess), y.value(bestGuess)),
-                Vec2(x.derivativeValue(bestGuess), y.derivativeValue(bestGuess))
-            )
+            return bestGuess
         }
 
         private fun getNormalizedPosition(distance: Double): Double {

@@ -2,6 +2,7 @@ package junction_intersection
 
 import OpenDriveReader
 import org.junit.jupiter.api.Test
+import ru.nsu.trafficsimulator.backend.junction_intersection.JunctionIntersectionFinder
 import kotlin.test.assertTrue
 
 class JunctionIntersectionFinderTest {

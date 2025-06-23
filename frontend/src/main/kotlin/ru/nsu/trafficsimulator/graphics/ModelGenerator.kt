@@ -44,6 +44,7 @@ class ModelGenerator {
             TO_ROAD_HEIGHT.y += 0.01
             for (road in layout.roads.values) {
                 addRoadToModel(road, modelBuilder)
+
             }
             TO_ROAD_HEIGHT.y -= 0.01
 
@@ -108,32 +109,32 @@ class ModelGenerator {
 
             val insertSegment = fun(left: Vec3, pos: Vec3, right: Vec3, prevOffset: Double, offset: Double) {
                 // Top
-                for (lane in road.leftLane downTo -road.rightLane + 1) {
+                for (lane in road.rightLane downTo -road.leftLane + 1) {
                     val endLane = lane.toDouble()
                     val startLane = (lane - 1).toDouble()
                     meshPartBuilder.rect(
                         MeshPartBuilder.VertexInfo().set(
                             (prevPos + prevRight * endLane + TO_ROAD_HEIGHT).toGdxVec(),
                             Vec3.UP.toGdxVec(),
-                            colorOf(endLane.toFloat(), prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            colorOf(-endLane.toFloat(), prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
                             null
                         ),
                         MeshPartBuilder.VertexInfo().set(
                             (pos + right * endLane + TO_ROAD_HEIGHT).toGdxVec(),
                             Vec3.UP.toGdxVec(),
-                            colorOf(endLane.toFloat(), offset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            colorOf(-endLane.toFloat(), offset.toFloat(), leftLaneCntF, rightLaneCntF),
                             null
                         ),
                         MeshPartBuilder.VertexInfo().set(
                             (pos + right * startLane + TO_ROAD_HEIGHT).toGdxVec(),
                             Vec3.UP.toGdxVec(),
-                            colorOf(startLane.toFloat(), offset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            colorOf(-startLane.toFloat(), offset.toFloat(), leftLaneCntF, rightLaneCntF),
                             null
                         ),
                         MeshPartBuilder.VertexInfo().set(
                             (prevPos + prevRight * startLane + TO_ROAD_HEIGHT).toGdxVec(),
                             Vec3.UP.toGdxVec(),
-                            colorOf(startLane.toFloat(), prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
+                            colorOf(-startLane.toFloat(), prevOffset.toFloat(), leftLaneCntF, rightLaneCntF),
                             null
                         ),
                     )
@@ -142,19 +143,19 @@ class ModelGenerator {
                 // Right
                 val rightNormal = (pos - prevPos).cross(Vec3.UP).toGdxVec()
                 meshPartBuilder.rect(
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight).toGdxVec(), rightNormal, Color.CLEAR, null),
-                    MeshPartBuilder.VertexInfo().set((pos + right).toGdxVec(), rightNormal, Color.CLEAR, null),
-                    MeshPartBuilder.VertexInfo().set((pos + right + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, Color.CLEAR, null),
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight * road.rightLane.toDouble()).toGdxVec(), rightNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((pos + right * road.rightLane.toDouble()).toGdxVec(), rightNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((pos + right * road.rightLane.toDouble() + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevRight * road.rightLane.toDouble() + TO_ROAD_HEIGHT).toGdxVec(), rightNormal, Color.CLEAR, null),
                 )
 
                 // Left
                 val leftNormal = -rightNormal
                 meshPartBuilder.rect(
-                    MeshPartBuilder.VertexInfo().set((pos + left).toGdxVec(), leftNormal, Color.CLEAR, null),
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft).toGdxVec(), leftNormal, Color.CLEAR, null),
-                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, Color.CLEAR, null),
-                    MeshPartBuilder.VertexInfo().set((pos + left + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((pos + left * road.leftLane.toDouble()).toGdxVec(), leftNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft * road.leftLane.toDouble()).toGdxVec(), leftNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((prevPos + prevLeft * road.leftLane.toDouble() + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, Color.CLEAR, null),
+                    MeshPartBuilder.VertexInfo().set((pos + left * road.leftLane.toDouble() + TO_ROAD_HEIGHT).toGdxVec(), leftNormal, Color.CLEAR, null),
                 )
             }
 

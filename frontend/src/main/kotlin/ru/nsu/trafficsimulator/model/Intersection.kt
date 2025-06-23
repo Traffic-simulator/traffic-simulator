@@ -3,6 +3,10 @@ package ru.nsu.trafficsimulator.model
 import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
+import ru.nsu.trafficsimulator.model.intsettings.BuildingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.IntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.MergingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.SplitDistrictsIntersectionSettings
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -15,7 +19,7 @@ class Intersection(
     val incomingRoads: MutableSet<Road> = HashSet()
     val intersectionRoads: MutableMap<Long, IntersectionRoad> = HashMap()
     var signals: HashMap<Road, Signal> = HashMap()
-    private var irNextId: Long = 0
+    var irNextId: Long = 0
 
     val building: BuildingIntersectionSettings?
         get() = if (intersectionSettings != null && intersectionSettings is BuildingIntersectionSettings) {
@@ -30,6 +34,13 @@ class Intersection(
         } else null
     val isMerging: Boolean
         get() = merging != null
+
+    val splitSettings: SplitDistrictsIntersectionSettings?
+        get() = if (intersectionSettings != null && intersectionSettings is SplitDistrictsIntersectionSettings) {
+            intersectionSettings as SplitDistrictsIntersectionSettings
+        } else null
+    val isSplitting: Boolean
+        get() = splitSettings != null
 
     val hasSignals: Boolean get() = signals.isNotEmpty()
     val incomingRoadsCount get() = incomingRoads.size
@@ -90,7 +101,8 @@ class Intersection(
                     fromRoad = fromRoad,
                     toRoad = toRoad,
                     geometry = geometry,
-                    laneLinkage = fromLane to toLane
+                    laneLinkage = fromLane to toLane,
+                    district = fromRoad.district // maybe tak, sporno
                 )
                 newIntersectionRoad.recalculateGeometry()
 
@@ -110,8 +122,8 @@ class Intersection(
 
 
     private fun addIntersectionRoad(fromRoad: Road, toRoad: Road) {
-        val incomingLaneNumber = fromRoad.getIncomingLaneNumber(this)
-        val outgoingLaneNumber = toRoad.getOutgoingLaneNumber(this)
+        val incomingLaneNumber = fromRoad.getIncomingLaneCount(this)
+        val outgoingLaneNumber = toRoad.getOutgoingLaneCount(this)
 
         val incomingSign = incomingLaneNumber.sign
         val outgoingSign = outgoingLaneNumber.sign
@@ -126,7 +138,8 @@ class Intersection(
                     fromRoad = fromRoad,
                     toRoad = toRoad,
                     geometry = geometry,
-                    laneLinkage = incomingLane * incomingSign to outgoingLane * outgoingSign
+                    laneLinkage = incomingLane * incomingSign to outgoingLane * outgoingSign,
+                    district = fromRoad.district
                 )
                 newIntersectionRoad.recalculateGeometry()
 
