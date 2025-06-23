@@ -118,26 +118,31 @@ class Layout(district: Int = 0) {
         intersection.recalculateIntersectionRoads()
     }
 
-    fun deleteRoad(road: Road) {
+    fun deleteRoad(road: Road, deleteIntersections: Boolean = true) {
         road.startIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 deleteIntersection(it)
             }
         }
         road.endIntersection.let {
             it.removeRoad(road)
-            if (it.incomingRoadsCount == 0) {
+            if (it.incomingRoadsCount == 0 && deleteIntersections) {
                 deleteIntersection(it)
             }
+            roads.remove(road.id)
         }
-        roads.remove(road.id)
     }
 
-    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings): Intersection {
+    fun addIntersection(position: Vec3, intersectionSettings: IntersectionSettings?): Intersection {
         val newIntersectionId = intersectionIdCount++
         val newIntersection =
-            Intersection(newIntersectionId, position.xzProjection(), DEFAULT_INTERSECTION_PADDING, intersectionSettings)
+            Intersection(
+                newIntersectionId,
+                position.xzProjection(),
+                DEFAULT_INTERSECTION_PADDING,
+                intersectionSettings
+            )
         intersections[newIntersectionId] = newIntersection
         return newIntersection
     }
