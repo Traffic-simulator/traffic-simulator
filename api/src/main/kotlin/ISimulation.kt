@@ -1,3 +1,4 @@
+import opendrive.OpenDRIVE
 import signals.SignalState
 import vehicle.Direction
 import java.time.LocalTime
@@ -76,6 +77,8 @@ interface ISimulation {
              regionId: Int?,
              startingTime: LocalTime,
              seed: Long): Error?
+
+    fun gatherSimulationStats(layout: OpenDRIVE, seed: Long): OpenDRIVE
 
     /**
      * Simulate simulation
