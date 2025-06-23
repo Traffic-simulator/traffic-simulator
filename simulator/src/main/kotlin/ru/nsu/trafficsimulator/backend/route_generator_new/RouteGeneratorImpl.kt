@@ -89,7 +89,9 @@ class RouteGeneratorImpl(
             var endTravelPoint: TravelPoint
             var endJunctionId: String
             if (currentPosition + 1 == travel.getPlanLength()) {
-                endJunctionId = "-100"
+//                endJunctionId = "-100"
+                endTravelPoint = travel.getIthPoint(currentPosition)
+                endJunctionId = endTravelPoint.junctionId
             } else {
                 endTravelPoint = travel.getIthPoint(currentPosition + 1)
                 endJunctionId = endTravelPoint.junctionId

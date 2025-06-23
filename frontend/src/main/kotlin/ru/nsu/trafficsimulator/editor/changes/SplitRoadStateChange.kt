@@ -82,6 +82,7 @@ class SplitRoadStateChange(
             startIntersection = originalRoad.startIntersection,
             endIntersection = newIntersection,
             geometry = firstSpline,
+            district = layout.district
         )
 
         val road2 = Road(
@@ -89,6 +90,7 @@ class SplitRoadStateChange(
             startIntersection = newIntersection,
             endIntersection = originalRoad.endIntersection,
             geometry = secondSpline,
+            district = layout.district
         )
 
         return Triple(road1, road2, newIntersection)

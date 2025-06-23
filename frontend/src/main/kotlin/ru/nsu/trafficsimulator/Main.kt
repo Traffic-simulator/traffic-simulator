@@ -101,8 +101,8 @@ class Main : ApplicationAdapter() {
 
         // val dto2 = simState.backend.gatherSimulationStats(dto, 500)
         OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
-        val dto2 = simState.backend.gatherSimulationStats(OpenDriveReader().read("sausages4.xodr"), 500)
-        simState.backend.init(dto2, ISimulation.DrivingSide.RIGHT, null, simState.startTime, 500)
+        // val dto2 = simState.backend.gatherSimulationStats(OpenDriveReader().read("sausages4.xodr"), 500)
+        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, simState.startTime, 500)
     }
 
     override fun render() {
