@@ -296,6 +296,8 @@ varying vec3 v_normal;
 
 #endif //normalFlag
 
+varying vec4 v_color;
+
 #ifdef blendedFlag
 uniform float u_opacity;
 #ifdef alphaTestFlag
@@ -303,7 +305,7 @@ uniform float u_alphaTest;
 #endif //alphaTestFlag
 #endif //blendedFlag
 
-#ifdef textureFlag
+#ifdef textureCoord0Flag
 varying MED vec2 v_texCoord0;
 #endif
 
@@ -490,11 +492,11 @@ vec4 getBaseColor()
 #endif
 
 // Comment out diffuse textures for custom shaders
-#ifdef diffuseTextureFlag
-    vec4 baseColor = SRGBtoLINEAR(texture2D(u_diffuseTexture, v_diffuseUV)) * baseColorFactor;
-#else
+// #ifdef diffuseTextureFlag
+    // vec4 baseColor = SRGBtoLINEAR(texture2D(u_diffuseTexture, v_diffuseUV)) * baseColorFactor;
+// #else
     vec4 baseColor = baseColorFactor;
-#endif
+// #endif
 
 #ifdef colorFlag
     baseColor *= v_color;
@@ -599,6 +601,7 @@ uniform vec4 u_cameraPosition;
 uniform mat4 u_worldTrans;
 
 varying vec3 v_position;
+varying float v_heatmap;
 
 #ifdef transmissionSourceFlag
 uniform sampler2D u_transmissionSourceSampler;
@@ -1250,6 +1253,26 @@ void main() {
     float alphaRoughness = perceptualRoughness * perceptualRoughness;
 
     vec4 baseColor = getBaseColor();
+    float x_abs = abs(v_color.x);
+    float closest_lane = round(v_color.x);
+    bool is_border_lane = (abs(closest_lane - v_color.z) < 0.01) || (abs(closest_lane - v_color.w) < 0.01);
+    vec3 black_color = vec3(0.1, 0.1, 0.1);
+    vec3 white_color = vec3(1.0, 1.0, 1.0);
+    vec3 red_color = vec3(1.0, 0.0, 0.0);
+    vec3 green_color = vec3(0.0, 0.1, 0.0);
+    if (x_abs < LINE_WIDTH) {
+        baseColor.xyz = black_color;
+    } else if (x_abs < 3 * LINE_WIDTH) {
+        baseColor.xyz = white_color;
+    } else if (abs(v_color.x - closest_lane) <= 2 * LINE_WIDTH && is_border_lane) {
+        baseColor.xyz = white_color;
+    } else if (abs(v_color.x - closest_lane) <= LINE_WIDTH && fract(v_color.y) >= 0.5) {
+        baseColor.xyz = white_color;
+    } else if (v_heatmap >= 1.0 && v_heatmap <= 2.0) {
+        baseColor.xyz = mix(red_color, green_color, v_heatmap - 1.0);
+    } else {
+        baseColor.xyz = black_color;
+    }
 
 #ifdef iorFlag
     vec3 f0 = vec3(pow(( u_ior - 1.0) /  (u_ior + 1.0), 2.0));

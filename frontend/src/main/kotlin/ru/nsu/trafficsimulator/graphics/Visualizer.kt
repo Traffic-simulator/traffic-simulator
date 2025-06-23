@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g3d.Environment
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelBatch
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
@@ -29,6 +30,7 @@ import java.util.HashMap
 import kotlin.math.*
 
 class Visualizer(private var layout: Layout) {
+    private val AMBIENT_LIGHT_INTENSITY = 0.2f
     private val sceneManager = SceneManager()
     private val camera: PerspectiveCamera
 
@@ -74,7 +76,7 @@ class Visualizer(private var layout: Layout) {
     init {
         val environment = Environment()
         environment.add(
-            DirectionalShadowLight(1024, 1024, 1000.0f, 1000.0f, 0.1f, 1000.0f).set(
+            DirectionalLight().set(
                 0.9f,
                 0.9f,
                 0.9f,
@@ -83,6 +85,12 @@ class Visualizer(private var layout: Layout) {
                 -0.2f
             )
         )
+        environment.set(PBRColorAttribute.createAmbientLight(
+            AMBIENT_LIGHT_INTENSITY,
+            AMBIENT_LIGHT_INTENSITY,
+            AMBIENT_LIGHT_INTENSITY,
+            1.0f
+        ))
         sceneManager.environment = environment
 
         sceneManager.skyBox = SceneSkybox(
@@ -104,11 +112,16 @@ class Visualizer(private var layout: Layout) {
         camera.update()
         sceneManager.camera = camera
 
-        sceneManager.setShaderProvider(CustomShaderProvider("shaders/pbr.vs.glsl", "shaders/pbr.fs.glsl"))
+        sceneManager.setShaderProvider(CustomShaderProvider(
+            "shaders/road.vs.glsl",
+            "shaders/road.fs.glsl",
+            "shaders/pbr.vs.glsl",
+            "shaders/pbr.fs.glsl"
+        ))
 
         // Add ground
         val modelBuilder = ModelBuilder()
-        val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 0.8f, 0.0f, 1.0f)))
+        val groundMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.0f, 1.0f, 0.0f, 1.0f)))
         modelBuilder.begin()
         val meshPartBuilder = modelBuilder.part(
             "Ground",
