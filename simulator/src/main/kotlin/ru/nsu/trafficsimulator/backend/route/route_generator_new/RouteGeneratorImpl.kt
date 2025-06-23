@@ -1,11 +1,11 @@
-package ru.nsu.trafficsimulator.backend.route_generator_new
+package ru.nsu.trafficsimulator.backend.route.route_generator_new
 
 import ru.nsu.trafficsimulator.backend.network.Waypoint
-import ru.nsu.trafficsimulator.backend.route_generator.IRouteGenerator
-import ru.nsu.trafficsimulator.backend.route_generator.RouteGeneratorDespawnListener
-import ru.nsu.trafficsimulator.backend.route_generator.VehicleCreationListener
-import ru.nsu.trafficsimulator.backend.route_generator.WaypointSpawnAbilityChecker
-import ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function.Building
+import ru.nsu.trafficsimulator.backend.route.IRouteGenerator
+import ru.nsu.trafficsimulator.backend.route.RouteGeneratorDespawnListener
+import ru.nsu.trafficsimulator.backend.route.VehicleCreationListener
+import ru.nsu.trafficsimulator.backend.route.WaypointSpawnAbilityChecker
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function.Building
 
 class RouteGeneratorImpl(
     startingTime: Double,     // In seconds

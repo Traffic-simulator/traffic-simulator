@@ -1,12 +1,12 @@
-package ru.nsu.trafficsimulator.backend.route_generator_new
+package ru.nsu.trafficsimulator.backend.route.route_generator_new
 
-import ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function.TravelDesireFunction
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function.TravelDesireFunction
 
 class ModelConfig {
     companion object {
         val defaultTravelDesireDistribution =
             TravelDesireFunction(listOf(
-                2.0, 2.0, 2.0, 1.0, 1.0, 1.0, // 00:00 - 06:00
+                10.0, 10.0, 10.0, 1.0, 1.0, 1.0, // 00:00 - 06:00
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // 06:00 - 12:00
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, // 12:00 - 18:00
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0  // 18:00 - 00:00

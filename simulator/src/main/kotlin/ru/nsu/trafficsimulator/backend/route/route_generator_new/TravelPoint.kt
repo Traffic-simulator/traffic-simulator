@@ -1,4 +1,4 @@
-package ru.nsu.trafficsimulator.backend.route_generator_new
+package ru.nsu.trafficsimulator.backend.route.route_generator_new
 
 class TravelPoint (
     val junctionId: String,//место положение куда поехать

@@ -1,27 +1,22 @@
 package ru.nsu.trafficsimulator.backend
 
 import ISimulation
-import ru.nsu.trafficsimulator.backend.junction_intersection.JunctionIntersectionFinder
 import mu.KotlinLogging
-import ru.nsu.trafficsimulator.backend.network.Network
 import opendrive.ERoadLinkElementType
+import opendrive.OpenDRIVE
+import ru.nsu.trafficsimulator.backend.junction_intersection.JunctionIntersectionFinder
+import ru.nsu.trafficsimulator.backend.network.Network
 import ru.nsu.trafficsimulator.backend.network.Road
 import ru.nsu.trafficsimulator.backend.network.Waypoint
-import opendrive.OpenDRIVE
-import ru.nsu.trafficsimulator.backend.path.Path
-import ru.nsu.trafficsimulator.backend.path.algorithms.DijkstraPathBuilder
-import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
-import ru.nsu.trafficsimulator.backend.path.cost_function.StaticLengthCostFunction
-import ru.nsu.trafficsimulator.backend.route_generator.*
-import ru.nsu.trafficsimulator.backend.route_generator_new.RouteGeneratorImpl
-import ru.nsu.trafficsimulator.backend.route_generator_new.discrete_function.Building
-import vehicle.Direction
+import ru.nsu.trafficsimulator.backend.route.*
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.RouteGeneratorImpl
+import ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function.Building
+import ru.nsu.trafficsimulator.backend.utils.BuildingsParser
 import ru.nsu.trafficsimulator.backend.vehicle.Vehicle
-import ru.nsu.trafficsimulator.backend.vehicle.Vehicle.Companion.pathManager
 import ru.nsu.trafficsimulator.backend.vehicle.VehicleDetector
 import ru.nsu.trafficsimulator.backend.vehicle.model.IDM
+import vehicle.Direction
 import java.time.LocalTime
-import kotlin.collections.ArrayList
 import kotlin.random.Random
 
 // Route - source point and destination point.
@@ -49,44 +44,13 @@ class Simulator(openDrive: OpenDRIVE,
     var currentTime: Double = startingTime.toSecondOfDay().toDouble()
     var updateIterationsCounter: Long = 0
 
-    private val regionAPI = object: IRegionAPI {
-        // TODO: Use CachedDijkstraPathBuilder
-        val costFunction: ICostFunction = StaticLengthCostFunction()
-        val pathBuilder = DijkstraPathBuilder(network, costFunction)
-
-        override fun isRegionRoad(roadId: Int, regionId: Int): Boolean {
-            return isRegionRoad(roadId.toString(), regionId)
-        }
-
-        override fun isRegionRoad(roadId: String, regionId: Int): Boolean {
-            return network.getRoadById(roadId).region == regionId
-        }
-
-        override fun getGlobalPath(source: Waypoint, destination: Waypoint): Pair<Double, List<Path.PathWaypoint>> {
-            return pathBuilder.getPath(source, destination, 0.0)
-        }
-
-        override fun getPathTime(path: List<Path.PathWaypoint>, beforeExcluded: Path.PathWaypoint): Double {
-            val roads = path.takeWhile{ it != beforeExcluded }
-            var cost = 0.0
-            // TODO: USE TIMED COST FUNCTION
-            roads.forEach { cost += costFunction.getLaneCost(it.lane) / 16.0 /* TODO: drop this divison later*/ }
-            return cost
-        }
-
-        override fun getWaypointAvgSpeed(waypoint: Waypoint): Double {
-            return 8.0 // for now it's ok
-        }
-    }
-
     init {
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
         if (regionId == null) {
             routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings, seed)
         } else {
-            val regionAPI: IRegionAPI = regionAPI
-            routeGeneratorAPI = RegionRouteGenerator(regionId, regionAPI, RouteGeneratorImpl(currentTime, buildings, seed))
+            routeGeneratorAPI = RegionRouteGenerator(regionId, network, RouteGeneratorImpl(currentTime, buildings, seed))
         }
         Vehicle.initialize(network, this)
     }

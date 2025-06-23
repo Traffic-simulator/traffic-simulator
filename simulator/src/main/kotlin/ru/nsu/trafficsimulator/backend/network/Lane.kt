@@ -1,7 +1,7 @@
 package ru.nsu.trafficsimulator.backend.network
 
 import ru.nsu.trafficsimulator.backend.SimulationConfig
-import ru.nsu.trafficsimulator.backend.heatmap.Segment
+import ru.nsu.trafficsimulator.backend.network.heatmap.Segment
 import ru.nsu.trafficsimulator.backend.network.signals.Signal
 import opendrive.EUnitSpeed
 import opendrive.TRoadLanesLaneSectionLcrLaneLink
@@ -31,7 +31,7 @@ class Lane(val tlane: TRoadLanesLaneSectionLrLane, val road: Road, val laneId: I
     }
 
     fun getMaxSpeed(): Double {
-        val defaultMaxSpeed = 30.0
+        val defaultMaxSpeed = 80.0 / 3.6 // 80 km/h - default maxspeed
         val speed = road.troad.type?.firstOrNull()?.speed ?: return defaultMaxSpeed
 
         return when (speed.unit) {

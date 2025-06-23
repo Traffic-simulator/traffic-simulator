@@ -7,4 +7,6 @@ interface ICostFunction {
     fun getLaneCost(lane: Lane): Double
 
     fun getLaneChangeCost(numLaneChanges: Int): Double
+
+    fun getStatLaneCost(lane: Lane, secondsOfDay: Double): Double
 }
