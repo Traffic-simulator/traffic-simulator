@@ -6,6 +6,10 @@ import ru.nsu.trafficsimulator.math.Poly3
 import ru.nsu.trafficsimulator.math.Spline
 import ru.nsu.trafficsimulator.math.Vec2
 import ru.nsu.trafficsimulator.model.*
+import ru.nsu.trafficsimulator.model.intsettings.BuildingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.BuildingType
+import ru.nsu.trafficsimulator.model.intsettings.MergingIntersectionSettings
+import ru.nsu.trafficsimulator.model.intsettings.SplitDistrictsIntersectionSettings
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -14,7 +18,14 @@ private val INVALID_INTERSECTION_POSITION = Vec2(Double.POSITIVE_INFINITY, Doubl
 class Deserializer {
     companion object {
         fun deserialize(openDRIVE: OpenDRIVE): Layout {
-            val layout = Layout()
+            val userParameters: MutableMap<String, String> = mutableMapOf()
+            openDRIVE.getGAdditionalData().forEach { data ->
+                val userData = data as TUserData
+                userParameters[userData.code] = userData.value
+            }
+
+            val district = userParameters["district"]?.toInt() ?: 0
+            val layout = Layout(district)
 
             val intersections = openDRIVE.junction
                 .map { deserializeIntersection(it) }
@@ -22,13 +33,13 @@ class Deserializer {
 
             val roads = openDRIVE.road
                 .filter { it.junction == "-1" }
-                .map { deserializeRoad(it, layout.intersections) }
+                .map { deserializeRoad(it, layout.intersections, district) }
             roads.forEach { pushRoad(it, layout) }
             layout.intersectionIdCount = layout.intersections.keys.max() + 1
 
             val intersectionRoads = openDRIVE.road
                 .filter { it.junction != "-1" }
-                .map { deserializeIntersectionRoad(it, layout.intersections, layout.roads) }
+                .map { deserializeIntersectionRoad(it, layout.intersections, layout.roads, district) }
             intersectionRoads.forEach { pushIntersectionRoad(it, layout) }
 
             recalculateIntersectionPosition(layout)
@@ -39,7 +50,11 @@ class Deserializer {
         }
 
 
-        private fun deserializeRoad(tRoad: TRoad, idToIntersection: MutableMap<Long, Intersection>): Road {
+        private fun deserializeRoad(
+            tRoad: TRoad,
+            idToIntersection: MutableMap<Long, Intersection>,
+            layoutDistrict: Int
+        ): Road {
             val userParameters: MutableMap<String, String> = mutableMapOf()
             tRoad.getGAdditionalData().forEach { data ->
                 val userData = data as TUserData
@@ -98,7 +113,8 @@ class Deserializer {
                 endIntersection,
                 leftLane,
                 rightLane,
-                spline
+                spline,
+                userParameters["district"]?.toInt() ?: layoutDistrict
             )
 
             // See https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/latest/specification/14_signals/14_01_introduction.html
@@ -139,8 +155,15 @@ class Deserializer {
         private fun deserializeIntersectionRoad(
             tRoad: TRoad,
             idToIntersection: Map<Long, Intersection>,
-            idToRoad: Map<Long, Road>
+            idToRoad: Map<Long, Road>,
+            layoutDistrict: Int
         ): IntersectionRoad {
+            val userParameters: MutableMap<String, String> = mutableMapOf()
+            tRoad.getGAdditionalData().forEach { data ->
+                val userData = data as TUserData
+                userParameters[userData.code] = userData.value
+            }
+
             val intersection = idToIntersection[tRoad.junction.toLong()]
 
             val leftLanes = tRoad.lanes.laneSection[0]?.left?.lane?.count { it.type == ELaneType.DRIVING } ?: 0
@@ -161,7 +184,8 @@ class Deserializer {
                 toRoad = idToRoad[tRoad.link.successor.elementId.toLong()]
                     ?: throw IllegalArgumentException("Intersection road have no successor"),
                 geometry = planeViewToSpline(tRoad.planView),
-                laneLinkage = link.predecessor[0].id.toInt() to link.successor[0].id.toInt()
+                laneLinkage = link.predecessor[0].id.toInt() to link.successor[0].id.toInt(),
+                district = userParameters["district"]?.toInt() ?: layoutDistrict
             )
 
             intersection.intersectionRoads[intersectionRoad.id] = intersectionRoad
@@ -178,7 +202,7 @@ class Deserializer {
             val intersection = Intersection(
                 junction.id.toLong(),
                 position = INVALID_INTERSECTION_POSITION,
-                intersectionSettings = MergingIntersectionSettings(0, 1) // tmp vals
+                intersectionSettings = null
             )
 
             userParameters["position"]?.let {
@@ -192,7 +216,31 @@ class Deserializer {
             if (userParameters.containsKey("buildingType")) {
                 intersection.intersectionSettings =
                     BuildingIntersectionSettings(BuildingType.valueOf(userParameters["buildingType"]!!)).apply {
-                    capacity = userParameters["buildingCapacity"]!!.toInt()
+                        capacity = userParameters["buildingCapacity"]!!.toInt()
+                    }
+            }
+
+            userParameters["mergingIntersection"]?.let { isMerging ->
+                if (isMerging.toBoolean()) {
+                    intersection.intersectionSettings =
+                        MergingIntersectionSettings(
+                            userParameters["firstDistrict"]?.toInt()
+                                ?: throw IllegalArgumentException("There is no first district"),
+                            userParameters["secondDistrict"]?.toInt()
+                                ?: throw IllegalArgumentException("There is no second district")
+                        )
+                }
+            }
+
+            userParameters["splitIntersection"]?.let { isSplit ->
+                if (isSplit.toBoolean()) {
+                    intersection.intersectionSettings =
+                        SplitDistrictsIntersectionSettings(
+                            userParameters["firstDistrict"]?.toInt()
+                                ?: throw IllegalArgumentException("There is no first district"),
+                            userParameters["secondDistrict"]?.toInt()
+                                ?: throw IllegalArgumentException("There is no second district")
+                        )
                 }
             }
 

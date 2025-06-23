@@ -50,6 +50,7 @@ class Vehicle(
     var position = 0.0
     var despawned = false
     var distToClosestJunctionTmp: Double = SimulationConfig.INF
+    var blockingFactors = ""
 
     init {
         lane.addVehicle(this)
@@ -100,7 +101,7 @@ class Vehicle(
     fun updateAcceleration() {
         val closestJunction = getClosestJunction()
         var junctionAcc = SimulationConfig.INF
-
+        blockingFactors = ""
         // Rely on that traffic lights are placed in the end of each lane.
         // If lane contains red traffic light
 
@@ -109,6 +110,7 @@ class Vehicle(
             // Stop before this signal
             junctionAcc = IDM.getStopAcceleration(this, this.speed, lane.road.troad.length - position)
             logger.debug("Veh@${vehicleId} will stop because of TrafficLight@${lane.signal!!.id}")
+            blockingFactors = "TrafficLight@${lane.signal!!.id}"
         } else
         if (closestJunction != null && closestJunction.distance < JUNCTION_BLOCK_DISTANCE) {
             val junction = network.getJunctionById(closestJunction.junctionId)
@@ -125,11 +127,13 @@ class Vehicle(
                 // val hasFreePlace: Boolean = minPosVeh == null || minPosVeh.position > 2 * MIN_GAP + minPosVeh.length
                 val hasFreePlace: Boolean = true
 
-                if (hasFreePlace && junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)) {
+                val tryBlockResult = junction.tryBlockTrajectoryVehicle(closestJunction.connectingRoadId, vehicleId)
+                if (hasFreePlace && tryBlockResult.first) {
                     // Trajectory was succesfully blocked by us, can continue driving
                 } else {
                     // Trajectory was blocked, have to stop before junction
                     junction.unlockTrajectoryVehicle(vehicleId)
+                    blockingFactors = tryBlockResult.second
                     junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
                 }
             }

@@ -4,10 +4,11 @@ import ru.nsu.trafficsimulator.math.Spline
 import kotlin.math.abs
 
 data class IntersectionRoad(
-    var id: Long,
+    val id: Long,
     val intersection: Intersection,
     val fromRoad: Road,
-    val toRoad: Road, val laneLinkage: Pair<Int, Int>, var geometry: Spline
+    val toRoad: Road, val laneLinkage: Pair<Int, Int>, var geometry: Spline,
+    val district: Int
 ) {
     val lane get() = 1
 

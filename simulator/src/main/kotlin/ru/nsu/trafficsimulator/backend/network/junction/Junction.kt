@@ -60,7 +60,7 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
      *     2) Игнорировать блокировки если они приходят от машин сзади на этой же дороге (стремно), но в нашей системе где нет двух подряд идущих дорог работать будет.
      *          Почти будет, так как мы можем заблочить следующий перекресток, находясь на предыдущем...
      */
-    fun tryBlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int): Boolean {
+    fun tryBlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int): Pair<Boolean, String> {
         assert(trajBlockingFactors[connectingRoadId] != null)
 
         // TODO: Can not block if already blocked, perfomance optimization
@@ -75,15 +75,14 @@ class Junction(val tjunction: TJunction, val intersections: MutableList<Intersec
             }
 
             blockingFactorsString = blockingFactorsString.trim()
-            logger.debug("Veh@${vehicleId} desired trajectory with roadId@${connectingRoadId} is blocked by ${blockingFactorsString}, will stop before junction")
-            return false
+            return Pair(false, blockingFactorsString)
         }
 
         // Blocking trajectory
         trajBlockList[connectingRoadId]!!.blockList.forEach { trajBlockingFactors[it.connectingRoad]!!.addBlockingFactor(
             TrajectoryBlockingFactors.BlockingReason.DEFAULT, vehicleId) }
         logger.debug("Veh@${vehicleId} succesfully blocked trajectory with roadId@${connectingRoadId}")
-        return true
+        return Pair(true, "")
     }
 
     fun unlockTrajectoryVehicle(connectingRoadId: String, vehicleId: Int) {

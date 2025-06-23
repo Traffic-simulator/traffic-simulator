@@ -10,7 +10,8 @@ class Road(
     var endIntersection: Intersection,
     var leftLane: Int = 1,
     var rightLane: Int = 1,
-    var geometry: Spline
+    var geometry: Spline,
+    val district : Int
 ) {
     val startPadding
         get() = startIntersection.padding
