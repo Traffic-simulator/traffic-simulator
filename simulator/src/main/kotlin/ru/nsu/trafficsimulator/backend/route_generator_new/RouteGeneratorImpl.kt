@@ -45,6 +45,9 @@ class RouteGeneratorImpl(
         val spawnRoutes = transformTravelsToRoutes(spawnTravels)//переделываем его в Route'ы
         for (i in 0 until spawnRoutes.size) {
             val route = spawnRoutes[i]
+            if (route.endJunctionId == "-100") {
+                continue
+            }
             val startWaypoint = create.getWaypointByJunction(route.startJunctionId, true)
             val endWaypoint = create.getWaypointByJunction(route.endJunctionId, false)
             //создаем машинку по waypoint'ам
@@ -86,8 +89,7 @@ class RouteGeneratorImpl(
             var endTravelPoint: TravelPoint
             var endJunctionId: String
             if (currentPosition + 1 == travel.getPlanLength()) {
-                endTravelPoint = travel.getIthPoint(currentPosition)
-                endJunctionId = endTravelPoint.junctionId
+                endJunctionId = "-100"
             } else {
                 endTravelPoint = travel.getIthPoint(currentPosition + 1)
                 endJunctionId = endTravelPoint.junctionId

@@ -337,9 +337,9 @@ class Vehicle(
             maxSpeed: Double, maxAcc: Double, speed: Double = 0.0
         ): Vehicle {
             // TODO: Ruslan
-            // if (source.roadId == destination.roadId) {
-            //    throw RuntimeException("WTF, broooo!??")
-            // }
+             if (source.roadId == destination.roadId) {
+                throw RuntimeException("WTF, broooo!??")
+             }
             return Vehicle(counter++, network, source, destination, pathManager, despawnCallback, maxSpeed, maxAcc, speed)
         }
 
