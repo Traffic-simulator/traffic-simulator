@@ -10,6 +10,7 @@ import ru.nsu.trafficsimulator.backend.network.Waypoint
 import ru.nsu.trafficsimulator.backend.path.Path
 import ru.nsu.trafficsimulator.backend.path.PathManager
 import ru.nsu.trafficsimulator.backend.path.algorithms.CachedDijkstraPathBuilder
+import ru.nsu.trafficsimulator.backend.path.algorithms.DijkstraPathBuilder
 import ru.nsu.trafficsimulator.backend.path.cost_function.DynamicTimeCostFunction
 import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
 import ru.nsu.trafficsimulator.backend.route.RouteGeneratorDespawnListener
@@ -179,12 +180,8 @@ class Vehicle(
         if (tmp_lane == null) {
             return SimulationConfig.INF
         }
-
-        val minPosVeh = tmp_lane.lane.getMinPositionVehicle()
-        if (minPosVeh == null) {
-            return tmp_lane.lane.length - occupiedSpace
-        }
-        return minPosVeh.position - minPosVeh.length - SimulationConfig.MIN_GAP - occupiedSpace
+        tmp_lane.lane.vehicles.forEach { occupiedSpace += it.length + SimulationConfig.MIN_GAP }
+        return tmp_lane.lane.length - occupiedSpace - SimulationConfig.MIN_GAP
     }
 
 
@@ -324,10 +321,9 @@ class Vehicle(
 
         fun initialize(network: Network, simulator: Simulator) {
             costFunction = DynamicTimeCostFunction()
-            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction, 20.0))
+            pathManager = PathManager(DijkstraPathBuilder(network, costFunction))
             // pathManager = PathManager(DijkstraPathBuilder(network, costFunction))
         }
-
 
         fun NewVehicle(
             network: Network,

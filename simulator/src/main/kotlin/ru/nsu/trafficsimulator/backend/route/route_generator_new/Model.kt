@@ -1,6 +1,7 @@
 package ru.nsu.trafficsimulator.backend.route.route_generator_new
 
 import ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function.Building
+import ru.nsu.trafficsimulator.backend.utils.WeightedRandom
 import kotlin.random.Random
 
 class Model (
@@ -14,6 +15,7 @@ class Model (
         private const val MAX_PLAN_LENGTH = 3
     }
     private val random = Random(seed)
+    private val weightedRandom = WeightedRandom(seed)
     private val travelDesireFunction = ModelConfig.defaultTravelDesireDistribution
 
     private val homes : Homes;
@@ -139,13 +141,12 @@ class Model (
     }
 
     fun getRandomNonEmptyHome() : Building? {
-        var nonEmpty = homes.getNonEmpty()
+        val nonEmpty = homes.getNonEmpty().toList()
         if (nonEmpty.isEmpty()) {
             return null
         }
-        var numberOfNonEmptyHomes = nonEmpty.size
-        var indexOfHome = random.nextInt(numberOfNonEmptyHomes)
-        var building = nonEmpty.toList().get(indexOfHome).second
+        val indexOfHome = weightedRandom.chooseIndex(nonEmpty.map { it.second.currentPeople * 1000 / it.second.capacity })
+        val building = nonEmpty.toList().get(indexOfHome).second
         return building
     }
 
@@ -171,16 +172,18 @@ class Model (
             }
         }
 
-        planLength = Math.min(planLength, numberOfNonHomesBuilding);
+        planLength = Math.min(planLength, numberOfNonHomesBuilding)
 
         for (i in 0..planLength) {
             var type = listOfNonEmptyBuildingTypes.get(random.nextInt(listOfNonEmptyBuildingTypes.size));
-            var buildingDictionaryByType = buildingsMapByType[type]!!;
-            var building = buildingDictionaryByType.values.random(random);
+            var buildingsList = buildingsMapByType[type]!!.toList()
+            val randomIndex = weightedRandom.chooseIndex(buildingsList.map { it.second.capacity - it.second.currentPeople })
+            var building = buildingsList.get(randomIndex).second
             var iters = 10
 
             while(!travelPoints.isEmpty() && building.junctionId == travelPoints.last().junctionId) {
-                building = buildingDictionaryByType.values.random(random);
+                val randomIdx = weightedRandom.chooseIndex(buildingsList.map {(it.second.capacity - it.second.currentPeople) * 1000 / it.second.capacity + 1 })
+                building = buildingsList.get(randomIdx).second
                 iters--
                 if (iters < 0) {
                     return null
