@@ -57,7 +57,6 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
 
     private fun bufferChanged() {
         if (isBound) {
-            println("Changing buffer for render!")
             Gdx.gl20.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandles[bufferForRender])
             Gdx.gl20.glBufferData(GL20.GL_ARRAY_BUFFER, byteBuffer!!.limit(), byteBuffer, usage)
             isDirty = false
@@ -96,7 +95,6 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
             nextAttributeStart += attribute.sizeInBytes * numVertices
         }
 
-        println("Set vertices!!!")
         val gl = Gdx.gl30
         for (bufferHandle in bufferHandles) {
             gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandle)
@@ -114,7 +112,6 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
         (byteBuffer as Buffer).position(pos)
         (buffer as Buffer).position(0)
 
-        println("Update vertices!!!")
         val gl = Gdx.gl30
         for (bufferHandle in bufferHandles) {
             gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandle)
@@ -134,7 +131,6 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
         byteBuffer.position(offset * 4)
 
         val lastBuffer = Math.floorMod((bufferForRender - 1), bufferHandles.size)
-        println("Writing data to buffer ${lastBuffer}")
         val gl = Gdx.gl30
         gl.glBindVertexArray(0)
         gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandles[lastBuffer])
@@ -157,7 +153,6 @@ class VBOWithVAOBatched(isStatic: Boolean, private val numVertices: Int, private
         gl.glBindVertexArray(vaoHandle)
         Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandles[bufferForRender])
         bufferForRender = (bufferForRender + 1) % bufferHandles.size
-        println("Current buffer: $bufferForRender")
 
         bindAttributes(shader, locations)
 
