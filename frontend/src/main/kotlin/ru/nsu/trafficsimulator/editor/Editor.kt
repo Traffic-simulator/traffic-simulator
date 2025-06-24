@@ -26,6 +26,7 @@ class Editor {
 
         private lateinit var camera: Camera
         private var client: Client? = null
+        private var host: Boolean = false
         private var changes = ArrayList<IStateChange>()
         private var nextChange = 0
 
@@ -50,8 +51,9 @@ class Editor {
         }
 
         fun runImgui() {
-            renderServerMenu()
+            renderClientServerMenu()
             renderClientMenu()
+            renderServerMenu()
             if (!viewOnly) {
                 ImGui.begin("Editor")
                 ImGui.labelText("##actions", "Available Actions:")
@@ -96,17 +98,27 @@ class Editor {
             }
         }
 
-        private fun renderServerMenu() {
+        private fun renderClientServerMenu() {
             ImGui.begin("Client/Server Menu")
-            if (serverAction.runImgui()) {
-                if (serverAction.runAction(layout)) {
-                    onLayoutChange(serverAction.isStructuralAction(), true)
-                }
+            if (ImGui.button("Create host")) {
+                host = true
             }
             if (ImGui.button("Create client")) {
                 client = Client()
             }
             ImGui.end()
+        }
+
+        private fun renderServerMenu() {
+            if (host) {
+                ImGui.begin("Host Menu")
+                if (serverAction.runImgui()) {
+                    if (serverAction.runAction(layout)) {
+                        onLayoutChange(serverAction.isStructuralAction(), true)
+                    }
+                }
+                ImGui.end()
+            }
         }
 
         private fun renderClientMenu() {
