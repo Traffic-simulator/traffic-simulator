@@ -99,9 +99,9 @@ class Simulator(openDrive: OpenDRIVE,
     }
 
     init {
-        val tmpDt = ISimulation.Constants.SIMULATION_FRAME_MILLIS.toDouble() / 1000.0
+        val tmpDt = ISimulation.Constants.SIMULATION_FRAME_MILLIS.toDouble() * 5 / 1000.0
         val realStartTime = currentTime
-        currentTime = max(currentTime - 60.0 * 5,0.0) // starting simulation 5 minutes before
+        currentTime = max(currentTime - 60.0 * 3,0.0) // starting simulation 5 minutes before
 
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
