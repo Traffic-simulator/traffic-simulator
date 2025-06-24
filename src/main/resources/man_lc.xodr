@@ -6,7 +6,7 @@
             <successor elementId="1" elementType="junction"/>
         </link>
         <type s="0.0" type="town">
-            <speed max="60" unit="km/h"/>
+            <speed max="90" unit="km/h"/>
         </type>
         <planView>
             <geometry hdg="0.7619125858622161" length="253.0218510913136" s="0.0" x="-5.0431245931674535" y="-31.44458725628043">
@@ -1126,22 +1126,22 @@
     </junction>
     <junction id="6">
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="3000"/>
+        <userData code="buildingFullness" value="3000"/>
     </junction>
     <junction id="7">
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="3000"/>
+        <userData code="buildingFullness" value="3000"/>
     </junction>
     <junction id="8">
         <userData code="buildingType" value="WORK"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="3000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
     <junction id="9">
         <userData code="buildingType" value="WORK"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="3000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
 </OpenDRIVE>

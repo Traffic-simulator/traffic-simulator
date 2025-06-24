@@ -2,7 +2,7 @@ package ru.nsu.trafficsimulator.model.intsettings
 
 data class BuildingIntersectionSettings(
     var type: BuildingType,
-    var capacity: Int = 100,
+    var capacity: Int = 1000,
 ) : IntersectionSettings {
     val fullness get() = (capacity * type.fullness).toInt()
 }

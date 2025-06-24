@@ -85,7 +85,7 @@ class Simulator(openDrive: OpenDRIVE,
                 source,
                 destination,
                 onDespawn,
-                rnd.nextInt(4, 6) * 4.0,
+                rnd.nextInt(5, 7) * 4.0,
                 rnd.nextDouble(2.0, 2.5),
                 initialSpeed
             )
