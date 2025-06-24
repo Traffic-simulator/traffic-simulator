@@ -8,9 +8,12 @@ import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelBatch
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Matrix4
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import net.mgsx.gltf.loaders.glb.GLBLoader
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
@@ -63,6 +66,7 @@ class Visualizer(private var layout: Layout) {
 
     private var selectedItem: Any? = null
 
+    private var districtLines: Scene? = null
     private var layoutScene: Scene? = null
 
     var heatmapMode: Boolean = false
@@ -85,12 +89,14 @@ class Visualizer(private var layout: Layout) {
                 -0.2f
             )
         )
-        environment.set(PBRColorAttribute.createAmbientLight(
-            AMBIENT_LIGHT_INTENSITY,
-            AMBIENT_LIGHT_INTENSITY,
-            AMBIENT_LIGHT_INTENSITY,
-            1.0f
-        ))
+        environment.set(
+            PBRColorAttribute.createAmbientLight(
+                AMBIENT_LIGHT_INTENSITY,
+                AMBIENT_LIGHT_INTENSITY,
+                AMBIENT_LIGHT_INTENSITY,
+                1.0f
+            )
+        )
         sceneManager.environment = environment
 
         sceneManager.skyBox = SceneSkybox(
@@ -112,12 +118,14 @@ class Visualizer(private var layout: Layout) {
         camera.update()
         sceneManager.camera = camera
 
-        sceneManager.setShaderProvider(CustomShaderProvider(
-            "shaders/road.vs.glsl",
-            "shaders/road.fs.glsl",
-            "shaders/pbr.vs.glsl",
-            "shaders/pbr.fs.glsl"
-        ))
+        sceneManager.setShaderProvider(
+            CustomShaderProvider(
+                "shaders/road.vs.glsl",
+                "shaders/road.fs.glsl",
+                "shaders/pbr.vs.glsl",
+                "shaders/pbr.fs.glsl"
+            )
+        )
 
         // Add ground
         val modelBuilder = ModelBuilder()
@@ -171,6 +179,79 @@ class Visualizer(private var layout: Layout) {
         carInstances.clear()
 
         turnOffHeatmap()
+    }
+
+    private fun createDistrictLines(districtId: Int) {
+        districtLines?.let {
+            sceneManager.removeScene(it)
+            it.modelInstance.model.dispose()
+        }
+
+        val modelBuilder = ModelBuilder()
+        val lineMaterial = Material(PBRColorAttribute.createBaseColorFactor(Color(0.2f, 0.0f, 0.0f, 1.0f)))
+        val lineWidth = 1.25f
+
+        modelBuilder.begin()
+
+        when (districtId) {
+            1 -> {
+                // (X > 0, Z < 0)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(500f, 1f, 0f), lineWidth)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(0f, 1f, -500f), lineWidth)
+            }
+
+            2 -> {
+                // (X < 0, Z < 0)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(-500f, 1f, 0f), lineWidth)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(0f, 1f, -500f), lineWidth)
+            }
+
+            3 -> {
+                // (X < 0, Z > 0)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(-500f, 1f, 0f), lineWidth)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(0f, 1f, 500f), lineWidth)
+            }
+
+            4 -> {
+                // (X > 0, Z > 0)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(500f, 1f, 0f), lineWidth)
+                createThickLine(modelBuilder, lineMaterial, Vector3(0f, 1f, 0f), Vector3(0f, 1f, 500f), lineWidth)
+            }
+
+            else -> {
+                return
+            }
+        }
+
+        val model = modelBuilder.end()
+        districtLines = Scene(model)
+        sceneManager.addScene(districtLines)
+    }
+
+    private fun createThickLine(
+        modelBuilder: ModelBuilder,
+        material: Material,
+        start: Vector3,
+        end: Vector3,
+        width: Float
+    ) {
+        val direction = Vector3(end).sub(start)
+        val perpendicular = Vector3(-direction.z, 0f, direction.x).nor().scl(width / 2)
+
+        val p1 = Vector3(start).add(perpendicular)
+        val p2 = Vector3(start).sub(perpendicular)
+        val p3 = Vector3(end).add(perpendicular)
+        val p4 = Vector3(end).sub(perpendicular)
+
+        val partBuilder = modelBuilder.part(
+            "line",
+            GL20.GL_TRIANGLES,
+            VertexAttributes.Usage.Position.toLong(),
+            material
+        )
+
+        partBuilder.triangle(p1, p3, p2)
+        partBuilder.triangle(p2, p3, p4)
     }
 
     fun updateCars(cars: List<Vehicle>) {
@@ -270,6 +351,7 @@ class Visualizer(private var layout: Layout) {
                 mesh.getIndices(indices)
             }
         }
+
         val nodes = layoutScene!!.modelInstance.model.nodes
         val meshData: MutableMap<Mesh, MeshData> = mutableMapOf()
 
@@ -292,9 +374,11 @@ class Visualizer(private var layout: Layout) {
                 val colorAttrib = data.colorAttrib
                 val heatmapAttrib = data.heatmapAttrib
 
-                val getOffsetAndLane = {vertexIndex: Short ->
-                    val offset = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
-                    val lane = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
+                val getOffsetAndLane = { vertexIndex: Short ->
+                    val offset =
+                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
+                    val lane =
+                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
                     offset to lane
                 }
 
@@ -312,9 +396,12 @@ class Visualizer(private var layout: Layout) {
                     } else {
                         laneC.toInt()
                     }
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] = getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] = getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] = getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] =
+                        getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] =
+                        getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] =
+                        getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
                 }
             }
         }
@@ -326,7 +413,12 @@ class Visualizer(private var layout: Layout) {
 
     // Valid heatmap values lie in range [1.0, 2.0], offset by 1 from [0.0, 1.0]
     // heatmap value of 0.0 is an invalid value
-    private fun getHeatmapValue(segments: List<ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
+    private fun getHeatmapValue(
+        segments: List<ISimulation.SegmentDTO>,
+        roadId: Long,
+        laneId: Int,
+        offset: Float
+    ): Double {
         val segment = segments.find { it.road.id.toLong() == roadId && it.laneId == laneId } ?: return 0.0
         return segment.segments[min(floor(offset / segment.segmentLen).toInt(), segment.segments.size - 1)] + 1.0
     }
@@ -340,6 +432,8 @@ class Visualizer(private var layout: Layout) {
         layoutScene = Scene(ModelGenerator.createLayoutModel(layout))
         sceneManager.addScene(layoutScene)
 
+        createDistrictLines(layout.district)
+
         placeTrafficLights()
         placeBuildings()
     }
@@ -349,7 +443,13 @@ class Visualizer(private var layout: Layout) {
         for (material in carInstance.modelInstance.materials) {
             material.set(PBRColorAttribute.createEmissive(Color.WHITE))
             material.set(
-                PBRFloatAttribute.createEmissiveIntensity(if (select) { 0.2f } else { 0.0f })
+                PBRFloatAttribute.createEmissiveIntensity(
+                    if (select) {
+                        0.2f
+                    } else {
+                        0.0f
+                    }
+                )
             )
         }
     }
@@ -380,6 +480,7 @@ class Visualizer(private var layout: Layout) {
         }
         buildingModel.dispose()
         trafficLightModel.dispose()
+        districtLines?.modelInstance?.model?.dispose()
     }
 
     private fun placeTrafficLights() {
@@ -390,7 +491,11 @@ class Visualizer(private var layout: Layout) {
             }
             for (road in intersection.incomingRoads) {
                 val isStart = road.startIntersection == intersection
-                val distFromStart = if (isStart) { 0.0 } else { road.length }
+                val distFromStart = if (isStart) {
+                    0.0
+                } else {
+                    road.length
+                }
                 val key = road to isStart
                 visited.add(key)
                 if (!trafficLights.containsKey(key)) {
@@ -401,7 +506,11 @@ class Visualizer(private var layout: Layout) {
                 val scene = trafficLights[key]!!
                 val centerPos = road.getPoint(distFromStart)
                 val roadDirection = road.getDirection(distFromStart)
-                val laneId = if (isStart) { -road.leftLane } else { road.rightLane }.toDouble()
+                val laneId = if (isStart) {
+                    -road.leftLane
+                } else {
+                    road.rightLane
+                }.toDouble()
                 val offsetLen = if (isStart) {
                     road.leftLane
                 } else {
