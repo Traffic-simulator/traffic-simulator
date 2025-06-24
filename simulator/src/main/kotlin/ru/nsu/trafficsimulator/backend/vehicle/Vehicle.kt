@@ -217,7 +217,7 @@ class Vehicle(
     // When doing nmlc pay respect to mls: increase initPostition and TODO: how to prevent from stupid LC?
     fun processNMLC() {
         // Lane changes on junctions are prohibited
-        if (isInLaneChange() || lane.road.junction != "-1") {
+        if (isInLaneChange() || lane.road.junction != "-1" || lane.length - position < SimulationConfig.MLC_MIN_DISTANCE) {
             return
         }
 
