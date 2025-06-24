@@ -11,7 +11,8 @@ class Road(
     var leftLane: Int = 1,
     var rightLane: Int = 1,
     var geometry: Spline,
-    val district : Int
+    val district : Int,
+    var maxSpeed: Double = DEFAULT_MAX_SPEED,
 ) {
     val startPadding
         get() = startIntersection.padding
@@ -156,6 +157,7 @@ class Road(
 
         const val MIN_LANE_COUNT = 0
         const val MAX_LANE_COUNT = 10
+        const val DEFAULT_MAX_SPEED = 50.0
     }
 
     override fun toString(): String {

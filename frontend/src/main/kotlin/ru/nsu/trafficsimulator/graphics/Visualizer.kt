@@ -1,5 +1,6 @@
 package ru.nsu.trafficsimulator.graphics
 
+import ISimulation
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g3d.Environment
@@ -257,6 +258,12 @@ class Visualizer(private var layout: Layout) {
             return
         }
 
+        // Road id to Lane id
+        val segmentMap = mutableMapOf<Pair<Long, Int>, ISimulation.SegmentDTO>()
+        for (segment in segments) {
+            segmentMap[segment.road.id.toLong() to segment.laneId] = segment
+        }
+
         data class MeshData(val mesh: Mesh) {
             val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
             val indices = ShortArray(mesh.numIndices)
@@ -292,9 +299,11 @@ class Visualizer(private var layout: Layout) {
                 val colorAttrib = data.colorAttrib
                 val heatmapAttrib = data.heatmapAttrib
 
-                val getOffsetAndLane = {vertexIndex: Short ->
-                    val offset = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
-                    val lane = vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
+                val getOffsetAndLane = { vertexIndex: Short ->
+                    val offset =
+                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForOffset]
+                    val lane =
+                        vertices[colorAttrib.offset / 4 + vertexIndex * colorAttrib.numComponents + offsetInColorForLane]
                     offset to lane
                 }
 
@@ -312,22 +321,24 @@ class Visualizer(private var layout: Layout) {
                     } else {
                         laneC.toInt()
                     }
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] = getHeatmapValue(segments, roadId, lane, offsetA).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] = getHeatmapValue(segments, roadId, lane, offsetB).toFloat()
-                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] = getHeatmapValue(segments, roadId, lane, offsetC).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexA] =
+                        getHeatmapValue(segmentMap, roadId, lane, offsetA).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexB] =
+                        getHeatmapValue(segmentMap, roadId, lane, offsetB).toFloat()
+                    vertices[heatmapAttrib.offset / 4 + vertexIndexC] =
+                        getHeatmapValue(segmentMap, roadId, lane, offsetC).toFloat()
                 }
             }
         }
         for ((mesh, data) in meshData) {
-            // TODO: Do double or even triple buffering of mesh values for better perf
             (mesh as RoadMesh).updateVerticesImmediately(data.heatmapAttrib.offset / 4, data.vertices, mesh.numVertices)
         }
     }
 
     // Valid heatmap values lie in range [1.0, 2.0], offset by 1 from [0.0, 1.0]
     // heatmap value of 0.0 is an invalid value
-    private fun getHeatmapValue(segments: List<ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
-        val segment = segments.find { it.road.id.toLong() == roadId && it.laneId == laneId } ?: return 0.0
+    private fun getHeatmapValue(segments: Map<Pair<Long, Int>, ISimulation.SegmentDTO>, roadId: Long, laneId: Int, offset: Float): Double {
+        val segment = segments[roadId to laneId] ?: return 0.0
         return segment.segments[min(floor(offset / segment.segmentLen).toInt(), segment.segments.size - 1)] + 1.0
     }
 
@@ -460,14 +471,18 @@ class Visualizer(private var layout: Layout) {
     }
 
     private fun turnOffHeatmap() {
-        val mesh = layoutScene!!.modelInstance.model.meshes[0] as RoadMesh
-        val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
-        mesh.getVertices(vertices)
-        val attributes = mesh.vertexAttributes
-        val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
-        for (i in 0..<mesh.numVertices) {
-            vertices[heatmapAttrib.offset / 4 + i] = 0.0f
+        for (mesh in layoutScene!!.modelInstance.model.meshes) {
+            if (mesh !is RoadMesh) {
+                continue
+            }
+            val vertices = FloatArray(mesh.numVertices * mesh.vertexSize / 4)
+            mesh.getVertices(vertices)
+            val attributes = mesh.vertexAttributes
+            val heatmapAttrib = attributes.findByUsage(VertexAttributes.Usage.Generic)
+            for (i in 0..<mesh.numVertices) {
+                vertices[heatmapAttrib.offset / 4 + i] = 0.0f
+            }
+            mesh.updateVertices(0, vertices)
         }
-        mesh.updateVertices(0, vertices)
     }
 }
