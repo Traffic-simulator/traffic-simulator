@@ -1,6 +1,8 @@
 package ru.nsu.trafficsimulator.model
 
+import OpenDriveWriter
 import ru.nsu.trafficsimulator.model.intsettings.SplitDistrictsIntersectionSettings
+import ru.nsu.trafficsimulator.serializer.serializeLayout
 
 const val THRESHOLD = 1.0
 
@@ -36,15 +38,26 @@ class LayoutMerger {
                     merging.firstDistrict,
                     merging.secondDistrict
                 )
-                used.add(intersection.id)
-                resultLayout.pushIntersection(intersection, true)
 
-                mergingIntersections.filter { it.id == intersection.id && it !== intersection }
+                val newIntersection = Intersection(
+                    resultLayout.intersectionIdCount++, intersection.position,
+                    intersectionSettings = SplitDistrictsIntersectionSettings(
+                        merging.firstDistrict,
+                        merging.secondDistrict
+                    )
+                )
+
+                used.add(intersection.id)
+                resultLayout.pushIntersection(newIntersection, true)
+
+                mergingIntersections.filter { it.id == intersection.id }
                     .forEach { int ->
                         int.incomingRoads.forEach { road ->
-                            road.reconnectIntersection(int, intersection)
+                            road.reconnectIntersection(int, newIntersection)
                         }
                     }
+
+                resultLayout.moveIntersection(newIntersection, newIntersection.position.toVec3())
             }
         }
 
