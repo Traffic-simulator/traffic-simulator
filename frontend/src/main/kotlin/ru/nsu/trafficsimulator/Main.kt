@@ -42,7 +42,8 @@ class Main : ApplicationAdapter() {
         var isPaused: Boolean = false,
         var speed: Long = 1,
         var startTime: LocalTime = LocalTime.ofSecondOfDay(60 * 60 * 8),
-        var currentTime: LocalTime = startTime
+        var currentTime: LocalTime = startTime,
+        var region: Int? = null,
     )
 
     private var image: Texture? = null
@@ -104,7 +105,7 @@ class Main : ApplicationAdapter() {
         // val dto2 = simState.backend.gatherSimulationStats(dto, 500)
         OpenDriveWriter().write(dto, "export_$formattedDateTime.xodr")
         // val dto2 = simState.backend.gatherSimulationStats(OpenDriveReader().read("sausages4.xodr"), 500)
-        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, null, simState.startTime, 500)
+        simState.backend.init(dto, ISimulation.DrivingSide.RIGHT, simState.region, simState.startTime, 500)
     }
 
     override fun render() {
@@ -116,10 +117,7 @@ class Main : ApplicationAdapter() {
             visualizer.updateCars(vehicles)
             Editor.updateVehicles(vehicles)
             visualizer.updateSignals(simState.backend.getSignalStates())
-            val millis = measureTimeMillis {
-                visualizer.updateHeatmap(simState.backend.getSegments())
-            }
-            println("Took ${millis}ms to update heatmap")
+            visualizer.updateHeatmap(simState.backend.getSegments())
 
             simState.currentTime = simState.backend.getSimulationTime()
         }
@@ -178,6 +176,7 @@ class Main : ApplicationAdapter() {
         } else {
             "Stop"
         }
+
         if (state == ApplicationState.Editor) {
             ImGui.pushItemWidth(100.0f)
             ImGui.labelText("##TimeLabel", "Time: ")
@@ -199,6 +198,7 @@ class Main : ApplicationAdapter() {
         } else {
             ImGui.labelText("##TimeLabel", "Time: ${simState.currentTime}")
         }
+
         if (ImGui.button(startStopText)) {
             state = when (state) {
                 ApplicationState.Editor -> ApplicationState.Simulator
@@ -207,13 +207,27 @@ class Main : ApplicationAdapter() {
             if (state == ApplicationState.Editor) {
                 visualizer.cleanup()
                 Editor.viewOnlyMode(false)
-//                inputMultiplexer.addProcessor(0, editorInputProcess)
             } else {
-//                inputMultiplexer.removeProcessor(editorInputProcess)
                 Editor.viewOnlyMode(true)
                 initializeSimulation(Editor.layout)
             }
         }
+        val isRegion = simState.region != null
+        ImGui.sameLine()
+        if (ImGui.radioButton("Simulate region", isRegion)) {
+            simState.region = if (isRegion) { null } else { 1 }
+        }
+
+        if (simState.region != null) {
+            val regionId = ImInt(simState.region!!)
+            ImGui.sameLine()
+            ImGui.pushItemWidth(100.0f)
+            if (ImGui.inputInt("Region id", regionId)) {
+                simState.region = regionId.get().coerceIn(1, 4)
+            }
+            ImGui.popItemWidth()
+        }
+
         if (state == ApplicationState.Simulator) {
             val pauseLabel = if (simState.isPaused) {
                 "|>"
