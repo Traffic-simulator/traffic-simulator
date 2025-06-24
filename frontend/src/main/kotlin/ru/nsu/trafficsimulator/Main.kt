@@ -27,6 +27,7 @@ import ru.nsu.trafficsimulator.serializer.serializeLayout
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.system.measureTimeMillis
 
 val logger = KotlinLogging.logger("FRONTEND")
 
@@ -115,7 +116,10 @@ class Main : ApplicationAdapter() {
             visualizer.updateCars(vehicles)
             Editor.updateVehicles(vehicles)
             visualizer.updateSignals(simState.backend.getSignalStates())
-            visualizer.updateHeatmap(simState.backend.getSegments())
+            val millis = measureTimeMillis {
+                visualizer.updateHeatmap(simState.backend.getSegments())
+            }
+            println("Took ${millis}ms to update heatmap")
 
             simState.currentTime = simState.backend.getSimulationTime()
         }

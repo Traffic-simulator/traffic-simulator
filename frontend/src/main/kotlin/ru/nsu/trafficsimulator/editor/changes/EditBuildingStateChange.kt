@@ -12,6 +12,8 @@ class EditBuildingStateChange(
     private val prevBuildingCapacity = intersection.building!!.capacity
     private val prevBuildingType = intersection.building!!.type.toString()
 
+    override fun isStructuralChange() = currentType != prevBuildingType
+
     override fun apply(layout: Layout) {
         intersection.building!!.capacity = currentCapacity
         intersection.building!!.type = BuildingType.valueOf(currentType)
