@@ -34,7 +34,7 @@ class ServerAction : IAction {
 
     private fun hostLayout(): Map<Int, Layout> {
         return listOf(1, 2, 3, 4).associateWithTo(HashMap()) {
-            Deserializer.deserialize(OpenDriveReader().read("export/client-$it.xodr"))
+            Deserializer.deserialize(OpenDriveReader().read("template_$it.xodr"))
         }
     }
 }
