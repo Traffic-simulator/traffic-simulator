@@ -75,7 +75,7 @@ private fun serializeRoad(road: Road): TRoad {
         s = 0.0
         type = ERoadType.TOWN
         speed = TRoadTypeSpeed()
-        speed.max = MAX_SPEED
+        speed.max = road.maxSpeed.toString()
         speed.unit = EUnitSpeed.KM_H
     })
 
@@ -88,6 +88,7 @@ private fun serializeRoad(road: Road): TRoad {
                 dynamic = TYesNo.YES
                 subtype =
                     "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
+                id = road.startIntersection.id.toString()
             })
         }
 
@@ -99,6 +100,7 @@ private fun serializeRoad(road: Road): TRoad {
                 dynamic = TYesNo.YES
                 subtype =
                     "${trafficLight.redOffsetOnStartSecs}-${trafficLight.redTimeSecs}-${trafficLight.greenTimeSecs}"
+                id = road.endIntersection.id.toString()
             })
         }
     }

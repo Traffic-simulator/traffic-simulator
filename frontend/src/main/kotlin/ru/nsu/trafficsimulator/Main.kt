@@ -68,6 +68,7 @@ class Main : ApplicationAdapter() {
         imGuiGlfw.init(windowHandle, true)
         imGuiGl3.init()
         GLFW.glfwSwapInterval(0)
+        ImGui.getStyle().scaleAllSizes(2.0f)
 
         visualizer = Visualizer(Editor.layout)
 
@@ -174,10 +175,9 @@ class Main : ApplicationAdapter() {
             "Stop"
         }
         if (state == ApplicationState.Editor) {
-            ImGui.pushItemWidth(80.0f)
+            ImGui.pushItemWidth(100.0f)
             ImGui.labelText("##TimeLabel", "Time: ")
             ImGui.sameLine()
-            ImGui.pushItemWidth(80.0f)
             val hours = ImInt(simState.startTime.hour)
             ImGui.inputInt("##hours", hours)
             ImGui.sameLine()
