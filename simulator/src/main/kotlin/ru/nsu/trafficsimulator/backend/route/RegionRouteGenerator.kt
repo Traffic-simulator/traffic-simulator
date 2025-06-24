@@ -88,7 +88,7 @@ class RegionRouteGenerator(
                 }
             } else if (firstPathWaypoint == path[0]) {
                 // Option 2) Vehicle is spawning on speed in our region
-                val spawnSpeed = regionAPI.getWaypointAvgSpeed(firstWaypoint)
+                val spawnSpeed = regionAPI.getWaypointAvgSpeed(firstWaypoint, 0.0)
                 if (simPositionChecker.isFreeWithSpeed(firstWaypoint, lastWaypoint, spawnSpeed)) {
                     val simVehId = simCreator.createVehicle(firstWaypoint, lastWaypoint, regionOnDespawn, spawnSpeed)
                     val simInfo  =  SimulationVehicleInfo(true, firstWaypoint, lastWaypoint, afterLastWaypoint, simVehId)
@@ -99,7 +99,7 @@ class RegionRouteGenerator(
                 // Option 3) Vehicle will later run into our region
                 // vehicle will be spawned when timeout expire
                 vehicleInfo.simInfo = SimulationVehicleInfo(false, firstWaypoint, lastWaypoint, afterLastWaypoint, -1)
-                vehicleInfo.timeout = regionAPI.getPathTime(path, firstPathWaypoint)
+                vehicleInfo.timeout = regionAPI.getPathTime(path, firstPathWaypoint, 0.0)
             }
 
             return regionModelVehId

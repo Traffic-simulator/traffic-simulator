@@ -363,4 +363,42 @@ class Network(
 
         return signals
     }
+
+    fun getWaypointByJunction(junctionId: String, isStart: Boolean): Waypoint {
+        val network = this
+        val predecessors = network.roads.stream().filter {
+            it.predecessor!!.getElementType().equals(ERoadLinkElementType.JUNCTION)
+                && it.predecessor!!.getElementId().equals(junctionId)
+        }.toList()
+        val successors = network.roads.stream().filter {
+            it.successor!!.getElementType().equals(ERoadLinkElementType.JUNCTION)
+                && it.successor!!.getElementId().equals(junctionId)
+        }.toList()
+
+        if (predecessors.size + successors.size != 1) {
+            throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId")
+        }
+
+        if (predecessors.size == 1) {
+            val road = network.getRoadById(predecessors[0].id)
+            val lanes = road.lanes.filter { it.laneId == (if (isStart) -1 else 1) }.toList()
+            if (lanes.size != 1) {
+                throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId, don't have lane -1")
+            }
+            return Waypoint(
+                road.id,
+                lanes.get(0).laneId.toString(),
+            )
+        }
+
+        val road = network.getRoadById(successors[0].id)
+        val lanes = road.lanes.filter { it.laneId == (if (isStart) 1 else -1) }.toList()
+        if (lanes.size != 1) {
+            throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId, don't have lane 1")
+        }
+        return Waypoint(
+            road.id,
+            lanes.get(0).laneId.toString()
+        )
+    }
 }

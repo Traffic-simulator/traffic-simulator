@@ -17,6 +17,7 @@ import ru.nsu.trafficsimulator.backend.vehicle.VehicleDetector
 import ru.nsu.trafficsimulator.backend.vehicle.model.IDM
 import vehicle.Direction
 import java.time.LocalTime
+import kotlin.math.max
 import kotlin.random.Random
 
 // Route - source point and destination point.
@@ -44,15 +45,79 @@ class Simulator(openDrive: OpenDRIVE,
     var currentTime: Double = startingTime.toSecondOfDay().toDouble()
     var updateIterationsCounter: Long = 0
 
+
+    private val isPositionFree = object : WaypointSpawnAbilityChecker {
+        override fun isFree(waypoint: Waypoint): Boolean {
+            val lane = network.getLaneById(waypoint.roadId, waypoint.laneId.toInt())
+
+            val minVeh = lane.getMinPositionVehicle()
+            if (minVeh == null || minVeh!!.position - minVeh.length > SimulationConfig.MIN_GAP) {
+                return true
+            }
+            return false
+        }
+
+        override fun isFreeWithSpeed(source: Waypoint, destination: Waypoint, speed: Double): Boolean {
+            // Let's just create temporary vehicle to check ability of it's existence
+            // maxAcc can be random here as there is no problem in cars behind us.
+
+            val vehicle = Vehicle.createTempVehicle(network, source, destination, speed)
+            val nextVeh = VehicleDetector.getNextVehicle(0.0, vehicle.pathManager.getNextRoads(vehicle))
+
+            val desiredAcc = IDM.getAcceleration(vehicle, nextVeh)
+            removeVehicle(vehicle)
+
+            return desiredAcc > -vehicle.comfortDeceleration
+        }
+    }
+
+    private val createVehicle = object : VehicleCreationListener {
+        override fun createVehicle(
+            source: Waypoint,
+            destination: Waypoint,
+            onDespawn: RouteGeneratorDespawnListener,
+            initialSpeed: Double
+        ): Int {
+            // TODO: make additional checks, for example is source and destination can be connected
+            // TODO: connect speed and acc paramters to conf or to veh.kt
+            val nw = Vehicle.NewVehicle(
+                network,
+                source,
+                destination,
+                onDespawn,
+                rnd.nextInt(4, 6) * 4.0,
+                rnd.nextDouble(2.0, 2.5),
+                initialSpeed
+            )
+            vehicles.add(nw)
+            return nw.vehicleId
+        }
+
+        override fun getWaypointByJunction(junctionId: String, isStart: Boolean): Waypoint {
+            return network.getWaypointByJunction(junctionId, isStart)
+        }
+    }
+
     init {
+        val tmpDt = ISimulation.Constants.SIMULATION_FRAME_MILLIS.toDouble() / 1000.0
+        val realStartTime = currentTime
+        currentTime = max(currentTime - 60.0 * 5,0.0) // starting simulation 5 minutes before
+
         val buildingParser = BuildingsParser(openDrive)
         buildings = buildingParser.getBuildings()
         if (regionId == null) {
-            routeGeneratorAPI = RouteGeneratorImpl(currentTime, buildings, seed)
+            routeGeneratorAPI = TimeRewindRouteGenerator(network, currentTime,
+                                    RouteGeneratorImpl(0.0, buildings, seed))
         } else {
-            routeGeneratorAPI = RegionRouteGenerator(regionId, network, RouteGeneratorImpl(currentTime, buildings, seed))
+            routeGeneratorAPI = RegionRouteGenerator(regionId, network,
+                                    TimeRewindRouteGenerator(network, currentTime,
+                                        RouteGeneratorImpl(0.0, buildings, seed)))
         }
         Vehicle.initialize(network, this)
+
+        while(currentTime < realStartTime) {
+            update(tmpDt)
+        }
     }
 
     fun update(dt: Double): ArrayList<Vehicle> {
@@ -173,91 +238,6 @@ class Simulator(openDrive: OpenDRIVE,
             for (lane in road.lanes) {
                 lane.segments.forEach { it.clearMemory() }
             }
-        }
-    }
-
-    private val isPositionFree = object : WaypointSpawnAbilityChecker {
-        override fun isFree(waypoint: Waypoint): Boolean {
-            val lane = network.getLaneById(waypoint.roadId, waypoint.laneId.toInt())
-
-            val minVeh = lane.getMinPositionVehicle()
-            if (minVeh == null || minVeh!!.position - minVeh.length > SimulationConfig.MIN_GAP) {
-                return true
-            }
-            return false
-        }
-
-        override fun isFreeWithSpeed(source: Waypoint, destination: Waypoint, speed: Double): Boolean {
-            // Let's just create temporary vehicle to check ability of it's existence
-            // maxAcc can be random here as there is no problem in cars behind us.
-
-            val vehicle = Vehicle.createTempVehicle(network, source, destination, speed)
-            val nextVeh = VehicleDetector.getNextVehicle(0.0, vehicle.pathManager.getNextRoads(vehicle))
-
-            val desiredAcc = IDM.getAcceleration(vehicle, nextVeh)
-            removeVehicle(vehicle)
-
-            return desiredAcc > -vehicle.comfortDeceleration
-        }
-    }
-
-    private val createVehicle = object : VehicleCreationListener {
-        override fun createVehicle(
-            source: Waypoint,
-            destination: Waypoint,
-            onDespawn: RouteGeneratorDespawnListener,
-            initialSpeed: Double
-        ): Int {
-            // TODO: make additional checks, for example is source and destination can be connected
-            // TODO: connect speed and acc paramters to conf or to veh.kt
-            val nw = Vehicle.NewVehicle(
-                network,
-                source,
-                destination,
-                onDespawn,
-                rnd.nextInt(4, 6) * 4.0,
-                rnd.nextDouble(2.0, 2.5),
-                initialSpeed
-            )
-            vehicles.add(nw)
-            return nw.vehicleId
-        }
-
-        override fun getWaypointByJunction(junctionId: String, isStart: Boolean): Waypoint {
-            val predecessors = network.roads.stream().filter {
-                it.predecessor!!.getElementType().equals(ERoadLinkElementType.JUNCTION)
-                    && it.predecessor!!.getElementId().equals(junctionId)
-            }.toList()
-            val successors = network.roads.stream().filter {
-                it.successor!!.getElementType().equals(ERoadLinkElementType.JUNCTION)
-                    && it.successor!!.getElementId().equals(junctionId)
-            }.toList()
-
-            if (predecessors.size + successors.size != 1) {
-                throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId")
-            }
-
-            if (predecessors.size == 1) {
-                val road = network.getRoadById(predecessors[0].id)
-                val lanes = road.lanes.filter { it.laneId == (if (isStart) -1 else 1) }.toList()
-                if (lanes.size != 1) {
-                    throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId, don't have lane -1")
-                }
-                return Waypoint(
-                    road.id,
-                    lanes.get(0).laneId.toString(),
-                )
-            }
-
-            val road = network.getRoadById(successors[0].id)
-            val lanes = road.lanes.filter { it.laneId == (if (isStart) 1 else -1) }.toList()
-            if (lanes.size != 1) {
-                throw Exception("Can't create Spawn/Despawn point from junction with id $junctionId, don't have lane 1")
-            }
-            return Waypoint(
-                road.id,
-                lanes.get(0).laneId.toString()
-            )
         }
     }
 }

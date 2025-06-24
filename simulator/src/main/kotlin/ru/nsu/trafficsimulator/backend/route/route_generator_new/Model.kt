@@ -11,6 +11,7 @@ class Model (
 
     companion object {
         private const val SECONDS_IN_HOUR = 3600;
+        private const val SECONDS_IN_DAY = SECONDS_IN_HOUR * 60
         private const val HOURS_IN_DAY = 24;
         private const val MAX_PLAN_LENGTH = 3
     }
@@ -125,7 +126,7 @@ class Model (
         val numberOfPeopleInHome = homes.getNumberOfHumansInHomes()
         val currentHour = (currentTime.toLong() / SECONDS_IN_HOUR) % HOURS_IN_DAY
         val travelDesire = travelDesireFunction.getIthNumber(currentHour.toInt())
-        meanOfTravelDesire += travelDesire / SECONDS_IN_HOUR * deltaTime * numberOfPeopleInHome;
+        meanOfTravelDesire += travelDesire * numberOfPeopleInHome / SECONDS_IN_HOUR * deltaTime
         //TODO рассмотреть случай когда переходим из одного часа в другой, погрешность слишком мала, поэтому не приоритетно
     }
 
@@ -145,18 +146,17 @@ class Model (
         if (nonEmpty.isEmpty()) {
             return null
         }
-        val indexOfHome = weightedRandom.chooseIndex(nonEmpty.map { it.second.currentPeople * 1000 / it.second.capacity })
+        val indexOfHome = weightedRandom.chooseIndex(nonEmpty.map { it.second.currentPeople * 100000 / it.second.capacity })
         val building = nonEmpty.toList().get(indexOfHome).second
         return building
     }
-
 
     fun createTravel() : Travel? {
         val travelPoints = mutableListOf<TravelPoint>();
         var startHome = getRandomNonEmptyHome() ?: return null
         var startPoint : TravelPoint = TravelPoint(startHome.junctionId, 0.0);
-        var planLength = random.nextInt(1, MAX_PLAN_LENGTH)
-        travelPoints.add(startPoint);
+        var planLength = random.nextInt(MAX_PLAN_LENGTH)
+        travelPoints.add(startPoint)
         //init nonEmptyBuildingTypesList
         //случай если здания определенного типа просто отсутствуют на карте
         //TODO вынести чтобы не повторялось при каждом вызове метода, здания все равно не добавятся в течении симуляции
@@ -174,15 +174,25 @@ class Model (
 
         planLength = Math.min(planLength, numberOfNonHomesBuilding)
 
+        val usedTypes = HashSet<BuildingTypes>()
         for (i in 0..planLength) {
-            var type = listOfNonEmptyBuildingTypes.get(random.nextInt(listOfNonEmptyBuildingTypes.size));
-            var buildingsList = buildingsMapByType[type]!!.toList()
-            val randomIndex = weightedRandom.chooseIndex(buildingsList.map {(it.second.capacity - it.second.currentPeople) * 1000 / it.second.capacity + 1 })
-            var building = buildingsList.get(randomIndex).second
+            var type = listOfNonEmptyBuildingTypes.get(random.nextInt(listOfNonEmptyBuildingTypes.size))
             var iters = 10
+            while(usedTypes.contains(type) && iters >= 0) {
+                type = listOfNonEmptyBuildingTypes.get(random.nextInt(listOfNonEmptyBuildingTypes.size))
+                iters--
+            }
+            if (iters < 0) {
+                continue
+            }
+            usedTypes.add(type)
 
+            var buildingsList = buildingsMapByType[type]!!.toList()
+            val randomIndex = weightedRandom.chooseIndex(buildingsList.map {(it.second.capacity - it.second.currentPeople) * 100000 / it.second.capacity + 1 })
+            var building = buildingsList.get(randomIndex).second
+            iters = 10
             while(!travelPoints.isEmpty() && building.junctionId == travelPoints.last().junctionId) {
-                val randomIdx = weightedRandom.chooseIndex(buildingsList.map {(it.second.capacity - it.second.currentPeople) * 1000 / it.second.capacity + 1 })
+                val randomIdx = weightedRandom.chooseIndex(buildingsList.map {(it.second.capacity - it.second.currentPeople) * 100000 / it.second.capacity + 1 })
                 building = buildingsList.get(randomIdx).second
                 iters--
                 if (iters < 0) {

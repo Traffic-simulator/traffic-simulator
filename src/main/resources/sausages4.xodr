@@ -5736,43 +5736,43 @@
         <userData code="position" value="(187.61354064941406;169.7845458984375)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
+        <userData code="buildingFullness" value="1000"/>
     </junction>
     <junction id="14">
         <userData code="position" value="(242.05282592773438;182.1317901611328)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="WORK"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
     <junction id="15">
         <userData code="position" value="(221.84860229492188;220.2953338623047)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="SHOPPING"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
     <junction id="16">
         <userData code="position" value="(257.2060852050781;230.958984375)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="EDUCATION"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
     <junction id="17">
         <userData code="position" value="(236.44053649902344;135.54949951171875)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="ENTERTAINMENT"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
     <junction id="18">
         <userData code="position" value="(196.99774169921875;134.93362426757812)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
+        <userData code="buildingFullness" value="1000"/>
     </junction>
     <junction id="19">
         <connection connectingRoad="94" contactPoint="start" id="0" incomingRoad="21">
@@ -5842,15 +5842,15 @@
         <userData code="position" value="(-150.17771911621094;136.11459350585938)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
+        <userData code="buildingFullness" value="1000"/>
     </junction>
     <junction id="24">
         <userData code="position" value="(-211.4703369140625;97.55961608886719)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
+        <userData code="buildingFullness" value="1000"/>
     </junction>
     <junction id="25">
         <connection connectingRoad="110" contactPoint="start" id="0" incomingRoad="41">
@@ -6036,28 +6036,28 @@
         <userData code="position" value="(195.0762939453125;-186.9101104736328)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
+        <userData code="buildingFullness" value="1000"/>
     </junction>
     <junction id="32">
         <userData code="position" value="(248.00729370117188;-186.24847412109375)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="WORK"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
     <junction id="33">
         <userData code="position" value="(236.0977783203125;-203.4510498046875)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="HOME"/>
-        <userData code="buildingCapacity" value="100"/>
-        <userData code="buildingFullness" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
+        <userData code="buildingFullness" value="1000"/>
     </junction>
     <junction id="34">
         <userData code="position" value="(189.12173461914062;-218.668701171875)"/>
         <userData code="padding" value="10.0"/>
         <userData code="buildingType" value="SHOPPING"/>
-        <userData code="buildingCapacity" value="100"/>
+        <userData code="buildingCapacity" value="1000"/>
         <userData code="buildingFullness" value="0"/>
     </junction>
     <junction id="0">

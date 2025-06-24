@@ -50,6 +50,8 @@ class Vehicle(
     var distToClosestJunctionTmp: Double = SimulationConfig.INF
     var blockingFactors = ""
     var maxSpeed = globalMaxSpeed
+    val PATH_REMOVING_ITERATIONS_INIT = 500
+    var pathRemovingIterations = PATH_REMOVING_ITERATIONS_INIT
 
     init {
         lane.addVehicle(this)
@@ -93,6 +95,15 @@ class Vehicle(
         4) MLC
      */
     fun updateAcceleration() {
+        // Sometimes remove path to don't stay in jams
+        pathRemovingIterations--
+        if (pathRemovingIterations < 0 && lane.road.junction == "-1") {
+            pathRemovingIterations = PATH_REMOVING_ITERATIONS_INIT
+            // We can't remove path if currently blocking junction...
+            network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
+            pathManager.removePath(this)
+        }
+
         val closestJunction = getClosestJunction()
         var junctionAcc     = SimulationConfig.INF
         blockingFactors = ""
@@ -181,7 +192,11 @@ class Vehicle(
             return SimulationConfig.INF
         }
         tmp_lane.lane.vehicles.forEach { occupiedSpace += it.length + SimulationConfig.MIN_GAP }
-        return tmp_lane.lane.length - occupiedSpace - SimulationConfig.MIN_GAP
+        var res = tmp_lane.lane.length - occupiedSpace
+        if (occupiedSpace > 0.0) {
+            res -= SimulationConfig.MIN_GAP
+        }
+        return res
     }
 
 
@@ -300,7 +315,6 @@ class Vehicle(
         laneChangeDistance = getLaneChangePenalty()
         laneChangeFullDistance = laneChangeDistance
         laneChangeFromLaneId = lane.laneId
-        // TODO: We don't need to traverse all junction, only the closest one...
         network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
         setNewLane(_lane)
     }
