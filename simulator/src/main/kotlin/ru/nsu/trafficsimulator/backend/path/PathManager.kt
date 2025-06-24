@@ -42,7 +42,8 @@ class PathManager(private val algorithm: IPathBuilder) {
         Get distance to next MLC on path.
      */
     fun getNextMLCDistance(vehicle: Vehicle): Double {
-        createPathIfNotExists(vehicle, vehicle.position)
+        val add = if (vehicle.laneChangeDistance > 0.0) vehicle.laneChangeDistance + 3.0 else 0.0
+        createPathIfNotExists(vehicle, vehicle.position + add)
 
         var first = true
         var acc_distance = 0.0
@@ -80,13 +81,15 @@ class PathManager(private val algorithm: IPathBuilder) {
     }
 
     fun getNextPathLane(vehicle: Vehicle): Path.PathWaypoint? {
-        createPathIfNotExists(vehicle, vehicle.position)
+        val add = if (vehicle.laneChangeDistance > 0.0) vehicle.laneChangeDistance + 3.0 else 0.0
+        createPathIfNotExists(vehicle, vehicle.position + add)
 
         return getNextPathLane(vehicle, vehicle.lane)
     }
 
     fun getNextPathLane(vehicle: Vehicle, lane: Lane): Path.PathWaypoint? {
-        createPathIfNotExists(vehicle, vehicle.position)
+        val add = if (vehicle.laneChangeDistance > 0.0) vehicle.laneChangeDistance + 3.0 else 0.0
+        createPathIfNotExists(vehicle, vehicle.position + add)
 
         for(i in 0 until vehiclesPaths[vehicle.vehicleId]!!.size) {
             if (vehiclesPaths[vehicle.vehicleId]!!.get(i).lane == lane) {
@@ -102,7 +105,8 @@ class PathManager(private val algorithm: IPathBuilder) {
     }
 
     fun getNextRoads(vehicle: Vehicle): Sequence<LaneSequence> {
-        createPathIfNotExists(vehicle, vehicle.position)
+        val add = if (vehicle.laneChangeDistance > 0.0) vehicle.laneChangeDistance + 3.0 else 0.0
+        createPathIfNotExists(vehicle, vehicle.position + add)
 
         fun generateNextRoads(vehicle: Vehicle, lane: Lane) : Sequence<LaneSequence> = sequence {
             var curLane = lane

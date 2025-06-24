@@ -20,6 +20,8 @@ interface IPathBuilder {
     ): Pair<Double, List<Path.PathWaypoint>>
 
 
+
+    // Максимальная позиция на дороге, до которой нужно перестроиться
     fun getMLCMaxRoadOffset(roadLength: Double, numLC: Int, roadLanes: Int, fromLaneId: Int): Double {
         return roadLength - numLC * SimulationConfig.MLC_MIN_DISTANCE - 15.0 * (roadLanes - Math.abs(fromLaneId))
     }
