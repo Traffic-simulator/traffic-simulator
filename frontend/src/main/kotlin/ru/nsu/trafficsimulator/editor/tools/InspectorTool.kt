@@ -131,7 +131,7 @@ class InspectorTool : IEditingTool {
                     val currentOffset = ImInt(signal.redOffsetOnStartSecs)
                     val currentRed = ImInt(signal.redTimeSecs)
                     val currentGreen = ImInt(signal.greenTimeSecs)
-                    ImGui.pushItemWidth(80.0f)
+                    ImGui.pushItemWidth(100.0f)
                     if (viewOnly) {
                         ImGui.text(currentOffset.toString())
                     } else if (ImGui.inputInt("##offset", currentOffset)) {
@@ -190,6 +190,21 @@ class InspectorTool : IEditingTool {
             }
             if (rightLaneCnt.get() != it.rightLane) {
                 EditRoadStateChange(it, it.leftLane, rightLaneCnt.get())
+            } else {
+                null
+            }
+        }.withFilter { !viewOnly }
+
+        textItem<Road>("Speed limit") { "${it.maxSpeed} KM/H" }.withFilter { viewOnly }
+        customItem<Road>("Speed limit") {
+            val maxSpeed = ImDouble(it.maxSpeed)
+            if (ImGui.inputDouble("##speed", maxSpeed)) {
+                maxSpeed.set(maxSpeed.get().coerceIn(0.0, Double.MAX_VALUE))
+            }
+            ImGui.sameLine()
+            ImGui.text("KM/H")
+            if (maxSpeed.get() != it.maxSpeed) {
+                EditRoadSpeedLimitStateChange(it, maxSpeed.get())
             } else {
                 null
             }

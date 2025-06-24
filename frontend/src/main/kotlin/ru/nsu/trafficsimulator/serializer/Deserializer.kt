@@ -114,7 +114,8 @@ class Deserializer {
                 leftLane,
                 rightLane,
                 spline,
-                userParameters["district"]?.toInt() ?: layoutDistrict
+                userParameters["district"]?.toInt() ?: layoutDistrict,
+                tRoad.type.first()?.speed?.max?.toDouble() ?: Road.DEFAULT_MAX_SPEED
             )
 
             // See https://publications.pages.asam.net/standards/ASAM_OpenDRIVE/ASAM_OpenDRIVE_Specification/latest/specification/14_signals/14_01_introduction.html
