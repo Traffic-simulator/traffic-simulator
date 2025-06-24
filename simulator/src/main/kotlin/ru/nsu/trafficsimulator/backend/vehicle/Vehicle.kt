@@ -97,10 +97,10 @@ class Vehicle(
         blockingFactors = ""
 
         // Checking traffic lights
-        if (lane.signal != null && lane.signal!!.state != SignalState.GREEN) {
+        if (lane.signal != null && lane.signal!!.state != SignalState.GREEN && IDM.isAbleToStop(this, lane.road.troad.length - position)) {
             // Don't block any trajectories...
             // Stop before this signal
-            junctionAcc = IDM.getStopAcceleration(this, this.speed, lane.road.troad.length - position)
+            junctionAcc = IDM.getStopAcceleration(this, lane.road.troad.length - position)
             logger.debug("Veh@${vehicleId} will stop because of TrafficLight@${lane.signal!!.id}")
             blockingFactors = "TrafficLight@${lane.signal!!.id}"
         } else
@@ -123,10 +123,10 @@ class Vehicle(
                     // Trajectory was blocked, have to stop before junction
                     junction.unlockTrajectoryVehicle(vehicleId)
                     blockingFactors = tryBlockResult.second
-                    junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
+                    junctionAcc = IDM.getStopAcceleration(this, closestJunction.distance)
                 }
             } else {
-                junctionAcc = IDM.getStopAcceleration(this, this.speed, closestJunction.distance)
+                junctionAcc = IDM.getStopAcceleration(this, closestJunction.distance)
             }
         }
 
@@ -138,7 +138,7 @@ class Vehicle(
         acc = minOf(
             junctionAcc,
             IDM.getAcceleration(this, nextVeh.first, nextVeh.second),
-            IDM.getAcceleration(this, this.speed, nextMLCDistance, 0.0)
+            IDM.getStopAcceleration(this, nextMLCDistance)
         )
     }
 
@@ -154,7 +154,9 @@ class Vehicle(
         var accDist = lane.road.troad.length - position
 
         while (tmp_lane != null && tmp_lane.lane.road.junction == "-1") {
-            accDist += tmp_lane.lane.length
+            if (tmp_lane.type == Path.PWType.NORMAL) {
+                accDist += tmp_lane.lane.length
+            }
             tmp_lane = pathManager.getNextPathLane(this, tmp_lane.lane)
         }
         if (tmp_lane == null) {
@@ -232,6 +234,8 @@ class Vehicle(
             val reachable = pathManager.isDestinationReachable(this, this.position + 2 * this.getLaneChangePenalty() + 20.0) // TODO: very bad constant, what's wrong with that?
             pathManager.removePath(this)
             lane = oldLane
+
+            // CHECK COST!!!
             if (!reachable) {
                 continue
             }
@@ -275,7 +279,7 @@ class Vehicle(
         // Возможно сейчас данная машина блокирует некоторые траектории.
         // В качестве тупой реализации просто проверим вообще все
         val closestJunction = getClosestJunction()
-        if (closestJunction != null && lane.signal != null && lane.signal!!.state != SignalState.GREEN) {
+        if (closestJunction != null && lane.signal != null && lane.signal!!.state != SignalState.GREEN && IDM.isAbleToStop(this, lane.road.troad.length - position)) {
             val junction = network.getJunctionById(closestJunction.junctionId)
             junction.unlockTrajectoryVehicle(vehicleId = vehicleId)
         }
