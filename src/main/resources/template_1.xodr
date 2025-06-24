@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OpenDRIVE>
+    <junction id="0">
+        <userData code="position" value="(150.0;0.0)"/>
+        <userData code="padding" value="0.0"/>
+        <userData code="mergingIntersection" value="true"/>
+        <userData code="firstDistrict" value="4"/>
+        <userData code="secondDistrict" value="1"/>
+    </junction>
+    <junction id="1">
+        <userData code="position" value="(0.0;150.0)"/>
+        <userData code="padding" value="0.0"/>
+        <userData code="mergingIntersection" value="true"/>
+        <userData code="firstDistrict" value="1"/>
+        <userData code="secondDistrict" value="2"/>
+    </junction>
+    <userData code="district" value="1"/>
+</OpenDRIVE>

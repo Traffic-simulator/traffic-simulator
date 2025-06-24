@@ -1,12 +1,13 @@
 package ru.nsu.trafficsimulator.editor.actions
 
+import OpenDriveReader
 import imgui.ImGui
 import ru.nsu.trafficsimulator.logger
-import ru.nsu.trafficsimulator.math.Vec3
 import ru.nsu.trafficsimulator.model.Layout
-import ru.nsu.trafficsimulator.model.intsettings.MergingIntersectionSettings
-import ru.nsu.trafficsimulator.server.Client
+import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.server.Server
+import java.util.HashMap
+import java.util.TreeMap
 
 const val PORT = 8080
 
@@ -31,13 +32,9 @@ class ServerAction : IAction {
         }
     }
 
-    private fun hostLayout(): Layout {
-        val result = Layout(0)
-        result.addIntersection(Vec3(150.0, 0.0, 0.0), MergingIntersectionSettings(4, 1))
-        result.addIntersection(Vec3(0.0, 0.0, 150.0), MergingIntersectionSettings(1, 2))
-        result.addIntersection(Vec3(-150.0, 0.0, 0.0), MergingIntersectionSettings(2, 3))
-        result.addIntersection(Vec3(0.0, 0.0, -150.0), MergingIntersectionSettings(3, 4))
-
-        return result
+    private fun hostLayout(): Map<Int, Layout> {
+        return listOf(1, 2, 3, 4).associateWithTo(HashMap()) {
+            Deserializer.deserialize(OpenDriveReader().read("export/client-$it.xodr"))
+        }
     }
 }

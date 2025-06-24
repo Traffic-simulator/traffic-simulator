@@ -16,10 +16,10 @@ import java.util.concurrent.ArrayBlockingQueue
 
 private const val DISTRICTS_NUMBER = 4
 
-class Server(private val port: Int, private val startLayout: Layout) {
+class Server(private val port: Int, private val startLayouts: Map<Int, Layout>) {
     private val clients = ArrayList<Socket>(DISTRICTS_NUMBER)
     private val receivedLayouts = ArrayBlockingQueue<Layout>(DISTRICTS_NUMBER)
-    private var resultLayout: Layout? = null
+    private var resultLayout: String? = null
 
     private val lock = Object()
 
@@ -51,12 +51,13 @@ class Server(private val port: Int, private val startLayout: Layout) {
             list.add(receivedLayouts.take())
         }
 
-        setResultLayout(LayoutMerger().merge(list)) // should be LayoutMerger().merge(list)
+        val mergedLayout = LayoutMerger().merge(list)
+        setResultLayout(mergedLayout) // should be LayoutMerger().merge(list)
 
         clientHandlers.forEach { it.join() }
         logger.info { "Sent result layout to clients" }
 
-        return resultLayout!!
+        return mergedLayout
     }
 
 
@@ -66,7 +67,11 @@ class Server(private val port: Int, private val startLayout: Layout) {
                 BufferedReader(InputStreamReader(client.getInputStream())).use { reader ->
                     writer.println("DISTRICT: $districtId")
 
-                    val initXodrString = OpenDriveWriter().toString(serializeLayout(startLayout, districtId))
+                    val sl =
+                        startLayouts[districtId] ?: throw IllegalArgumentException("No layout with id=$districtId")
+
+                    val initXodrString =
+                        OpenDriveWriter().toString(serializeLayout(sl, districtId))
 
                     writer.println(initXodrString)
                     writer.println("END OF INIT LAYOUT")
@@ -95,9 +100,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
 
                     val result = waitForResultLayout()
 
-                    val resultXodrString = OpenDriveWriter().toString(serializeLayout(result))
-
-                    writer.println(resultXodrString)
+                    writer.println(result)
                     writer.println("END OF RESULT LAYOUT")
                     writer.flush()
                 }
@@ -105,7 +108,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
         }
     }
 
-    private fun waitForResultLayout(): Layout {
+    private fun waitForResultLayout(): String {
         synchronized(lock) {
             while (resultLayout == null) {
                 lock.wait()
@@ -116,7 +119,7 @@ class Server(private val port: Int, private val startLayout: Layout) {
 
     private fun setResultLayout(layout: Layout) {
         synchronized(lock) {
-            resultLayout = layout
+            resultLayout = OpenDriveWriter().toString(serializeLayout(layout))
             lock.notifyAll()
         }
     }
