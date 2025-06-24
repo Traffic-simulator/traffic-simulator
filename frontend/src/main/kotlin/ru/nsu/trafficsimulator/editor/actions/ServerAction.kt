@@ -7,7 +7,6 @@ import ru.nsu.trafficsimulator.logger
 import ru.nsu.trafficsimulator.model.Layout
 import ru.nsu.trafficsimulator.serializer.Deserializer
 import ru.nsu.trafficsimulator.server.Server
-import java.util.HashMap
 
 const val PORT = 8080
 
@@ -44,8 +43,9 @@ class ServerAction : IAction {
 
     override fun runAction(layout: Layout): Boolean {
         try {
-            val hostLayout = hostLayout()
-            val server = Server(PORT, hostLayout)
+            val hostLayouts = hostLayouts()
+
+            val server = Server(PORT, hostLayouts)
             val resultLayout = server.start()
             layout.copy(resultLayout)
             return true
@@ -55,9 +55,12 @@ class ServerAction : IAction {
         }
     }
 
-    private fun hostLayout(): Map<Int, Layout> {
-        return listOf(1, 2, 3, 4).associateWithTo(HashMap()) {
-            Deserializer.deserialize(OpenDriveReader().read("template_$it.xodr"))
-        }
+    private fun hostLayouts(): Map<Int, Layout> {
+        return listOf(
+            1 to Deserializer.deserialize(OpenDriveReader().read(filename1.toString())),
+            2 to Deserializer.deserialize(OpenDriveReader().read(filename2.toString())),
+            3 to Deserializer.deserialize(OpenDriveReader().read(filename3.toString())),
+            4 to Deserializer.deserialize(OpenDriveReader().read(filename4.toString())),
+        ).associate { it.first to it.second }
     }
 }
