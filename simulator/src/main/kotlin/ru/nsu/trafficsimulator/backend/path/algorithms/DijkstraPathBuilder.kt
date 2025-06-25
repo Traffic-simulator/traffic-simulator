@@ -16,10 +16,19 @@ class DijkstraPathBuilder(private val network: Network, private val costFunction
     override fun getPath(source: Waypoint, destination: Waypoint, initPosition_: Double): Pair<Double, List<Path.PathWaypoint>> {
         var initPosition = initPosition_
 
+        val srcLane = network.getLaneById(source.roadId, source.laneId.toInt())
+        val curRoadWaypoint = RoadWaypoint(srcLane, Path.PWType.NORMAL)
+        if (source == destination) {
+            return Pair(curRoadWaypoint.lane.length, listOf(Path.PathWaypoint(
+                Path.PWType.NORMAL,
+                curRoadWaypoint.lane,
+                -SimulationConfig.INF
+            )))
+        }
+
         val queue = PriorityQueue<Pair<RoadWaypoint, Double>>(compareBy { it.second })
         val cost = mutableMapOf<RoadWaypoint, Double>().withDefault { Double.MAX_VALUE }
         val par = mutableMapOf<RoadWaypoint, RoadWaypoint>()
-        val srcLane = network.getLaneById(source.roadId, source.laneId.toInt())
         cost[RoadWaypoint(srcLane, Path.PWType.NORMAL)] = 0.0
         queue.add(RoadWaypoint(srcLane, Path.PWType.NORMAL) to 0.0)
 
@@ -44,7 +53,7 @@ class DijkstraPathBuilder(private val network: Network, private val costFunction
                     toLane ->
                 val toWaypoint = RoadWaypoint(toLane, Path.PWType.NORMAL)
                 // We can not consider initPosition in cost, as first road will be fully traversed in every situation
-                val weight = costFunction.getLaneCost(curRoadWaypoint.lane)
+                val weight = costFunction.getLaneCost(curRoadWaypoint.lane, 0.0)
                 updateDijkstraState(toWaypoint, weight)
             }
 

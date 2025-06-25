@@ -254,8 +254,8 @@ class Main : ApplicationAdapter() {
                 simState.speed = 60
             }
             ImGui.sameLine()
-            if (ImGui.button("x480")) {
-                simState.speed = 480
+            if (ImGui.button("x1000")) {
+                simState.speed = 1000
             }
             if (ImGui.radioButton("Display Heatmap", visualizer.heatmapMode)) {
                 visualizer.heatmapMode = !visualizer.heatmapMode

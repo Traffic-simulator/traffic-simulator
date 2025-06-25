@@ -10,6 +10,7 @@ import ru.nsu.trafficsimulator.backend.network.Waypoint
 import ru.nsu.trafficsimulator.backend.path.Path
 import ru.nsu.trafficsimulator.backend.path.PathManager
 import ru.nsu.trafficsimulator.backend.path.algorithms.CachedDijkstraPathBuilder
+import ru.nsu.trafficsimulator.backend.path.algorithms.DijkstraPathBuilder
 import ru.nsu.trafficsimulator.backend.path.cost_function.DynamicTimeCostFunction
 import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
 import ru.nsu.trafficsimulator.backend.route.RouteGeneratorDespawnListener
@@ -49,6 +50,8 @@ class Vehicle(
     var distToClosestJunctionTmp: Double = SimulationConfig.INF
     var blockingFactors = ""
     var maxSpeed = globalMaxSpeed
+    val PATH_REMOVING_ITERATIONS_INIT = 500
+    var pathRemovingIterations = PATH_REMOVING_ITERATIONS_INIT
 
     init {
         lane.addVehicle(this)
@@ -92,6 +95,15 @@ class Vehicle(
         4) MLC
      */
     fun updateAcceleration() {
+        // Sometimes remove path to don't stay in jams
+        pathRemovingIterations--
+        if (pathRemovingIterations < 0 && lane.road.junction == "-1") {
+            pathRemovingIterations = PATH_REMOVING_ITERATIONS_INIT
+            // We can't remove path if currently blocking junction...
+            network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
+            pathManager.removePath(this)
+        }
+
         val closestJunction = getClosestJunction()
         var junctionAcc     = SimulationConfig.INF
         blockingFactors = ""
@@ -181,12 +193,12 @@ class Vehicle(
         if (tmp_lane == null) {
             return SimulationConfig.INF
         }
-
-        val minPosVeh = tmp_lane.lane.getMinPositionVehicle()
-        if (minPosVeh == null) {
-            return tmp_lane.lane.length - occupiedSpace
+        tmp_lane.lane.vehicles.forEach { occupiedSpace += it.length + SimulationConfig.MIN_GAP }
+        var res = tmp_lane.lane.length - occupiedSpace
+        if (occupiedSpace > 0.0) {
+            res -= SimulationConfig.MIN_GAP
         }
-        return minPosVeh.position - minPosVeh.length - SimulationConfig.MIN_GAP - occupiedSpace
+        return res
     }
 
 
@@ -307,7 +319,6 @@ class Vehicle(
         laneChangeDistance = getLaneChangePenalty()
         laneChangeFullDistance = laneChangeDistance
         laneChangeFromLaneId = lane.laneId
-        // TODO: We don't need to traverse all junction, only the closest one...
         network.junctions.forEach{ it.unlockTrajectoryVehicle(vehicleId) }
         setNewLane(_lane)
     }
@@ -328,10 +339,9 @@ class Vehicle(
 
         fun initialize(network: Network, simulator: Simulator) {
             costFunction = DynamicTimeCostFunction()
-            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction, 20.0))
+            pathManager = PathManager(CachedDijkstraPathBuilder(network, simulator, costFunction, 40.0))
             // pathManager = PathManager(DijkstraPathBuilder(network, costFunction))
         }
-
 
         fun NewVehicle(
             network: Network,

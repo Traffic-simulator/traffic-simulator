@@ -10,7 +10,7 @@ class DynamicTimeCostFunction: ICostFunction {
     // because we can pass road by parts on different lanes
     // TODO: somehow сonsider road parts
     //  1) trivial solution - calculate avg speed on road-side instead of lane
-    override fun getLaneCost(lane: Lane): Double {
+    override fun getLaneCost(lane: Lane, time: Double): Double {
         val laneAvgSpeed = lane.road.getAverageRoadSideSpeed(lane.laneId.sign)
         if (laneAvgSpeed < 1) return lane.length
         return lane.length / laneAvgSpeed
@@ -21,6 +21,10 @@ class DynamicTimeCostFunction: ICostFunction {
     }
 
     override fun getStatLaneCost(lane: Lane, secondsOfDay: Double): Double {
+        TODO("Not yet implemented")
+    }
+
+    override fun getLaneAvgSpeed(lane: Lane, time: Double): Double {
         TODO("Not yet implemented")
     }
 }
