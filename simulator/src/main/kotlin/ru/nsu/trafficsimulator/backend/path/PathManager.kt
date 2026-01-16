@@ -5,7 +5,6 @@ import ru.nsu.trafficsimulator.backend.network.Lane
 import ru.nsu.trafficsimulator.backend.network.LaneSequence
 import ru.nsu.trafficsimulator.backend.network.Waypoint
 import ru.nsu.trafficsimulator.backend.path.algorithms.IPathBuilder
-// TODO: убрать vehicle отсюда
 import ru.nsu.trafficsimulator.backend.vehicle.Vehicle
 import java.util.*
 import kotlin.collections.HashMap

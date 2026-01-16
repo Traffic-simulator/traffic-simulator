@@ -3,7 +3,7 @@ package ru.nsu.trafficsimulator.backend.path.cost_function
 import ru.nsu.trafficsimulator.backend.network.Lane
 
 class StaticLengthCostFunction : ICostFunction {
-    override fun getLaneCost(lane: Lane): Double {
+    override fun getLaneCost(lane: Lane, time: Double): Double {
         return lane.length
     }
 
@@ -12,6 +12,10 @@ class StaticLengthCostFunction : ICostFunction {
     }
 
     override fun getStatLaneCost(lane: Lane, secondsOfDay: Double): Double {
+        TODO("Not yet implemented")
+    }
+
+    override fun getLaneAvgSpeed(lane: Lane, time: Double): Double {
         TODO("Not yet implemented")
     }
 

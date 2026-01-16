@@ -5,11 +5,11 @@ import ru.nsu.trafficsimulator.backend.network.Waypoint
 import ru.nsu.trafficsimulator.backend.path.algorithms.DijkstraPathBuilder
 import ru.nsu.trafficsimulator.backend.path.cost_function.ICostFunction
 import ru.nsu.trafficsimulator.backend.path.cost_function.StaticLengthCostFunction
+import ru.nsu.trafficsimulator.backend.path.cost_function.StatsCostFunction
 
 class RegionPathAPI(private val network: Network): IRegionPathAPI {
 
-    // TODO: Use CachedDijkstraPathBuilder
-    val costFunction: ICostFunction = StaticLengthCostFunction()
+    val costFunction: ICostFunction = StatsCostFunction()
     val pathBuilder = DijkstraPathBuilder(network, costFunction)
 
     override fun isRegionRoad(roadId: Int, regionId: Int): Boolean {
@@ -24,15 +24,14 @@ class RegionPathAPI(private val network: Network): IRegionPathAPI {
         return pathBuilder.getPath(source, destination, 0.0)
     }
 
-    override fun getPathTime(path: List<Path.PathWaypoint>, beforeExcluded: Path.PathWaypoint): Double {
+    override fun getPathTime(path: List<Path.PathWaypoint>, beforeExcluded: Path.PathWaypoint, time: Double): Double {
         val roads = path.takeWhile{ it != beforeExcluded }
         var cost = 0.0
-        // TODO: USE TIMED COST FUNCTION
-        roads.forEach { cost += costFunction.getLaneCost(it.lane) / 16.0 /* TODO: drop this divison later*/ }
+        roads.forEach { cost += costFunction.getLaneCost(it.lane, time)}
         return cost
     }
 
-    override fun getWaypointAvgSpeed(waypoint: Waypoint): Double {
-        return 8.0 // for now it's ok
+    override fun getWaypointAvgSpeed(waypoint: Waypoint, time: Double): Double {
+        return costFunction.getLaneAvgSpeed(network.getRoadById(waypoint.roadId).getLaneById(waypoint.laneId.toInt()), time)
     }
 }

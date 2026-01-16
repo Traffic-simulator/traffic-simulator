@@ -59,7 +59,7 @@ class InspectorTool : IEditingTool {
             if (ImGui.inputInt("##capacity", capacity)) {
                 EditBuildingStateChange(
                     it,
-                    capacity.get().coerceIn(0, 1000),
+                    capacity.get().coerceIn(0, 5000),
                     it.building!!.type.toString(),
                 )
             } else {

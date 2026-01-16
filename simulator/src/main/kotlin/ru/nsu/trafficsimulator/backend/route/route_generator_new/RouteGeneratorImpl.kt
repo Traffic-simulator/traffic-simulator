@@ -7,6 +7,7 @@ import ru.nsu.trafficsimulator.backend.route.VehicleCreationListener
 import ru.nsu.trafficsimulator.backend.route.WaypointSpawnAbilityChecker
 import ru.nsu.trafficsimulator.backend.route.route_generator_new.discrete_function.Building
 
+// This class will work as need if startingTime = 0.0
 class RouteGeneratorImpl(
     startingTime: Double,     // In seconds
     buildings: List<Building>,

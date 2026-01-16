@@ -31,6 +31,14 @@ class CachedDijkstraPathBuilder(
         var path: List<Path.PathWaypoint> = ArrayList<Path.PathWaypoint>()
         val curRoadWaypoint = RoadWaypoint(srcLane, Path.PWType.NORMAL)
 
+        if (source == destination) {
+            return Pair(curRoadWaypoint.lane.length, listOf(Path.PathWaypoint(
+                Path.PWType.NORMAL,
+                curRoadWaypoint.lane,
+                -SimulationConfig.INF
+            )))
+        }
+
         // Option 1: Normal lane change
         // Explore the next lanes
         curRoadWaypoint.lane.getNextLane()?.forEach { toLane ->
@@ -39,7 +47,7 @@ class CachedDijkstraPathBuilder(
             val (curPathCost, curPath) = timedCache.get(Pair(Waypoint(toWaypoint.lane.roadId, toWaypoint.lane.laneId.toString()), destination),
                 simulator.currentTime,
                 { key: Pair<Waypoint, Waypoint> -> dijkstraPathBuilder.getPath(key.first, key.second, 0.0) })
-            val edgeWeight = costFunction.getLaneCost(curRoadWaypoint.lane)
+            val edgeWeight = costFunction.getLaneCost(curRoadWaypoint.lane, simulator.currentTime)
             if (edgeWeight + curPathCost < cost) {
                 cost = edgeWeight + curPathCost
 
@@ -81,7 +89,7 @@ class CachedDijkstraPathBuilder(
                 val (curPathCost, curPath) = timedCache.get(Pair(Waypoint(toNormalWaypoint.lane.roadId, toNormalWaypoint.lane.laneId.toString()), destination),
                     simulator.currentTime,
                     { key: Pair<Waypoint, Waypoint> -> dijkstraPathBuilder.getPath(key.first, key.second, 0.0) })
-                val edgeWeight = costFunction.getLaneCost(toWaypoint.lane)
+                val edgeWeight = costFunction.getLaneCost(toWaypoint.lane, simulator.currentTime)
                 if (MLCWeight + edgeWeight + curPathCost < cost) {
                     cost = MLCWeight + edgeWeight + curPathCost
 
